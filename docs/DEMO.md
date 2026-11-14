@@ -153,14 +153,37 @@ contra una API en modo demo. Una captura o grabación se presenta como resultado
 
 ### Pasos en la UI Mission Lab
 
-Por función. La UI Mission Lab está montada en el arnés técnico (`apps/web/src/features/mission-lab/`) y se recorrió en Chromium; el diseño final sigue pendiente.
+Por función. Los paneles P6 `MissionLabPanel` (`apps/web/src/features/mission-lab/`) y `ReportPanel`
+(`apps/web/src/features/report/`) están montados en el arnés técnico de `codex/p6-mission-lab`. En la interfaz P5
+se montaron solo en un worktree temporal de integración; el montaje real en la rama de P5 está pendiente
+(parche propuesto en `docs/handoffs/P6-mount-for-P5.patch`). Los textos visibles de P6 están en inglés.
 
 1. Lanzar la consulta conocida y abrir el panel de hipótesis: etiqueta preparada visible, fundamento, alternativa,
    refutación y siguiente prueba.
 2. Elegir un escenario B en el selector (gravedad lunar, gravedad terrestre, flujo 2 cm/s puntuado, sin sintéticos) y comparar.
 3. Revisar la vista entra / sale / se mantiene: cada salida muestra sus motivos de `ranking_b.excluded`; la
    etiqueta de comparación de evidencia es visible.
-4. Pulsar la consulta sin evidencia: se muestra `insufficient_evidence` y lo que falta, sin cifras ni hipótesis.
+4. Pulsar «Run query without sufficient evidence»: se muestra `insufficient_evidence` y lo que falta, sin cifras ni hipótesis.
+5. Vigencia: cambiar los filtros del formulario después de comparar. El resultado A/B pasa a «Previous A/B result»
+   con el aviso «Previous comparison — not computed with the current filters», los filtros usados y el botón
+   «Recompute with current filters»; A deja de llamarse «A · current filters». Restaurar los mismos filtros lo
+   devuelve a actual.
+6. Evidencia: las referencias de hipótesis abren la evidencia del expediente (`research_id`); las de filas A/B, la
+   del corpus activo (sin `research_id`), y el visor del host lo rotula.
+7. Informe en «Report and recovery»: se carga al activar un expediente y se muestra como fuente Markdown sin
+   renderizar, tal cual llega de `GET /research/{id}/report`. «Download report (.md)» descarga exactamente ese texto.
+   «Replay saved events» reproduce eventos persistidos (no en vivo).
+8. Recuperación: tras recargar la página no se reabre nada automáticamente; «Reopen last research» o la lista de
+   recientes (solo en este navegador) recuperan el expediente desde la API. Con la API parada aparece una alerta con
+   Retry; al volver la API, Retry funciona.
+
+### Recorrido automatizado (navegador real)
+
+`node apps/web/tests/e2e/p6-walkthrough.mjs --host=harness` (o `--host=p5` sobre la interfaz P5 con los paneles
+montados) arranca API demo con SQLite temporal y Vite, y recorre los pasos 1–8 con Chromium, incluido el reinicio
+de la API. Requiere Playwright instalado (no es dependencia del proyecto; ver `apps/web/tests/e2e/README.md`).
+Resultado del 14 nov 2026 en Linux: 12/12 pasos y 23 comprobaciones en ambos hosts; detalle en VERIFICATION.
+Es el caso de respaldo ejecutable vinculado a commit: registrar el SHA con el que se ejecute.
 
 ### Aceptación de extremo a extremo
 
@@ -169,7 +192,7 @@ Por función. La UI Mission Lab está montada en el arnés técnico (`apps/web/s
 | P1 | El recorrido corre en el commit registrado; `scripts/smoke.py`, pruebas y cliente generado sin cambios manuales. |
 | P3 | Motivos de exclusión e `insufficient_evidence` son correctos; nada sugiere física lunar ni datos NASA. |
 | P4 | La hipótesis conserva `prepared_demo_hypothesis`/`ai_hypothesis` y muestra fundamento, alternativa y refutación. |
-| P5 | Mission Lab se integra en la aplicación sin romper el arnés; etiquetas sintético/demo visibles. |
+| P5 | Mission Lab e informe se montan en su App (parche P6) sin romper el arnés; etiquetas sintético/demo visibles; `record`/`corpus` respetado en el visor. |
 
 ### Límites
 

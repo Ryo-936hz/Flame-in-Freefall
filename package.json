@@ -10,7 +10,7 @@
     "generate:types": "node scripts/generate-types.mjs",
     "check:types": "node scripts/generate-types.mjs --check",
     "typecheck": "tsc --project apps/web/tsconfig.json",
-    "test:client": "tsx --test apps/web/tests/client.test.ts apps/web/tests/mission-lab.test.ts",
+    "test:client": "tsx --test apps/web/tests/client.test.ts apps/web/tests/mission-lab.test.ts apps/web/tests/mission-lab-state.test.ts apps/web/tests/mission-lab-panel.test.ts apps/web/tests/report.test.ts",
     "test:client:live": "tsx apps/web/tests/live-smoke.ts",
     "build": "vite build --config apps/web/vite.config.ts",
     "dev:web": "vite --config apps/web/vite.config.ts"

@@ -1,0 +1,155 @@
+diff --git a/apps/web/src/App.tsx b/apps/web/src/App.tsx
+index 3e39ee9..5083c72 100644
+--- a/apps/web/src/App.tsx
++++ b/apps/web/src/App.tsx
+@@ -8,7 +8,9 @@ import { shortId } from "./lib/format";
+ import TopBar from "./components/TopBar";
+ import MissionBrief from "./components/MissionBrief";
+ import SynthesisPanel from "./components/SynthesisPanel";
+-import InterimMissionTools from "./components/InterimMissionTools";
++import { MissionLabPanel } from "./features/mission-lab/MissionLabPanel";
++import { ReportPanel } from "./features/report/ReportPanel";
++import type { EvidenceSource, MissionSlotProps } from "./features/mission-lab/slot";
+ import { Panel, StateMessage } from "./components/ui";
+ import EvidenceCanvas from "./features/evidence/EvidenceCanvas";
+ import EvidenceViewer from "./features/evidence/EvidenceViewer";
+@@ -55,6 +57,8 @@ export default function App() {
+   const [draft, setDraft] = useState<BriefDraft>(demoDraft);
+   const [run, setRun] = useState<Run>({ state: "idle" });
+   const [selection, setSelection] = useState<Selection>(EMPTY_SELECTION);
++  // Selection opened by Mission Lab from the active corpus (A/B rows): read without research_id.
++  const [corpusPick, setCorpusPick] = useState<Selection | null>(null);
+   const latest = useRef(createLatest());
+ 
+   useEffect(() => {
+@@ -117,6 +121,20 @@ export default function App() {
+     document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+   };
+ 
++  // P6 slot: "record" reads the saved snapshot (research_id); "corpus" reads the active corpus (no research_id).
++  const onOpenEvidence = (evidenceId: string, trialId: string | null, source: EvidenceSource = "record") => {
++    const next: Selection = { trialId, observationId: null, evidenceId };
++    setSelection(next);
++    setCorpusPick(source === "corpus" ? next : null);
++    document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
++  };
++  // Any other selection change creates a new object, so it falls back to the record rule.
++  const fromCorpus = corpusPick !== null && corpusPick === selection;
++  const slot: MissionSlotProps = {
++    api, research: result, request: currentRequest, onOpenRun: showRun, onOpenEvidence,
++    researchState: run.state === "ready" ? "ready" : run.state,
++  };
++
+   return <>
+     <a className="skip" href="#brief">Skip to the form</a>
+     <TopBar health={health} offline={Boolean(offline)} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
+@@ -156,12 +174,15 @@ export default function App() {
+           <SynthesisPanel result={result} onCite={onCite} />
+         </>}
+ 
+-        <InterimMissionTools api={api} research={result} request={currentRequest} onOpenRun={showRun} onOpenEvidence={onCite} />
++        <div id="lab" className="p6-slot">
++          <MissionLabPanel {...slot} question={draft.question} />
++          <ReportPanel {...slot} />
++        </div>
+       </div>
+ 
+       <div className="col-evidence">
+         <EvidenceViewer api={api} researchId={result?.id ?? null} ids={evidenceIds}
+-          retrieved={result && selection.evidenceId ? isRetrieved(result, selection.evidenceId) : true} activeId={result ? selection.evidenceId : null}
++          retrieved={result && selection.evidenceId ? !fromCorpus && isRetrieved(result, selection.evidenceId) : true} activeId={result ? selection.evidenceId : null}
+           context={context} onPick={(id) => setSelection(selectEvidence(selection, id))} />
+       </div>
+     </main>
+diff --git a/apps/web/src/components/InterimMissionTools.tsx b/apps/web/src/components/InterimMissionTools.tsx
+deleted file mode 100644
+index 545c510..0000000
+--- a/apps/web/src/components/InterimMissionTools.tsx
++++ /dev/null
+@@ -1,86 +0,0 @@
+-import { useState } from "react";
+-import type { Api, RankingRequest, ResearchResponse, ScenarioComparison } from "../lib/client";
+-import { ApiError } from "../lib/client";
+-import { reasonText, shortId } from "../lib/format";
+-import { Panel, StateMessage, Tag } from "./ui";
+-
+-/**
+- * Proposed mount contract for P6's MissionLabPanel and ReportPanel. P5 renders
+- * whatever implements it in App; until P6 publishes those modules this interim
+- * panel keeps the harness capabilities (A/B, report, replay, recovery) reachable.
+- */
+-export interface MissionSlotProps {
+-  api: Api;
+-  research: ResearchResponse | null;
+-  /** Filters of the active research, as sent to the API. */
+-  request: RankingRequest | null;
+-  onOpenRun: (run: ResearchResponse) => void;
+-  onOpenEvidence: (evidenceId: string, trialId: string | null) => void;
+-}
+-
+-function message(error: unknown): string {
+-  return error instanceof ApiError ? `${error.message} (${error.code})` : "The operation could not be completed.";
+-}
+-
+-export default function InterimMissionTools({ api, research, request, onOpenRun }: MissionSlotProps) {
+-  const [scenario, setScenario] = useState<ScenarioComparison | null>(null);
+-  const [text, setText] = useState<{ title: string; body: string } | null>(null);
+-  const [runId, setRunId] = useState("");
+-  const [busy, setBusy] = useState(false);
+-  const [error, setError] = useState("");
+-
+-  async function run(action: () => Promise<void>) {
+-    setBusy(true); setError("");
+-    try { await action(); } catch (reason) { setError(message(reason)); } finally { setBusy(false); }
+-  }
+-
+-  const compareLunar = () => run(async () => {
+-    if (!request) return;
+-    setScenario(await api.scenarios({
+-      name_a: "A · current filters",
+-      name_b: "B · lunar gravity",
+-      scenario_a: request,
+-      scenario_b: {
+-        ...request,
+-        target: { ...request.target, gravity_regime: "lunar" },
+-        required_match: [...new Set([...(request.required_match ?? []), "gravity_regime" as const])],
+-        vary: (request.vary ?? []).filter((key) => key !== "gravity_regime"),
+-      },
+-    }));
+-  });
+-
+-  return <Panel id="lab" title="Mission Lab · interim" className="lab"
+-    meta={<Tag tone="warn">Interim mount until P6 panels</Tag>}>
+-    <div className="panel-b lab-grid">
+-      <section aria-labelledby="ab-title">
+-        <h3 id="ab-title" className="cap">A/B scenario</h3>
+-        <p className="hint">Compares which evidence applies. It does not simulate combustion or predict safety.</p>
+-        <button type="button" className="btn" disabled={busy || !request} onClick={compareLunar}>Compare with lunar gravity</button>
+-        {scenario && <div className="ab">
+-          {([[scenario.name_a, scenario.ranking_a], [scenario.name_b, scenario.ranking_b]] as const).map(([name, ranking]) => <div key={name} className="ab-col">
+-            <p><b>{name}</b></p>
+-            <p className="num big">{ranking.items.length} <small>eligible</small></p>
+-            <ul>{ranking.items.map((item) => <li key={item.trial_id} className="id">{shortId(item.trial_id)}</li>)}</ul>
+-            {!ranking.items.length && <ul className="reasons">{[...new Set(ranking.excluded.flatMap((item) => item.reasons))].map((reason) => <li key={reason}>{reasonText(reason)}</li>)}</ul>}
+-          </div>)}
+-        </div>}
+-      </section>
+-
+-      <section aria-labelledby="report-title">
+-        <h3 id="report-title" className="cap">Research record</h3>
+-        <div className="actions">
+-          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Saved report · Markdown, not rendered", body: await api.report(research.id) }); })}>Open report</button>
+-          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Saved events · replay, not live", body: await api.events(research.id) }); })}>Replay events</button>
+-        </div>
+-        <form className="recover" onSubmit={(event) => { event.preventDefault(); const id = runId.trim(); if (id) run(async () => onOpenRun(await api.getResearch(id))); }}>
+-          <label className="field"><span className="cap">Recover saved research</span>
+-            <input className="input" value={runId} onChange={(event) => setRunId(event.target.value)} placeholder={research?.id ?? "research:…"} />
+-          </label>
+-          <button type="submit" className="btn" disabled={busy || !runId.trim()}>Recover</button>
+-        </form>
+-      </section>
+-      {error && <div className="lab-full"><StateMessage kind="error" title="Operation not completed"><p>{error}</p></StateMessage></div>}
+-      {text && <div className="lab-full"><p className="cap">{text.title}</p><pre className="ev-text">{text.body}</pre></div>}
+-    </div>
+-  </Panel>;
+-}

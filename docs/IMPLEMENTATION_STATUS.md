@@ -44,10 +44,14 @@ team's review before merging into `main`.
   ejecutó servidor PostgreSQL/Docker. No se creó ni pobló un índice vectorial.
 - P5/P6 tienen carpetas y cliente común. DESIGN_ANDURIL conserva la dirección visual;
   no se ha construido frontend de producto ni una escena física.
-- P6: guion Mission Lab con peticiones A/B, caso conocido y caso lunar sin evidencia
-  verificados contra la API demo en DEMO.md. UI Mission Lab montada en el arnés: presets A/B,
-  entra/sale/se mantiene, hipótesis rotuladas con siguiente prueba y consulta sin evidencia;
-  9 pruebas cliente nuevas. Sin escena conceptual ni diseño final.
+- P6 (rama `codex/p6-mission-lab`, sin commit del incremento): `MissionLabPanel` y `ReportPanel`
+  con props `MissionSlotProps`, montados en el arnés de esta rama. A/B con vigencia visible
+  (resultado anterior marcado al cambiar filtros o expediente), procedencia, hipótesis rotuladas,
+  consulta sin evidencia, informe tal cual de `GET /report` con descarga, eventos (replay) y
+  recuperación tras recarga. Textos visibles en inglés. 43 pruebas cliente y recorrido E2E con
+  navegador y backend reales (`apps/web/tests/e2e/p6-walkthrough.mjs`) aprobados en arnés y en
+  la interfaz P5 integrada en un worktree temporal. Pendiente: montaje real en la rama de P5
+  (parche `docs/handoffs/P6-mount-for-P5.patch`), Playwright/CI por P1, escena conceptual y diseño final.
 
 ## Pendientes concretos
 

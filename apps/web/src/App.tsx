@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ApiError, createApi, demoRanking, sourceLink } from "./lib/client";
 import type { Evidence, Health, Profile, RankingRequest, ResearchResponse } from "./lib/client";
-import MissionLab, { type ScenarioTrigger } from "./features/mission-lab/MissionLab";
+import { MissionLabPanel, type ScenarioTrigger } from "./features/mission-lab/MissionLabPanel";
+import { ReportPanel } from "./features/report/ReportPanel";
+import type { EvidenceSource, MissionSlotProps, ResearchState } from "./features/mission-lab/slot";
 import { StudyCatalog } from "./features/catalog/StudyCatalog";
 
 const api = createApi(import.meta.env.VITE_API_BASE_URL ?? "");
@@ -18,10 +20,9 @@ export default function App() {
   const [rankingJson, setRankingJson] = useState(JSON.stringify(demoRanking, null, 2));
   const [result, setResult] = useState<ResearchResponse | null>(null);
   const [evidence, setEvidence] = useState<Evidence | null>(null);
+  const [evidenceFrom, setEvidenceFrom] = useState<{ source: EvidenceSource; researchId: string | null }>({ source: "record", researchId: null });
   const [scenarioTrigger, setScenarioTrigger] = useState<ScenarioTrigger | null>(null);
-  const [report, setReport] = useState("");
-  const [events, setEvents] = useState("");
-  const [runId, setRunId] = useState("");
+  const [researchState, setResearchState] = useState<ResearchState>("idle");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -45,20 +46,37 @@ export default function App() {
     return value as RankingRequest;
   }
 
+  // Filtros actuales del formulario para Mission Lab; null si el JSON no es un objeto válido.
+  const currentRequest = useMemo<RankingRequest | null>(() => {
+    try { return ranking(); } catch { return null; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rankingJson]);
+
   function showRun(value: ResearchResponse) {
-    setResult(value); setRunId(value.id); setEvidence(null); setReport(""); setEvents("");
+    setResult(value); setEvidence(null); setResearchState("ready");
   }
 
   async function investigate() {
-    setResult(null); setEvidence(null); setReport(""); setEvents("");
-    showRun(await api.research({ question, ranking: ranking(), include_hypotheses: true }));
+    setResult(null); setEvidence(null); setResearchState("loading");
+    try { showRun(await api.research({ question, ranking: ranking(), include_hypotheses: true })); }
+    catch (reason) { setResearchState("error"); throw reason; }
   }
 
-  const selectEvidence = (id: string, live = false) => perform(async () => {
+  // "record": snapshot del expediente activo (research_id); "corpus": corpus actual, sin research_id.
+  const openEvidence = (id: string, _trialId: string | null = null, source: EvidenceSource = "record") => perform(async () => {
     setEvidence(null);
-    // The endpoint reads the saved snapshot when research_id is provided; live A/B comparisons read the current dataset.
-    setEvidence(await api.evidence(id, live ? undefined : result?.id));
+    const researchId = source === "corpus" ? undefined : result?.id;
+    const value = await api.evidence(id, researchId);
+    setEvidenceFrom({ source, researchId: researchId ?? null });
+    setEvidence(value);
   });
+  const selectEvidence = (id: string) => openEvidence(id, null, "record");
+
+  const slot: MissionSlotProps = {
+    api, research: result, request: currentRequest, researchState,
+    onOpenRun: showRun,
+    onOpenEvidence: (id, trialId, source) => { void openEvidence(id, trialId, source); }
+  };
   const source = sourceLink(evidence?.source_url);
 
   return <main>
@@ -91,18 +109,17 @@ export default function App() {
       <label>RankingRequest (JSON validado por la API)<textarea className="code-input" value={rankingJson} onChange={(event) => setRankingJson(event.target.value)} rows={12} spellCheck={false} /></label>
       <div className="actions">
         <button disabled={busy || question.trim().length < 3} onClick={() => perform(investigate)}>Investigar</button>
-        <button disabled={busy} onClick={() => setScenarioTrigger({ presetId: "gravity_lunar", nonce: Date.now() })}>Comparar A/B · cambiar gravedad</button>
+        <button disabled={busy || !currentRequest} onClick={() => setScenarioTrigger({ presetId: "gravity_lunar", nonce: Date.now() })}>Comparar A/B · cambiar gravedad</button>
         <button disabled={busy} onClick={() => setRankingJson(JSON.stringify(demoRanking, null, 2))}>Restaurar filtros sintéticos</button>
       </div>
-      <label>Recuperar investigación guardada<input value={runId} onChange={(event) => setRunId(event.target.value)} placeholder="Identificador devuelto por la API" /></label>
-      <button disabled={busy || !runId.trim()} onClick={() => perform(async () => showRun(await api.getResearch(runId.trim())))}>Recuperar expediente</button>
+      {!currentRequest && <p className="error" role="note">El JSON de filtros no es un objeto válido; Mission Lab no puede usarlo.</p>}
+      <p>La recuperación de expedientes, el informe y la reproducción de eventos están en el panel «Report and recovery».</p>
     </section>
 
     <div aria-live="polite">{busy && <p role="status">Esperando respuesta de la API…</p>}</div>
     {error && <p className="error" role="alert">{error}</p>}
 
-    <MissionLab api={api} getBase={ranking} question={question} busy={busy} perform={perform} result={result}
-      onEvidence={(id, live) => { void selectEvidence(id, live); }} trigger={scenarioTrigger} />
+    <MissionLabPanel {...slot} question={question} trigger={scenarioTrigger} />
 
     {result && <>
       <section aria-labelledby="research-title">
@@ -111,10 +128,6 @@ export default function App() {
         <p>Pregunta guardada: {result.question}</p>
         <p>{result.summary}</p>
         <ul>{result.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
-        <div className="actions">
-          <button disabled={busy} onClick={() => perform(async () => setReport(await api.report(result.id)))}>Abrir informe persistido</button>
-          <button disabled={busy} onClick={() => perform(async () => setEvents(await api.events(result.id)))}>Reproducir eventos guardados</button>
-        </div>
       </section>
       <section aria-labelledby="ranking-title">
         <h2 id="ranking-title">Ranking y cobertura</h2>
@@ -154,13 +167,13 @@ export default function App() {
 
     {evidence && <section aria-labelledby="evidence-title">
       <h2 id="evidence-title">Evidencia seleccionada · {evidence.provenance}</h2>
+      <p className="eyebrow">{evidenceFrom.source === "corpus" ? "Leída del corpus activo actual (sin research_id)" : evidenceFrom.researchId ? `Leída del expediente ${evidenceFrom.researchId}` : "Leída sin expediente activo"}</p>
       <h3>{evidence.title}</h3><p><code>{evidence.id}</code> · {evidence.study_id} · revisión: {evidence.reviewed ? "marcada como revisada" : "pendiente"}</p>
       <p>Localizador: {evidence.locator}{evidence.page != null ? ` · página PDF ${evidence.page}` : ""}</p>
       <pre>{evidence.text}</pre>
       {source ? <a href={source} target="_blank" rel="noreferrer">Abrir fuente</a> : <p>Sin enlace HTTP público. Consulta el localizador del archivo; una fixture sintética no se vincula a una medición NASA.</p>}
     </section>}
-    {report && <section><h2>Informe persistido · Markdown sin ejecutar</h2><pre>{report}</pre></section>}
-    {events && <section><h2>Reproducción de eventos guardados · no streaming en vivo</h2><pre>{events}</pre></section>}
+    <ReportPanel {...slot} />
     <footer>Dirección visual futura: docs/DESIGN_ANDURIL.md. Este arnés preserva los contratos y las fronteras de P5/P6.</footer>
   </main>;
 }

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { demoRanking, type RankingRequest } from "../src/lib/client.ts";
 import {
-  buildScenarioRequest, diffScenarioRankings, hypothesisLabelText, scenarioPresets,
+  buildScenarioRequest, describeScenarioChanges, diffScenarioRankings, hypothesisLabelText, scenarioPresets,
   type RankedTrial, type ScenarioComparison
 } from "../src/features/mission-lab/scenarios.ts";
 
@@ -19,7 +19,7 @@ function response(parts: {
   warnings?: string[]; warningsA?: string[]; warningsB?: string[];
 }): ScenarioComparison {
   return {
-    name_a: "A · filtros actuales", name_b: "B · prueba",
+    name_a: "A · current filters", name_b: "B · test",
     ranking_a: { schema_version: "1.0", dataset_id: "synthetic:demo", method: "compatibility_then_weighted_gower_v1", items: parts.itemsA ?? [], excluded: parts.excludedA ?? [], warnings: parts.warningsA ?? [] },
     ranking_b: { schema_version: "1.0", dataset_id: "synthetic:demo", method: "compatibility_then_weighted_gower_v1", items: parts.itemsB ?? [], excluded: parts.excludedB ?? [], warnings: parts.warningsB ?? [] },
     warnings: parts.warnings ?? [], label: "evidence_comparison_not_physical_simulation"
@@ -48,7 +48,7 @@ test("every preset builds a policy-valid B without mutating A", () => {
       const request = buildScenarioRequest(base, preset.id);
       assert.equal(request.scenario_a, base);
       assert.notEqual(request.scenario_b, base);
-      assert.equal(request.name_a, "A · filtros actuales");
+      assert.equal(request.name_a, "A · current filters");
       assert.equal(request.name_b, `B · ${preset.title}`);
       assertPolicy(request.scenario_a);
       assertPolicy(request.scenario_b);
@@ -77,7 +77,7 @@ test("exclude_synthetic only switches allow_synthetic off", () => {
 });
 
 test("unknown presets fail with a clear error", () => {
-  assert.throws(() => buildScenarioRequest(demoRanking, "mars_magic"), /Escenario desconocido: "mars_magic"/);
+  assert.throws(() => buildScenarioRequest(demoRanking, "mars_magic"), /Unknown scenario: "mars_magic"/);
 });
 
 test("trials are classified as kept, entered or left with B exclusion reasons", () => {
@@ -96,7 +96,7 @@ test("trials are classified as kept, entered or left with B exclusion reasons", 
   assert.equal(diff.excludedB, 1);
   assert.equal(diff.noEvidenceA, false);
   assert.equal(diff.noEvidenceB, false);
-  assert.ok(diff.summary.some((line) => line.includes("Entran en B: synthetic:trial-4")));
+  assert.ok(diff.summary.some((line) => line.includes("Entered in B: synthetic:trial-4")));
   assert.ok(diff.summary.some((line) => line.includes("synthetic:trial-3") && line.includes("required_condition_mismatch:gravity_regime")));
 });
 
@@ -121,7 +121,7 @@ test("an empty B is reported as missing applicable evidence", () => {
   assert.equal(diff.noEvidenceB, true);
   assert.equal(diff.selectedB, 0);
   assert.deepEqual(diff.left[0]?.reasonsB, ["synthetic_not_allowed"]);
-  assert.ok(diff.summary.some((line) => line.includes("no tiene evidencia aplicable")));
+  assert.ok(diff.summary.some((line) => line.includes("has no applicable evidence")));
 });
 
 test("warnings are deduplicated across the response and both rankings in a stable order", () => {
@@ -134,6 +134,108 @@ test("warnings are deduplicated across the response and both rankings in a stabl
 });
 
 test("hypothesis labels are never presented as validated physics", () => {
-  assert.match(hypothesisLabelText("prepared_demo_hypothesis"), /preparada para la demo.*no es descubrimiento ni física validada/);
-  assert.match(hypothesisLabelText("ai_hypothesis"), /generada por IA.*requiere verificación/);
+  assert.match(hypothesisLabelText("prepared_demo_hypothesis"), /Prepared demo hypothesis.*not a discovery or validated physics/);
+  assert.match(hypothesisLabelText("ai_hypothesis"), /AI-generated hypothesis.*requires verification/);
+  for (const label of ["prepared_demo_hypothesis", "ai_hypothesis"] as const) {
+    assert.doesNotMatch(hypothesisLabelText(label), /validated(?! physics)|confirmed|proven/i);
+  }
+});
+
+// Bases sintéticas para el preset de flujo puntuado (no son mediciones NASA).
+const flowRequired: RankingRequest = {
+  ...demoRanking,
+  target: { gravity_regime: "microgravity", flow_velocity_cm_s: 5 },
+  required_match: ["gravity_regime", "flow_velocity_cm_s"], vary: []
+};
+const flowZeroWeight: RankingRequest = {
+  ...demoRanking,
+  target: { gravity_regime: "microgravity", flow_velocity_cm_s: 5 },
+  vary: [], weights: { flow_velocity_cm_s: 0 }
+};
+
+test("flow_scored_2 on the default filters scores flow instead of varying it", () => {
+  const snapshot = structuredClone(demoRanking);
+  const { scenario_b: b } = buildScenarioRequest(demoRanking, "flow_scored_2");
+  assert.equal(b.target?.flow_velocity_cm_s, 2);
+  assert.equal(b.target?.gravity_regime, "microgravity");
+  assert.deepEqual(b.required_match, ["gravity_regime"]);
+  assert.deepEqual(b.vary, []);
+  assert.equal(b.weights?.flow_velocity_cm_s, 1);
+  assert.equal(b.allow_synthetic, demoRanking.allow_synthetic);
+  assert.equal(b.minimum_coverage, demoRanking.minimum_coverage);
+  assert.equal(b.limit, demoRanking.limit);
+  assert.deepEqual(demoRanking, snapshot);
+  assert.deepEqual(describeScenarioChanges(demoRanking, b), [
+    "flow_velocity_cm_s target set to 2",
+    "flow_velocity_cm_s removed from varied conditions",
+    "flow_velocity_cm_s weight unset (default 1) → 1"
+  ]);
+});
+
+test("flow_scored_2 drops a flow prerequisite instead of requiring it", () => {
+  const snapshot = structuredClone(flowRequired);
+  const { scenario_b: b } = buildScenarioRequest(flowRequired, "flow_scored_2");
+  assert.deepEqual(b.required_match, ["gravity_regime"]);
+  assert.ok(!(b.vary ?? []).includes("flow_velocity_cm_s"));
+  assert.equal(b.target?.flow_velocity_cm_s, 2);
+  assert.ok((b.weights?.flow_velocity_cm_s ?? 0) > 0);
+  assert.deepEqual(flowRequired, snapshot);
+  const changes = describeScenarioChanges(flowRequired, b);
+  assert.ok(changes.includes("flow_velocity_cm_s removed from required matches"));
+  assert.ok(changes.includes("flow_velocity_cm_s target 5 → 2"));
+});
+
+test("flow_scored_2 turns a zero weight into a positive one and keeps positive weights", () => {
+  const snapshot = structuredClone(flowZeroWeight);
+  const { scenario_b: b } = buildScenarioRequest(flowZeroWeight, "flow_scored_2");
+  assert.equal(b.weights?.flow_velocity_cm_s, 1);
+  assert.deepEqual(flowZeroWeight, snapshot);
+  assert.deepEqual(describeScenarioChanges(flowZeroWeight, b), [
+    "flow_velocity_cm_s target 5 → 2",
+    "flow_velocity_cm_s weight 0 → 1"
+  ]);
+  const weighted: RankingRequest = { ...flowZeroWeight, weights: { flow_velocity_cm_s: 2.5 } };
+  const kept = buildScenarioRequest(weighted, "flow_scored_2").scenario_b;
+  assert.equal(kept.weights?.flow_velocity_cm_s, 2.5);
+  assert.ok(!describeScenarioChanges(weighted, kept).some((line) => line.includes("weight")));
+});
+
+test("flow_scored_2 leaves the other constraints untouched", () => {
+  const base: RankingRequest = {
+    target: { gravity_regime: "microgravity", oxygen_pct: 21, flow_velocity_cm_s: 5 },
+    required_match: ["gravity_regime", "flow_velocity_cm_s"], vary: ["pressure_kpa"],
+    weights: { oxygen_pct: 3 }, study_ids: ["synthetic:study-a"], allow_synthetic: true, minimum_coverage: 0.8, limit: 5
+  };
+  const { scenario_b: b } = buildScenarioRequest(base, "flow_scored_2");
+  assert.deepEqual(b.required_match, ["gravity_regime"]);
+  assert.deepEqual(b.vary, ["pressure_kpa"]);
+  assert.deepEqual(b.weights, { oxygen_pct: 3, flow_velocity_cm_s: 1 });
+  assert.equal(b.target?.oxygen_pct, 21);
+  assert.deepEqual(b.study_ids, ["synthetic:study-a"]);
+  assert.equal(b.minimum_coverage, 0.8);
+  assert.equal(b.limit, 5);
+});
+
+test("describeScenarioChanges reports nothing for equivalent requests and lists other edits", () => {
+  assert.deepEqual(describeScenarioChanges(demoRanking, structuredClone(demoRanking)), []);
+  const explicitDefaults: RankingRequest = { ...demoRanking, weights: {}, study_ids: [], condition_scope: "trial" };
+  assert.deepEqual(describeScenarioChanges(demoRanking, explicitDefaults), []);
+  assert.deepEqual(describeScenarioChanges(demoRanking, buildScenarioRequest(demoRanking, "gravity_lunar").scenario_b),
+    ["gravity_regime target microgravity → lunar"]);
+  assert.deepEqual(describeScenarioChanges(demoRanking, buildScenarioRequest(demoRanking, "exclude_synthetic").scenario_b),
+    ["Synthetic fixtures allowed → not allowed"]);
+  assert.deepEqual(describeScenarioChanges(demoRanking, { ...demoRanking, minimum_coverage: 0.8, limit: 5, study_ids: ["synthetic:study-a"] }),
+    ["Minimum coverage 0.6 → 0.8", "Limit 3 → 5", "synthetic:study-a added to selected studies"]);
+});
+
+test("preset texts are in English and describe fixtures as synthetic, not NASA data", () => {
+  for (const preset of scenarioPresets) {
+    for (const text of [preset.title, preset.change, preset.expectation]) {
+      assert.doesNotMatch(text, /[áéíóúñ¿¡]|ensayo|gravedad|filtros/i, `${preset.id} must be English`);
+    }
+    assert.doesNotMatch(preset.expectation, /(?<!not )NASA measurement/);
+  }
+  const flow = scenarioPresets.find((preset) => preset.id === "flow_scored_2");
+  assert.match(flow?.change ?? "", /leaves required matches and varied conditions/);
+  assert.match(flow?.expectation ?? "", /synthetic demo fixtures \(not NASA measurements\)/);
 });

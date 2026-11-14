@@ -2,6 +2,7 @@
 // Compara aplicabilidad de evidencia entre dos RankingRequest; no simula física.
 // INTERFAZ ACORDADA: las firmas y tipos exportados son estables para MissionLab.tsx.
 import type { Models, RankingRequest } from "../../lib/client";
+import { canonicalRequest, formatValue } from "./comparisonState";
 
 export type RankedTrial = Models["RankedTrial"];
 export type ScenarioComparisonRequest = Models["ScenarioComparisonRequest"];
@@ -46,7 +47,7 @@ export interface ScenarioDiff {
   /** true si el escenario no tiene candidatos elegibles: evidencia aplicable insuficiente. */
   noEvidenceA: boolean;
   noEvidenceB: boolean;
-  /** Frases explicativas en español derivadas solo de los datos de la respuesta. */
+  /** Frases explicativas visibles (inglés) derivadas solo de los datos de la respuesta. */
   summary: string[];
   /** Advertencias únicas de la respuesta y de ambos rankings. */
   warnings: string[];
@@ -75,43 +76,50 @@ function requireCondition(base: RankingRequest, key: ConditionKey, value: string
   return next;
 }
 
-/** Puntúa una condición por distancia de Gower sin exigir coincidencia: entra en target y sale de vary. */
+/**
+ * Puntúa una condición por distancia de Gower sin exigir coincidencia: entra en target, sale de
+ * required_match y de vary, y recibe peso positivo (1) si no tenía peso o era 0; un peso positivo se conserva.
+ */
 function scoreCondition(base: RankingRequest, key: ConditionKey, value: string | number): RankingRequest {
   const next = cloneRequest(base);
   next.target = { ...next.target, [key]: value };
+  next.required_match = (next.required_match ?? []).filter((item) => item !== key);
   next.vary = (next.vary ?? []).filter((item) => item !== key);
+  const weight = next.weights?.[key];
+  if (!(typeof weight === "number" && weight > 0)) next.weights = { ...next.weights, [key]: 1 };
   return next;
 }
 
-// Las expectativas describen lo observado con data/fixtures/demo.json (sintético) partiendo de los
-// filtros sintéticos por defecto (demoRanking) contra POST /api/v1/scenarios/compare. No afirman física.
+// Las expectativas describen lo observado contra el backend real (POST /api/v1/scenarios/compare y
+// POST /api/v1/rankings) con los fixtures sintéticos sembrados por FLAMELAB_SEED_DEMO, partiendo de
+// demoRanking salvo que se indique otra base. Textos visibles en inglés. No afirman física.
 export const scenarioPresets: readonly ScenarioPreset[] = [
   {
     id: "gravity_lunar",
-    title: "gravedad lunar",
-    change: "gravity_regime = lunar, exigido en required_match y retirado de vary.",
-    expectation: "Con los filtros sintéticos por defecto, B no tiene ensayos elegibles: ningún fixture declara gravedad lunar. Los tres ensayos de A salen por required_condition_mismatch:gravity_regime y la API avisa de que no hay evidencia elegible.",
+    title: "lunar gravity",
+    change: "gravity_regime = lunar, required in required matches and removed from varied conditions.",
+    expectation: "Observed with the synthetic demo fixtures (not NASA measurements) and the default synthetic filters: B has no eligible trials because no fixture declares lunar gravity. The three trials selected in A leave with required_condition_mismatch:gravity_regime and the API warns that there is no eligible evidence.",
     build: (base) => requireCondition(base, "gravity_regime", "lunar")
   },
   {
     id: "gravity_earth",
-    title: "gravedad terrestre",
-    change: "gravity_regime = earth, exigido en required_match y retirado de vary.",
-    expectation: "Con los filtros sintéticos por defecto, la selección cambia por completo: salen los tres ensayos en microgravedad y entra synthetic:trial-4, el único fixture declarado en gravedad terrestre.",
+    title: "Earth gravity",
+    change: "gravity_regime = earth, required in required matches and removed from varied conditions.",
+    expectation: "Observed with the synthetic demo fixtures (not NASA measurements) and the default synthetic filters: the selection changes completely. The three microgravity fixtures leave and synthetic:trial-4, the only fixture declared in Earth gravity, enters.",
     build: (base) => requireCondition(base, "gravity_regime", "earth")
   },
   {
     id: "flow_scored_2",
-    title: "flujo 2 cm/s puntuado",
-    change: "flow_velocity_cm_s = 2 entra en target y deja de estar en vary: se puntúa por distancia, no se exige.",
-    expectation: "Con los filtros sintéticos por defecto se conservan los mismos ensayos, pero cambia la similitud: synthetic:trial-1 (2 cm/s) mantiene 1 y los de 5 y 10 cm/s bajan ligeramente. El orden es de similitud con filtros explícitos, no de resultado físico.",
+    title: "flow 2 cm/s scored",
+    change: "flow_velocity_cm_s = 2 is scored by Gower distance instead of being required: it enters the target, leaves required matches and varied conditions, and gets weight 1 if its weight was unset or 0 (a positive weight is kept).",
+    expectation: "Observed with the synthetic demo fixtures (not NASA measurements). From the default synthetic filters (flow varied) the same three microgravity trials stay selected, but similarity now includes flow: synthetic:trial-1 (2 cm/s) keeps 1, synthetic:trial-2 drops to 0.985 and synthetic:trial-3 to 0.96 (flow distances 0.03 and 0.08 on the fixed v1 scale). If A required flow = 5 cm/s, only synthetic:trial-2 was selected and synthetic:trial-1 and synthetic:trial-3 enter in B. If A gave flow weight 0, its contribution goes from not scored to scored with the same values. Order is similarity under explicit filters, not a physical outcome.",
     build: (base) => scoreCondition(base, "flow_velocity_cm_s", 2)
   },
   {
     id: "exclude_synthetic",
-    title: "sin fixtures sintéticos",
-    change: "allow_synthetic = false; el resto de filtros no cambia.",
-    expectation: "Con el dataset de demostración, B queda sin evidencia aplicable: todos los ensayos son sintéticos y salen por synthetic_not_allowed. Demuestra que los fixtures no se cuelan como evidencia real.",
+    title: "no synthetic fixtures",
+    change: "allow_synthetic = false; every other filter stays the same.",
+    expectation: "With the synthetic demo dataset, B has no applicable evidence: every trial is a synthetic fixture and leaves with synthetic_not_allowed. It shows that fixtures are never passed off as real evidence.",
     build: (base) => ({ ...cloneRequest(base), allow_synthetic: false })
   }
 ];
@@ -120,10 +128,10 @@ export function buildScenarioRequest(base: RankingRequest, presetId: string): Sc
   const preset = scenarioPresets.find((item) => item.id === presetId);
   if (!preset) {
     const known = scenarioPresets.map((item) => item.id).join(", ");
-    throw new Error(`Escenario desconocido: "${presetId}". Disponibles: ${known}.`);
+    throw new Error(`Unknown scenario: "${presetId}". Available: ${known}.`);
   }
   return {
-    name_a: "A · filtros actuales",
+    name_a: "A · current filters",
     name_b: `B · ${preset.title}`,
     scenario_a: base,
     scenario_b: preset.build(base)
@@ -181,21 +189,21 @@ export function diffScenarioRankings(response: ScenarioComparison): ScenarioDiff
   const nameA = response.name_a;
   const nameB = response.name_b;
   const summary: string[] = [
-    `${nameA}: ${countLabel(selectedA.size, "ensayo seleccionado", "ensayos seleccionados")} y ${countLabel(a.excluded.length, "fuera de la selección", "fuera de la selección")} (excluidos o indeterminados).`,
-    `${nameB}: ${countLabel(selectedB.size, "ensayo seleccionado", "ensayos seleccionados")} y ${countLabel(b.excluded.length, "fuera de la selección", "fuera de la selección")} (excluidos o indeterminados).`
+    `${nameA}: ${countLabel(selectedA.size, "selected trial", "selected trials")} and ${a.excluded.length} outside the selection (excluded or indeterminate).`,
+    `${nameB}: ${countLabel(selectedB.size, "selected trial", "selected trials")} and ${b.excluded.length} outside the selection (excluded or indeterminate).`
   ];
-  if (noEvidenceA) summary.push(`${nameA} no tiene evidencia aplicable con sus filtros explícitos y su cobertura mínima.`);
-  if (noEvidenceB) summary.push(`${nameB} no tiene evidencia aplicable con sus filtros explícitos y su cobertura mínima.`);
-  if (kept.length) summary.push(`Se mantienen en ambos: ${kept.map((item) => item.trial_id).join(", ")}.`);
-  if (entered.length) summary.push(`Entran en B: ${entered.map((item) => item.trial_id).join(", ")}.`);
+  if (noEvidenceA) summary.push(`${nameA} has no applicable evidence with its explicit filters and minimum coverage.`);
+  if (noEvidenceB) summary.push(`${nameB} has no applicable evidence with its explicit filters and minimum coverage.`);
+  if (kept.length) summary.push(`Kept in both: ${kept.map((item) => item.trial_id).join(", ")}.`);
+  if (entered.length) summary.push(`Entered in B: ${entered.map((item) => item.trial_id).join(", ")}.`);
   if (left.length) {
     const reasons = [...new Set(left.flatMap((item) => item.reasonsB))];
-    summary.push(`Salen en B: ${left.map((item) => item.trial_id).join(", ")}` +
-      (reasons.length ? ` (motivos en B: ${reasons.join(", ")}).` : "."));
+    summary.push(`Left in B: ${left.map((item) => item.trial_id).join(", ")}` +
+      (reasons.length ? ` (reasons in B: ${reasons.join(", ")}).` : "."));
   }
   const unknownDelta = kept.filter((item) => item.similarityDelta === null).length;
-  if (unknownDelta) summary.push(`${countLabel(unknownDelta, "ensayo mantenido no tiene", "ensayos mantenidos no tienen")} similitud en ambos escenarios; su variación queda sin calcular.`);
-  if (!kept.length && !entered.length && !left.length && !noEvidenceA) summary.push("La selección no cambia entre A y B.");
+  if (unknownDelta) summary.push(`${countLabel(unknownDelta, "kept trial lacks", "kept trials lack")} a similarity in one of the scenarios; its change is not calculated.`);
+  if (!kept.length && !entered.length && !left.length && !noEvidenceA) summary.push("The selection does not change between A and B.");
 
   const warnings = [...new Set([...response.warnings, ...a.warnings, ...b.warnings])];
   return {
@@ -210,16 +218,52 @@ export function diffScenarioRankings(response: ScenarioComparison): ScenarioDiff
 export function hypothesisLabelText(label: Hypothesis["label"]): string {
   switch (label) {
     case "prepared_demo_hypothesis":
-      return "Hipótesis preparada para la demo · no es descubrimiento ni física validada";
+      return "Prepared demo hypothesis · not a discovery or validated physics";
     case "ai_hypothesis":
-      return "Hipótesis generada por IA · requiere verificación";
+      return "AI-generated hypothesis · requires verification";
     default:
-      return `Hipótesis sin etiqueta reconocida (${String(label)}) · requiere verificación`;
+      return `Hypothesis with unrecognized label (${String(label)}) · requires verification`;
   }
 }
 
-/** Cambios visibles de B respecto de A (target, required_match, vary, weights, allow_synthetic, ...), en español; [] si son iguales. */
+function setChanges(a: string[], b: string[], noun: string): string[] {
+  const out: string[] = [];
+  for (const key of b) if (!a.includes(key)) out.push(`${key} added to ${noun}`);
+  for (const key of a) if (!b.includes(key)) out.push(`${key} removed from ${noun}`);
+  return out;
+}
+
+/** Cambios visibles de B respecto de A (target, required_match, vary, weights, allow_synthetic, ...), en inglés; [] si son equivalentes. */
 export function describeScenarioChanges(a: RankingRequest, b: RankingRequest): string[] {
-  void a; void b;
-  throw new Error("Pendiente de implementación.");
+  const ca = canonicalRequest(a);
+  const cb = canonicalRequest(b);
+  const changes: string[] = [];
+  const targetA = new Map(ca.target);
+  const targetB = new Map(cb.target);
+  for (const [key, value] of cb.target) {
+    if (!targetA.has(key)) changes.push(`${key} target set to ${formatValue(value)}`);
+    else if (JSON.stringify(targetA.get(key)) !== JSON.stringify(value)) {
+      changes.push(`${key} target ${formatValue(targetA.get(key))} → ${formatValue(value)}`);
+    }
+  }
+  for (const [key] of ca.target) if (!targetB.has(key)) changes.push(`${key} target removed`);
+  changes.push(...setChanges(ca.required_match, cb.required_match, "required matches"));
+  changes.push(...setChanges(ca.vary, cb.vary, "varied conditions"));
+  const weightsA = new Map(ca.weights);
+  const weightsB = new Map(cb.weights);
+  for (const key of [...new Set([...weightsA.keys(), ...weightsB.keys()])].sort()) {
+    const wa = weightsA.get(key);
+    const wb = weightsB.get(key);
+    if (wa === wb) continue;
+    const show = (w: number | undefined) => (w === undefined ? "unset (default 1)" : formatValue(w));
+    changes.push(`${key} weight ${show(wa)} → ${show(wb)}`);
+  }
+  if (ca.allow_synthetic !== cb.allow_synthetic) {
+    changes.push(`Synthetic fixtures ${ca.allow_synthetic ? "allowed" : "not allowed"} → ${cb.allow_synthetic ? "allowed" : "not allowed"}`);
+  }
+  if (ca.minimum_coverage !== cb.minimum_coverage) changes.push(`Minimum coverage ${formatValue(ca.minimum_coverage)} → ${formatValue(cb.minimum_coverage)}`);
+  if (ca.limit !== cb.limit) changes.push(`Limit ${formatValue(ca.limit)} → ${formatValue(cb.limit)}`);
+  changes.push(...setChanges(ca.study_ids, cb.study_ids, "selected studies"));
+  if (ca.condition_scope !== cb.condition_scope) changes.push(`Condition scope ${ca.condition_scope} → ${cb.condition_scope}`);
+  return changes;
 }
