@@ -119,7 +119,8 @@ export default function App() {
 
   return <>
     <a className="skip" href="#brief">Skip to the form</a>
-    <TopBar health={health} offline={Boolean(offline)} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />
+    <TopBar health={health} offline={Boolean(offline)} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
+      sections={result ? ["brief", "canvas", "evidence", "synthesis", "lab"] : ["brief", "canvas", "evidence", "lab"]} />
     <main className="shell">
       <div className="col-brief">
         <MissionBrief draft={draft} onChange={setDraft} onSubmit={(request) => void investigate(request)} onReset={() => setDraft(demoDraft())}
