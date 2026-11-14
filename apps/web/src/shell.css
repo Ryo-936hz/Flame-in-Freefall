@@ -361,8 +361,9 @@ details.interpreted[open] summary { margin-bottom: 6px; }
 .chat-face { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--signal); background: color-mix(in oklab, var(--signal) 14%, transparent); }
 .chat-face .icon { width: 22px; height: 22px; stroke-width: 2; }
 /* No panel chrome: P5's ChatPanel keeps its markup, but here it is the page itself. */
-.chat-view .chat.panel { flex: 1; min-height: 0; display: flex; flex-direction: column; border: 0; border-radius: 0; background: none; box-shadow: none; }
-.chat-view .chat.panel::before { display: none; }
+/* `:root` raises the specificity above the day-theme `.panel` rules in style.css, which otherwise paint white. */
+:root .chat-view .chat.panel { flex: 1; min-height: 0; display: flex; flex-direction: column; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root .chat-view .chat.panel::before { display: none; }
 .chat-view .chat > .panel-h { display: none; } /* the view title above replaces the panel header; Esc still returns to Investigate */
 .chat-note { margin: 0; padding: 0 0 10px; font-size: 12.5px; color: var(--ink-3); border-bottom: 1px solid var(--rule); }
 .chat-log { list-style: none; margin: 0; padding: 18px 2px; flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
@@ -387,8 +388,13 @@ details.interpreted[open] summary { margin-bottom: 6px; }
   border: 1px solid var(--rule-strong); border-radius: 14px; background: var(--surface); transition: border-color 0.2s, box-shadow 0.2s;
 }
 .chat-form:focus-within { border-color: var(--signal); box-shadow: 0 0 0 3px color-mix(in oklab, var(--signal) 18%, transparent); }
-/* Specific enough to beat the global and light-theme textarea borders in style.css. */
-.chat-view .chat .chat-form textarea { flex: 1; min-height: 40px; max-height: 160px; resize: none; border: 0; background: none; padding: 9px 0; }
+/* Specific enough to beat the global and light-theme textarea rules in style.css. The field's own
+   focus ring is replaced by the composer's, so the textarea draws no inner outline or border. */
+:root .chat-view .chat .chat-form textarea,
+:root .chat-view .chat .chat-form textarea:focus,
+:root .chat-view .chat .chat-form textarea:focus-visible {
+  flex: 1; min-height: 40px; max-height: 160px; resize: none; border: 0; outline: none; box-shadow: none; background: transparent; padding: 9px 0; color: var(--ink);
+}
 .chat-form .btn.primary { border-radius: 10px; }
 .typing { display: inline-flex; gap: 4px; padding: 6px 0; }
 .typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--signal); animation: blink 1s infinite; }
