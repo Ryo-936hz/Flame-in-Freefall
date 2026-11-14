@@ -1,0 +1,31 @@
+:root { font-family: system-ui, sans-serif; color: #1c2730; background: #f3f5f7; line-height: 1.5; }
+body { margin: 0; }
+main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+header, section { padding: 22px; margin-bottom: 18px; background: white; border: 1px solid #c8d1d8; border-radius: 4px; }
+h1, h2, h3 { margin-top: 0; }
+h1 span { color: #465560; font-size: 0.6em; font-weight: 500; }
+.eyebrow { margin: 0; font-size: .85rem; color: #465560; }
+.notice { background: #fff2cd; padding: 12px; border-left: 4px solid #8a6100; }
+label { display: block; font-weight: 600; margin: 14px 0; }
+textarea, input { display: block; box-sizing: border-box; width: 100%; margin-top: 5px; padding: 9px; font: inherit; border: 1px solid #687c8b; border-radius: 3px; }
+.code-input, pre, code { font-family: ui-monospace, Consolas, monospace; font-size: .87rem; }
+button { padding: 8px 12px; margin: 3px; background: #eef3f7; color: #123e5e; border: 1px solid #728696; border-radius: 3px; cursor: pointer; font: inherit; }
+button:hover { background: #dce9f3; }
+button:disabled { cursor: wait; opacity: .55; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible { outline: 3px solid #1976b6; outline-offset: 3px; }
+a { color: #135d8e; }
+.actions { display: flex; flex-wrap: wrap; gap: 5px; margin: 10px 0; }
+.status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 15px; }
+dt { font-size: .85rem; color: #465560; }
+dd { margin: 0; overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #f3f5f7; padding: 12px; max-height: 600px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; text-align: left; }
+th, td { padding: 9px; border: 1px solid #ccd5dc; vertical-align: top; }
+th { background: #edf1f5; }
+.table-scroll { overflow-x: auto; }
+.reference { font-size: .8rem; overflow-wrap: anywhere; }
+.error { border: 1px solid #a22e25; background: #fff0ee; color: #8a2119; padding: 14px; overflow-wrap: anywhere; }
+article { border-top: 1px solid #dce1e5; margin-top: 12px; padding-top: 12px; }
+summary { cursor: pointer; padding: 10px 0; }
+footer { color: #465560; font-size: .85rem; padding: 10px; }
+@media (max-width: 600px) { main { padding: 10px; } header, section { padding: 14px; } h1 span { display: block; } }

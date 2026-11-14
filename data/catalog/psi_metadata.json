@@ -1,0 +1,515 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "psi:local-catalog-v1",
+  "description": "24 investigaciones reales: metadatos documentales, sin ensayos u observaciones cuantitativas importados.",
+  "studies": [
+    {
+      "id": "psi:PSI-10",
+      "title": "Advanced Combustion via Microgravity Experiments / Flame Design",
+      "family": "ACME/Flame Design",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/w4zy-bt45"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-20",
+      "title": "Advanced Combustion via Microgravity Experiments - Burning Rate Emulator",
+      "family": "ACME BRE",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/vb93-3y72"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-21",
+      "title": "Advanced Combustion via Microgravity Experiments / Coflow Laminar Diffusion Flame",
+      "family": "ACME CLD Flame",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/23e1-9950"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-22",
+      "title": "Advanced Combustion via Microgravity Experiments Electric-Field Effects on Laminar Diffusion Flames",
+      "family": "ACME E-FIELD Flames",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/se5a-8c73"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-23",
+      "title": "Advanced Combustion via Microgravity Experiments-Structure and Response of Spherical Diffusion Flames",
+      "family": "ACME s-Flame",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/k57n-p030"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-25",
+      "title": "Burning and Suppression of Solids - II",
+      "family": "BASS-II",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/4qc4-de67"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-26",
+      "title": "Burning and Suppression of Solids",
+      "family": "BASS",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/58h4-dy80"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-39",
+      "title": "Cool Flames Investigation",
+      "family": "CFI",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/m6pj-a914"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-47",
+      "title": "Dust and Aerosol Measurement Feasibility Test / Dust and Aerosol Measurement Feasibility Test-2",
+      "family": "DAFT / DAFT-2",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/ztgj-d202"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-60",
+      "title": "Computational and Experimental Analysis of SPICE Data Sets",
+      "family": "PSI-60",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/mzjm-yv57"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-62",
+      "title": "Concurrent Flame Spread Modeling using Flamelet Generated Manifolds in Microgravity with Comparison to BASS Experiments using Two-Color Tomography",
+      "family": "PSI-62",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/e9xp-ex83"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-68",
+      "title": "Flame Extinguishment Experiment - 2",
+      "family": "FLEX-2",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/byp8-h018"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-69",
+      "title": "Flame Extinguishment Experiment",
+      "family": "FLEX",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/mbq8-0451"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-98",
+      "title": "Spacecraft Fire Safety Experiment-I",
+      "family": "SAFFIRE-I",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/0t15-1z43"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-99",
+      "title": "Spacecraft Fire Experiment-II",
+      "family": "SAFFIRE-II",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/2chp-m469"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-100",
+      "title": "Spacecraft Fire Experiment-III",
+      "family": "SAFFIRE-III",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/040q-4h36"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-101",
+      "title": "Smoke Aerosol Measurement Experiment-Reflight",
+      "family": "SAME-R",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/2np7-jv14"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-102",
+      "title": "Smoke and Aerosol Measurement Experiment",
+      "family": "SAME",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/gd4k-8h62"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-106",
+      "title": "Structure and Liftoff In Combustion Experiment",
+      "family": "SLICE",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/pm12-rg61"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-107",
+      "title": "Smoke Point In Co-flow Experiment",
+      "family": "SPICE",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/9kbh-e962"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-115",
+      "title": "Utilization of the Smoke Aerosol Measurement Experiment Data for Advanced Modeling and Simulation of Smoke Generation in Micro-Gravity",
+      "family": "PSI-115",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/q0v5-1v28"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-117",
+      "title": "Effect of External Thermo-Convective Perturbation on Cool Flame Dynamics: A Multidimensional Multi-Physics CFD Analysis",
+      "family": "PSI-117",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/gz0q-b577"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-142",
+      "title": "Quantitative Studies of Cool Flame Transitions at Radiation / Stretch Extinction Using Counterflow Flames",
+      "family": "PSI-142",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/80qf-vj95"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    {
+      "id": "psi:PSI-159",
+      "title": "Advanced Combustion via Microgravity Experiments / Cool Flames Investigation with Gases",
+      "family": "ACME CFI-G",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/cyt1-kh64"
+      ],
+      "dataset_status": "metadata_only"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "psi:PSI-10:metadata",
+      "study_id": "psi:PSI-10",
+      "title": "Advanced Combustion via Microgravity Experiments / Flame Design",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/w4zy-bt45",
+      "locator": "datasets_lujan.zip#PSI-10/Investigation Metadata Files/PSI-10_metadata_PSI-10-ISA/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-20:metadata",
+      "study_id": "psi:PSI-20",
+      "title": "Advanced Combustion via Microgravity Experiments - Burning Rate Emulator",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/vb93-3y72",
+      "locator": "datasets_lujan.zip#PSI-20/Investigation Metadata Files/PSI-20_metadata_PSI-96_ACME BRE/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-21:metadata",
+      "study_id": "psi:PSI-21",
+      "title": "Advanced Combustion via Microgravity Experiments / Coflow Laminar Diffusion Flame",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/23e1-9950",
+      "locator": "datasets_lujan.zip#PSI-21/Investigation Metadata Files/PSI-21_metadata_PSI-97_ACME CLD Flame/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-22:metadata",
+      "study_id": "psi:PSI-22",
+      "title": "Advanced Combustion via Microgravity Experiments Electric-Field Effects on Laminar Diffusion Flames",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/se5a-8c73",
+      "locator": "datasets_lujan.zip#PSI-22/Investigation Metadata Files/PSI-22_metadata_ACME E-FIELD Flames/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-23:metadata",
+      "study_id": "psi:PSI-23",
+      "title": "Advanced Combustion via Microgravity Experiments-Structure and Response of Spherical Diffusion Flames",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/k57n-p030",
+      "locator": "datasets_lujan.zip#PSI-23/Investigation Metadata Files/PSI-23_metadata_PSI-99_ACME s-Flame/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-25:metadata",
+      "study_id": "psi:PSI-25",
+      "title": "Burning and Suppression of Solids - II",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/4qc4-de67",
+      "locator": "datasets_lujan.zip#PSI-25/Investigation Metadata Files/PSI-25_metadata_PSI_metadata_PSI-101_BASS-II/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-26:metadata",
+      "study_id": "psi:PSI-26",
+      "title": "Burning and Suppression of Solids",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/58h4-dy80",
+      "locator": "datasets_lujan.zip#PSI-26/Investigation Metadata Files/PSI-26_metadata_PSI-102_BASS/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-39:metadata",
+      "study_id": "psi:PSI-39",
+      "title": "Cool Flames Investigation",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/m6pj-a914",
+      "locator": "datasets_lujan.zip#PSI-39/Investigation Metadata Files/PSI-39_metadata_PSI-118_CFI/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-47:metadata",
+      "study_id": "psi:PSI-47",
+      "title": "Dust and Aerosol Measurement Feasibility Test / Dust and Aerosol Measurement Feasibility Test-2",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/ztgj-d202",
+      "locator": "datasets_lujan.zip#PSI-47/Investigation Metadata Files/PSI-47_metadata_PSI-126_DAFT_DAFT-2/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-60:metadata",
+      "study_id": "psi:PSI-60",
+      "title": "Computational and Experimental Analysis of SPICE Data Sets",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/mzjm-yv57",
+      "locator": "datasets_lujan.zip#PSI-60/Investigation Metadata Files/PSI-60_metadata_NEWID-5_Computational and Ex/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-62:metadata",
+      "study_id": "psi:PSI-62",
+      "title": "Concurrent Flame Spread Modeling using Flamelet Generated Manifolds in Microgravity with Comparison to BASS Experiments using Two-Color Tomography",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/e9xp-ex83",
+      "locator": "datasets_lujan.zip#PSI-62/Investigation Metadata Files/PSI-62_metadata_NEWID-7_Concurrent Flame Spr/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-68:metadata",
+      "study_id": "psi:PSI-68",
+      "title": "Flame Extinguishment Experiment - 2",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/byp8-h018",
+      "locator": "datasets_lujan.zip#PSI-68/Investigation Metadata Files/PSI-68_metadata_PSI-132_FLEX-2/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-69:metadata",
+      "study_id": "psi:PSI-69",
+      "title": "Flame Extinguishment Experiment",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/mbq8-0451",
+      "locator": "datasets_lujan.zip#PSI-69/Investigation Metadata Files/PSI-69_metadata_PSI-133_FLEX/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-98:metadata",
+      "study_id": "psi:PSI-98",
+      "title": "Spacecraft Fire Safety Experiment-I",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/0t15-1z43",
+      "locator": "datasets_lujan.zip#PSI-98/Investigation Metadata Files/PSI-98_metadata_PSI-166_SAFFIRE-I/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-99:metadata",
+      "study_id": "psi:PSI-99",
+      "title": "Spacecraft Fire Experiment-II",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/2chp-m469",
+      "locator": "datasets_lujan.zip#PSI-99/Investigation Metadata Files/PSI-99_metadata_PSI-167_SAFFIRE-II/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-100:metadata",
+      "study_id": "psi:PSI-100",
+      "title": "Spacecraft Fire Experiment-III",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/040q-4h36",
+      "locator": "datasets_lujan.zip#PSI-100/Investigation Metadata Files/PSI-100_metadata_PSI-168_SAFFIRE-III/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-101:metadata",
+      "study_id": "psi:PSI-101",
+      "title": "Smoke Aerosol Measurement Experiment-Reflight",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/2np7-jv14",
+      "locator": "datasets_lujan.zip#PSI-101/Investigation Metadata Files/PSI-101_metadata_PSI-169_SAME-R/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-102:metadata",
+      "study_id": "psi:PSI-102",
+      "title": "Smoke and Aerosol Measurement Experiment",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/gd4k-8h62",
+      "locator": "datasets_lujan.zip#PSI-102/Investigation Metadata Files/PSI-102_metadata_PSI-170_SAME/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-106:metadata",
+      "study_id": "psi:PSI-106",
+      "title": "Structure and Liftoff In Combustion Experiment",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/pm12-rg61",
+      "locator": "datasets_lujan.zip#PSI-106/Investigation Metadata Files/PSI-106_metadata_PSI-174_SLICE/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-107:metadata",
+      "study_id": "psi:PSI-107",
+      "title": "Smoke Point In Co-flow Experiment",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/9kbh-e962",
+      "locator": "datasets_lujan.zip#PSI-107/Investigation Metadata Files/PSI-107_metadata_PSI-176_SPICE/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-115:metadata",
+      "study_id": "psi:PSI-115",
+      "title": "Utilization of the Smoke Aerosol Measurement Experiment Data for Advanced Modeling and Simulation of Smoke Generation in Micro-Gravity",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/q0v5-1v28",
+      "locator": "datasets_lujan.zip#PSI-115/Investigation Metadata Files/PSI-115_metadata_PSI-185_Utilization of the S/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-117:metadata",
+      "study_id": "psi:PSI-117",
+      "title": "Effect of External Thermo-Convective Perturbation on Cool Flame Dynamics: A Multidimensional Multi-Physics CFD Analysis",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/gz0q-b577",
+      "locator": "datasets_lujan.zip#PSI-117/Investigation Metadata Files/PSI-117_metadata_NEWID-13_Effect of External T/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-142:metadata",
+      "study_id": "psi:PSI-142",
+      "title": "Quantitative Studies of Cool Flame Transitions at Radiation / Stretch Extinction Using Counterflow Flames",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/80qf-vj95",
+      "locator": "datasets_lujan.zip#PSI-142/Investigation Metadata Files/PSI-142_metadata_PSI-164_Quantitative Studies/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    },
+    {
+      "id": "psi:PSI-159:metadata",
+      "study_id": "psi:PSI-159",
+      "title": "Advanced Combustion via Microgravity Experiments / Cool Flames Investigation with Gases",
+      "text": "Catálogo local: título y acrónimo de investigación. No contiene mediciones importadas ni valida resultados científicos.",
+      "source_url": "https://doi.org/10.60555/cyt1-kh64",
+      "locator": "datasets_lujan.zip#PSI-159/Investigation Metadata Files/PSI-159_metadata_PSI-159-ISA/i_Investigation.txt; Study Title / Comment[Investigation Acronym] / Comment[DOI]; sha256=5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644",
+      "page": null,
+      "provenance": "published",
+      "reviewed": false
+    }
+  ],
+  "trials": [],
+  "observations": []
+}

@@ -1,0 +1,748 @@
+{
+  "schema_version": "1.0",
+  "dataset_id": "synthetic:demo-v1",
+  "description": "SOLO DATOS SINTÉTICOS para pruebas de integración. No es evidencia NASA, validación científica ni simulación física.",
+  "studies": [
+    {
+      "id": "synthetic:flow-study",
+      "title": "DEMO SINTÉTICA: flujo y propagación",
+      "family": "synthetic_demo",
+      "description": "Valores inventados exclusivamente para probar conexiones. No son mediciones NASA ni un modelo físico.",
+      "source_urls": [],
+      "dataset_status": "synthetic"
+    },
+    {
+      "id": "synthetic:contrast-study",
+      "title": "DEMO SINTÉTICA: incompatibilidad y ausencia",
+      "family": "synthetic_demo",
+      "description": "Casos artificiales para comprobar filtros y ausencia explícita de información.",
+      "source_urls": [],
+      "dataset_status": "synthetic"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "synthetic:evidence-1",
+      "study_id": "synthetic:flow-study",
+      "title": "Fixture SINTÉTICO ensayo 1",
+      "text": "Valores inventados, NO mediciones NASA. oxygen_pct=21 % (known); pressure_kpa=101.3 kPa (known); flow_velocity_cm_s=2 cm/s (known); material=demo_polymer  (known); geometry=sheet  (known); thickness_mm=1 mm (known); sample_width_mm=20 mm (known); diameter_mm=None mm (not_applicable); flow_direction=opposed  (known); gravity_regime=microgravity  (known). flame_spread_rate_mm_s=[0.05, 0.055] mm/s; null significa not_measured. Las observaciones comparten independent_unit_id=synthetic:unit-1.",
+      "source_url": null,
+      "locator": "data/fixtures/demo.json; trials[id=synthetic:trial-1], observations[trial_id=synthetic:trial-1]",
+      "page": null,
+      "provenance": "synthetic",
+      "reviewed": true
+    },
+    {
+      "id": "synthetic:evidence-2",
+      "study_id": "synthetic:flow-study",
+      "title": "Fixture SINTÉTICO ensayo 2",
+      "text": "Valores inventados, NO mediciones NASA. oxygen_pct=21 % (known); pressure_kpa=101.3 kPa (known); flow_velocity_cm_s=5 cm/s (known); material=demo_polymer  (known); geometry=sheet  (known); thickness_mm=1 mm (known); sample_width_mm=20 mm (known); diameter_mm=None mm (not_applicable); flow_direction=opposed  (known); gravity_regime=microgravity  (known). flame_spread_rate_mm_s=[0.1] mm/s; null significa not_measured. Las observaciones comparten independent_unit_id=synthetic:unit-2.",
+      "source_url": null,
+      "locator": "data/fixtures/demo.json; trials[id=synthetic:trial-2], observations[trial_id=synthetic:trial-2]",
+      "page": null,
+      "provenance": "synthetic",
+      "reviewed": true
+    },
+    {
+      "id": "synthetic:evidence-3",
+      "study_id": "synthetic:flow-study",
+      "title": "Fixture SINTÉTICO ensayo 3",
+      "text": "Valores inventados, NO mediciones NASA. oxygen_pct=21 % (known); pressure_kpa=101.3 kPa (known); flow_velocity_cm_s=10 cm/s (known); material=demo_polymer  (known); geometry=sheet  (known); thickness_mm=1 mm (known); sample_width_mm=20 mm (known); diameter_mm=None mm (not_applicable); flow_direction=opposed  (known); gravity_regime=microgravity  (known). flame_spread_rate_mm_s=[0.2] mm/s; null significa not_measured. Las observaciones comparten independent_unit_id=synthetic:unit-3.",
+      "source_url": null,
+      "locator": "data/fixtures/demo.json; trials[id=synthetic:trial-3], observations[trial_id=synthetic:trial-3]",
+      "page": null,
+      "provenance": "synthetic",
+      "reviewed": true
+    },
+    {
+      "id": "synthetic:evidence-4",
+      "study_id": "synthetic:contrast-study",
+      "title": "Fixture SINTÉTICO ensayo 4",
+      "text": "Valores inventados, NO mediciones NASA. oxygen_pct=21 % (known); pressure_kpa=101.3 kPa (known); flow_velocity_cm_s=5 cm/s (known); material=demo_polymer  (known); geometry=sphere  (known); thickness_mm=None mm (not_applicable); sample_width_mm=None mm (not_applicable); diameter_mm=20 mm (known); flow_direction=opposed  (known); gravity_regime=earth  (known). flame_spread_rate_mm_s=[0] mm/s; null significa not_measured. Las observaciones comparten independent_unit_id=synthetic:unit-4.",
+      "source_url": null,
+      "locator": "data/fixtures/demo.json; trials[id=synthetic:trial-4], observations[trial_id=synthetic:trial-4]",
+      "page": null,
+      "provenance": "synthetic",
+      "reviewed": true
+    },
+    {
+      "id": "synthetic:evidence-5",
+      "study_id": "synthetic:contrast-study",
+      "title": "Fixture SINTÉTICO ensayo 5",
+      "text": "Valores inventados, NO mediciones NASA. oxygen_pct=21 % (known); pressure_kpa=101.3 kPa (known); flow_velocity_cm_s=None cm/s (not_reported); material=demo_polymer  (known); geometry=sheet  (known); thickness_mm=1 mm (known); sample_width_mm=20 mm (known); diameter_mm=None mm (not_applicable); flow_direction=opposed  (known); gravity_regime=None  (not_reported). flame_spread_rate_mm_s=[None] mm/s; null significa not_measured. Las observaciones comparten independent_unit_id=synthetic:unit-5.",
+      "source_url": null,
+      "locator": "data/fixtures/demo.json; trials[id=synthetic:trial-5], observations[trial_id=synthetic:trial-5]",
+      "page": null,
+      "provenance": "synthetic",
+      "reviewed": true
+    }
+  ],
+  "trials": [
+    {
+      "id": "synthetic:trial-1",
+      "study_id": "synthetic:flow-study",
+      "sample_id": "synthetic:sample-1",
+      "independent_unit_id": "synthetic:unit-1",
+      "label": "SINTÉTICO ensayo 1",
+      "conditions": {
+        "oxygen_pct": {
+          "value": 21,
+          "status": "known",
+          "unit": "%",
+          "original_value": "21",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        },
+        "pressure_kpa": {
+          "value": 101.3,
+          "status": "known",
+          "unit": "kPa",
+          "original_value": "101.3",
+          "original_unit": "kPa",
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        },
+        "flow_velocity_cm_s": {
+          "value": 2,
+          "status": "known",
+          "unit": "cm/s",
+          "original_value": "2",
+          "original_unit": "cm/s",
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        },
+        "material": {
+          "value": "demo_polymer",
+          "status": "known",
+          "unit": null,
+          "original_value": "demo_polymer",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        },
+        "geometry": {
+          "value": "sheet",
+          "status": "known",
+          "unit": null,
+          "original_value": "sheet",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        },
+        "thickness_mm": {
+          "value": 1,
+          "status": "known",
+          "unit": "mm",
+          "original_value": "1",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        },
+        "sample_width_mm": {
+          "value": 20,
+          "status": "known",
+          "unit": "mm",
+          "original_value": "20",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        },
+        "diameter_mm": {
+          "value": null,
+          "status": "not_applicable",
+          "unit": "mm",
+          "original_value": null,
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        },
+        "flow_direction": {
+          "value": "opposed",
+          "status": "known",
+          "unit": null,
+          "original_value": "opposed",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        },
+        "gravity_regime": {
+          "value": "microgravity",
+          "status": "known",
+          "unit": null,
+          "original_value": "microgravity",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-1"
+          ]
+        }
+      },
+      "evidence_ids": [
+        "synthetic:evidence-1"
+      ],
+      "provenance": "synthetic",
+      "material_grade": "demo_only",
+      "notes": [
+        "Datos inventados de demostración; no usar como evidencia científica.",
+        "Dos observaciones del mismo ensayo, no dos réplicas independientes."
+      ]
+    },
+    {
+      "id": "synthetic:trial-2",
+      "study_id": "synthetic:flow-study",
+      "sample_id": "synthetic:sample-2",
+      "independent_unit_id": "synthetic:unit-2",
+      "label": "SINTÉTICO ensayo 2",
+      "conditions": {
+        "oxygen_pct": {
+          "value": 21,
+          "status": "known",
+          "unit": "%",
+          "original_value": "21",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        },
+        "pressure_kpa": {
+          "value": 101.3,
+          "status": "known",
+          "unit": "kPa",
+          "original_value": "101.3",
+          "original_unit": "kPa",
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        },
+        "flow_velocity_cm_s": {
+          "value": 5,
+          "status": "known",
+          "unit": "cm/s",
+          "original_value": "5",
+          "original_unit": "cm/s",
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        },
+        "material": {
+          "value": "demo_polymer",
+          "status": "known",
+          "unit": null,
+          "original_value": "demo_polymer",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        },
+        "geometry": {
+          "value": "sheet",
+          "status": "known",
+          "unit": null,
+          "original_value": "sheet",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        },
+        "thickness_mm": {
+          "value": 1,
+          "status": "known",
+          "unit": "mm",
+          "original_value": "1",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        },
+        "sample_width_mm": {
+          "value": 20,
+          "status": "known",
+          "unit": "mm",
+          "original_value": "20",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        },
+        "diameter_mm": {
+          "value": null,
+          "status": "not_applicable",
+          "unit": "mm",
+          "original_value": null,
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        },
+        "flow_direction": {
+          "value": "opposed",
+          "status": "known",
+          "unit": null,
+          "original_value": "opposed",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        },
+        "gravity_regime": {
+          "value": "microgravity",
+          "status": "known",
+          "unit": null,
+          "original_value": "microgravity",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-2"
+          ]
+        }
+      },
+      "evidence_ids": [
+        "synthetic:evidence-2"
+      ],
+      "provenance": "synthetic",
+      "material_grade": "demo_only",
+      "notes": [
+        "Datos inventados de demostración; no usar como evidencia científica."
+      ]
+    },
+    {
+      "id": "synthetic:trial-3",
+      "study_id": "synthetic:flow-study",
+      "sample_id": "synthetic:sample-3",
+      "independent_unit_id": "synthetic:unit-3",
+      "label": "SINTÉTICO ensayo 3",
+      "conditions": {
+        "oxygen_pct": {
+          "value": 21,
+          "status": "known",
+          "unit": "%",
+          "original_value": "21",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        },
+        "pressure_kpa": {
+          "value": 101.3,
+          "status": "known",
+          "unit": "kPa",
+          "original_value": "101.3",
+          "original_unit": "kPa",
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        },
+        "flow_velocity_cm_s": {
+          "value": 10,
+          "status": "known",
+          "unit": "cm/s",
+          "original_value": "10",
+          "original_unit": "cm/s",
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        },
+        "material": {
+          "value": "demo_polymer",
+          "status": "known",
+          "unit": null,
+          "original_value": "demo_polymer",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        },
+        "geometry": {
+          "value": "sheet",
+          "status": "known",
+          "unit": null,
+          "original_value": "sheet",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        },
+        "thickness_mm": {
+          "value": 1,
+          "status": "known",
+          "unit": "mm",
+          "original_value": "1",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        },
+        "sample_width_mm": {
+          "value": 20,
+          "status": "known",
+          "unit": "mm",
+          "original_value": "20",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        },
+        "diameter_mm": {
+          "value": null,
+          "status": "not_applicable",
+          "unit": "mm",
+          "original_value": null,
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        },
+        "flow_direction": {
+          "value": "opposed",
+          "status": "known",
+          "unit": null,
+          "original_value": "opposed",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        },
+        "gravity_regime": {
+          "value": "microgravity",
+          "status": "known",
+          "unit": null,
+          "original_value": "microgravity",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-3"
+          ]
+        }
+      },
+      "evidence_ids": [
+        "synthetic:evidence-3"
+      ],
+      "provenance": "synthetic",
+      "material_grade": "demo_only",
+      "notes": [
+        "Datos inventados de demostración; no usar como evidencia científica."
+      ]
+    },
+    {
+      "id": "synthetic:trial-4",
+      "study_id": "synthetic:contrast-study",
+      "sample_id": "synthetic:sample-4",
+      "independent_unit_id": "synthetic:unit-4",
+      "label": "SINTÉTICO ensayo 4",
+      "conditions": {
+        "oxygen_pct": {
+          "value": 21,
+          "status": "known",
+          "unit": "%",
+          "original_value": "21",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        },
+        "pressure_kpa": {
+          "value": 101.3,
+          "status": "known",
+          "unit": "kPa",
+          "original_value": "101.3",
+          "original_unit": "kPa",
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        },
+        "flow_velocity_cm_s": {
+          "value": 5,
+          "status": "known",
+          "unit": "cm/s",
+          "original_value": "5",
+          "original_unit": "cm/s",
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        },
+        "material": {
+          "value": "demo_polymer",
+          "status": "known",
+          "unit": null,
+          "original_value": "demo_polymer",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        },
+        "geometry": {
+          "value": "sphere",
+          "status": "known",
+          "unit": null,
+          "original_value": "sphere",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        },
+        "thickness_mm": {
+          "value": null,
+          "status": "not_applicable",
+          "unit": "mm",
+          "original_value": null,
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        },
+        "sample_width_mm": {
+          "value": null,
+          "status": "not_applicable",
+          "unit": "mm",
+          "original_value": null,
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        },
+        "diameter_mm": {
+          "value": 20,
+          "status": "known",
+          "unit": "mm",
+          "original_value": "20",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        },
+        "flow_direction": {
+          "value": "opposed",
+          "status": "known",
+          "unit": null,
+          "original_value": "opposed",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        },
+        "gravity_regime": {
+          "value": "earth",
+          "status": "known",
+          "unit": null,
+          "original_value": "earth",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-4"
+          ]
+        }
+      },
+      "evidence_ids": [
+        "synthetic:evidence-4"
+      ],
+      "provenance": "synthetic",
+      "material_grade": "demo_only",
+      "notes": [
+        "Datos inventados de demostración; no usar como evidencia científica."
+      ]
+    },
+    {
+      "id": "synthetic:trial-5",
+      "study_id": "synthetic:contrast-study",
+      "sample_id": "synthetic:sample-5",
+      "independent_unit_id": "synthetic:unit-5",
+      "label": "SINTÉTICO ensayo 5",
+      "conditions": {
+        "oxygen_pct": {
+          "value": 21,
+          "status": "known",
+          "unit": "%",
+          "original_value": "21",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        },
+        "pressure_kpa": {
+          "value": 101.3,
+          "status": "known",
+          "unit": "kPa",
+          "original_value": "101.3",
+          "original_unit": "kPa",
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        },
+        "flow_velocity_cm_s": {
+          "value": null,
+          "status": "not_reported",
+          "unit": "cm/s",
+          "original_value": null,
+          "original_unit": "cm/s",
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        },
+        "material": {
+          "value": "demo_polymer",
+          "status": "known",
+          "unit": null,
+          "original_value": "demo_polymer",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        },
+        "geometry": {
+          "value": "sheet",
+          "status": "known",
+          "unit": null,
+          "original_value": "sheet",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        },
+        "thickness_mm": {
+          "value": 1,
+          "status": "known",
+          "unit": "mm",
+          "original_value": "1",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        },
+        "sample_width_mm": {
+          "value": 20,
+          "status": "known",
+          "unit": "mm",
+          "original_value": "20",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        },
+        "diameter_mm": {
+          "value": null,
+          "status": "not_applicable",
+          "unit": "mm",
+          "original_value": null,
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        },
+        "flow_direction": {
+          "value": "opposed",
+          "status": "known",
+          "unit": null,
+          "original_value": "opposed",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        },
+        "gravity_regime": {
+          "value": null,
+          "status": "not_reported",
+          "unit": null,
+          "original_value": null,
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:evidence-5"
+          ]
+        }
+      },
+      "evidence_ids": [
+        "synthetic:evidence-5"
+      ],
+      "provenance": "synthetic",
+      "material_grade": "demo_only",
+      "notes": [
+        "Datos inventados de demostración; no usar como evidencia científica."
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "id": "synthetic:observation-1-1",
+      "trial_id": "synthetic:trial-1",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 0.05,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:evidence-1"
+      ],
+      "provenance": "synthetic",
+      "uncertainty": null
+    },
+    {
+      "id": "synthetic:observation-1-2",
+      "trial_id": "synthetic:trial-1",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 0.055,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:evidence-1"
+      ],
+      "provenance": "synthetic",
+      "uncertainty": null
+    },
+    {
+      "id": "synthetic:observation-2-1",
+      "trial_id": "synthetic:trial-2",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 0.1,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:evidence-2"
+      ],
+      "provenance": "synthetic",
+      "uncertainty": null
+    },
+    {
+      "id": "synthetic:observation-3-1",
+      "trial_id": "synthetic:trial-3",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 0.2,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:evidence-3"
+      ],
+      "provenance": "synthetic",
+      "uncertainty": null
+    },
+    {
+      "id": "synthetic:observation-4-1",
+      "trial_id": "synthetic:trial-4",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 0,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:evidence-4"
+      ],
+      "provenance": "synthetic",
+      "uncertainty": null
+    },
+    {
+      "id": "synthetic:observation-5-1",
+      "trial_id": "synthetic:trial-5",
+      "metric": "flame_spread_rate_mm_s",
+      "value": null,
+      "unit": "mm/s",
+      "status": "not_measured",
+      "evidence_ids": [
+        "synthetic:evidence-5"
+      ],
+      "provenance": "synthetic",
+      "uncertainty": null
+    }
+  ]
+}
