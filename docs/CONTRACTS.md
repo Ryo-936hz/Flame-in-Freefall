@@ -90,3 +90,9 @@ forzado la tabla BASS-II dentro de una granularidad incorrecta para simular inge
 `DatasetBundle.schema_version` acepta 1.0 y 1.1; al escribir, el default es 1.1. Los bundles 1.0 siguen siendo legibles. Un `Trial` conserva la unidad experimental y puede contener `segments` ordenados por `sequence` (orden reportado, no tiempo medido). Cada segmento contiene condiciones efectivas explicitas y evidencia; no hereda condiciones implicitamente del ensayo. `Observation.segment_id` es opcional y solo puede referir a un segmento del mismo ensayo. Si la asignacion no esta respaldada, se deja nulo.
 
 `oxygen_initial_pct` y `oxygen_final_pct` son condiciones separadas del ensayo; no se propagan a segmentos. `combustion_face` es una condicion categorica de control y `geometry` conserva su significado previo. `ConditionValue` conserva valor y unidad originales y referencias. Los segmentos no son replicas ni unidades experimentales nuevas.
+
+La validación exige valores de O₂ entre 0 y 100 inclusive para `oxygen_pct`,
+`oxygen_initial_pct` y `oxygen_final_pct`, tanto en condiciones conocidas como en
+objetivos de ranking. Los segmentos rechazan las claves de O₂ inicial/final incluso
+si su estado es ausente: pertenecen exclusivamente al ensayo. Se conservan bundles
+1.0, secuencias con huecos y observaciones con `segment_id=null` cuando no hay respaldo.

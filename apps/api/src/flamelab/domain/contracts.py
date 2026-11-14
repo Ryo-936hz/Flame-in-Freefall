@@ -37,7 +37,7 @@ def validate_scalar(key: str, value: Scalar) -> None:
     if key in CONDITION_UNITS:
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError(f"{key} requires a number")
-        if value < 0 or (key == "oxygen_pct" and value > 100):
+        if value < 0 or (key in {"oxygen_pct", "oxygen_initial_pct", "oxygen_final_pct"} and value > 100):
             raise ValueError(f"{key} is outside the admissible range")
     elif not isinstance(value, str) or not value.strip():
         raise ValueError(f"{key} requires nonempty text")
@@ -134,6 +134,8 @@ class ConditionSegment(Contract):
 
     @model_validator(mode="after")
     def typed_conditions(self) -> Self:
+        if {"oxygen_initial_pct", "oxygen_final_pct"} & self.conditions.keys():
+            raise ValueError("oxygen_initial_pct and oxygen_final_pct are trial-only conditions")
         for key, condition in self.conditions.items():
             if condition.status == "known":
                 validate_scalar(key, condition.value)
