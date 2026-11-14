@@ -62,3 +62,11 @@ Documents conserva SHA-256 del ZIP
 `5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644`.
 No se versionan ZIP, PDFs completos, credenciales, bases ni node_modules. El paquete
 documental original sigue intacto fuera del clon; no había código ajeno en destino.
+
+### Puerta de integración PostgreSQL
+
+P1 añadió a CI una comprobación con PostgreSQL 17 para migraciones y recuperación. No se pudo ejecutar localmente en este entorno. PostgreSQL sigue sin verificar hasta que pase el nuevo job; pgvector continúa sin verificar.
+
+### Contrato de condiciones sucesivas
+
+P1 implemento el contrato 1.1 compatible con bundles 1.0: segmentos ordenados dentro del ensayo, enlace opcional de observaciones, condiciones O2 inicial/final a nivel de ensayo y control de cara de combustion. OpenAPI y TypeScript se regeneraron desde el modelo canonico. P3 debe adaptar comparacion/evaluacion antes de considerar completo el incremento integrado.

@@ -7,6 +7,8 @@ from pydantic import ValidationError
 from flamelab.config import ROOT, Settings
 from flamelab.data.loader import load_bundle
 from flamelab.domain.contracts import ConditionValue, DatasetBundle, Observation, RankingRequest, Study
+from flamelab.domain.contracts import ComparisonRequest
+from flamelab.science.comparison import compare_trials
 
 
 @pytest.mark.parametrize("value", [True, False, math.nan, math.inf, -math.inf])
@@ -61,6 +63,37 @@ def test_uncertainty_and_unknown_metric_not_fabricated():
 def test_catalog_urls_cannot_execute_script():
     with pytest.raises(ValidationError):
         Study(id="test:s", title="title", family="test", dataset_status="metadata_only", source_urls=["javascript:alert(1)"])
+
+
+def test_sequential_segments_keep_one_trial_unit_and_observation_links():
+    bundle = load_bundle(ROOT / "docs/examples/sequential_conditions.json")
+    trial = bundle.trials[0]
+    assert bundle.schema_version == "1.1"
+    assert len(bundle.trials) == 1
+    assert {observation.trial_id for observation in bundle.observations} == {trial.id}
+    assert [segment.sequence for segment in trial.segments] == [1, 2]
+    assert [observation.segment_id for observation in bundle.observations] == [
+        segment.id for segment in trial.segments
+    ]
+    assert trial.conditions["oxygen_initial_pct"].value == 21
+    assert trial.conditions["oxygen_final_pct"].value == 18
+    comparison = compare_trials(
+        bundle,
+        ComparisonRequest(
+            trial_ids=[trial.id], metric="flame_spread_rate_mm_s",
+            x_condition="oxygen_pct", allow_synthetic=True,
+        ),
+    )
+    assert [(point.x, point.segment_id) for point in comparison.points] == [
+        (20, trial.segments[0].id), (19, trial.segments[1].id),
+    ]
+
+
+def test_observation_cannot_reference_a_segment_from_another_or_missing_trial():
+    data = load_bundle(ROOT / "docs/examples/sequential_conditions.json").model_dump(mode="json")
+    data["observations"][0]["segment_id"] = "demo:missing-segment"
+    with pytest.raises(ValidationError, match="segment reference"):
+        DatasetBundle.model_validate(data)
 
 
 def test_invalid_configuration_does_not_print_server_secret():
