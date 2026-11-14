@@ -12,10 +12,10 @@ export default function PointsTable({ comparison, groupIndex, selectedObservatio
 }) {
   return <div className="table-wrap">
     <table className="data">
-      <caption className="sr-only">Observaciones representadas en el gráfico</caption>
+      <caption className="sr-only">Observations plotted in the chart</caption>
       <thead><tr>
-        <th>Observación</th><th>X ({comparison.x_unit ?? "sin unidad"})</th><th>Y ({comparison.unit})</th>
-        <th>Unidad independiente</th><th>Grupo</th><th>Procedencia</th>
+        <th>Observation</th><th>X ({comparison.x_unit ?? "no unit"})</th><th>Y ({comparison.unit})</th>
+        <th>Independent unit</th><th>Group</th><th>Provenance</th>
       </tr></thead>
       <tbody>{comparison.points.map((point) => {
         const selected = point.observation_id === selectedObservation;
@@ -23,7 +23,7 @@ export default function PointsTable({ comparison, groupIndex, selectedObservatio
           <td><button type="button" className="row-link" aria-pressed={selected} onClick={() => onSelect(point.observation_id)}>
             <b>{shortId(point.observation_id)}</b><span className="id">{point.trial_id}</span>
           </button></td>
-          <td className="num">{point.x === null ? <span className="muted">no disponible</span> : fmt(point.x)}</td>
+          <td className="num">{point.x === null ? <span className="muted">not available</span> : fmt(point.x)}</td>
           <td className="num">{fmt(point.y)}</td>
           <td className="id">{point.independent_unit_id}</td>
           <td><span className="swatch" data-series={(groupIndex.get(point.group_id) ?? 0) % 4} aria-hidden="true" /> G{(groupIndex.get(point.group_id) ?? 0) + 1}</td>

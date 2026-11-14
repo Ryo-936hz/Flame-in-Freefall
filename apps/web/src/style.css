@@ -1,4 +1,4 @@
-/* FlameLab SI · interfaz de demo. Tokens globales propiedad de P5; P6 usa estilos acotados. */
+/* FlameLab SI demo interface. Global tokens owned by P5; P6 uses scoped styles. */
 
 @font-face {
   font-family: "Inter Tight Variable";

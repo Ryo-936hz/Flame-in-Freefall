@@ -40,7 +40,7 @@ export default function ScatterChart({ comparison, groupIndex, selectedObservati
   const yMax = yTicks[yTicks.length - 1] ?? 1;
   const sx = (v: number) => M.l + (v / xMax) * (W - M.l - M.r);
   const sy = (v: number) => H - M.b - (v / yMax) * (H - M.t - M.b);
-  const xTitle = `${conditionLabel(comparison.x_condition ?? "")} (${comparison.x_unit ?? "sin unidad"})`;
+  const xTitle = `${conditionLabel(comparison.x_condition ?? "")} (${comparison.x_unit ?? "no unit"})`;
   const yTitle = `${metricLabel(comparison.metric)} (${comparison.unit})`;
 
   // Repeated observations at the same x share a column; offset them slightly so both stay clickable.
@@ -58,7 +58,7 @@ export default function ScatterChart({ comparison, groupIndex, selectedObservati
   };
 
   return <figure className="chart">
-    <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`Gráfico de dispersión: ${yTitle} frente a ${xTitle}. ${placed.length} puntos.`}>
+    <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`Scatter chart: ${yTitle} vs ${xTitle}. ${placed.length} points.`}>
       <g className="axis" aria-hidden="true">
         {xTicks.map((t) => <g key={`x${t}`}><line x1={sx(t)} x2={sx(t)} y1={M.t} y2={H - M.b} /><text x={sx(t)} y={H - M.b + 16} textAnchor="middle">{fmt(t)}</text></g>)}
         {yTicks.map((t) => <g key={`y${t}`}><line x1={M.l} x2={W - M.r} y1={sy(t)} y2={sy(t)} /><text x={M.l - 8} y={sy(t) + 3.5} textAnchor="end">{fmt(t)}</text></g>)}
@@ -81,7 +81,7 @@ export default function ScatterChart({ comparison, groupIndex, selectedObservati
       })}
     </svg>
     {unplaced.length > 0 && <figcaption className="unplaced">
-      <span className="cap">Sin valor en el eje X ({unplaced.length})</span>
+      <span className="cap">No X-axis value ({unplaced.length})</span>
       {unplaced.map((point) => <button type="button" key={point.observation_id} className="chip" aria-pressed={point.observation_id === selectedObservation}
         onClick={() => onSelect(point.observation_id)}>{shortId(point.observation_id)} · {fmt(point.y)} {comparison.unit}</button>)}
     </figcaption>}

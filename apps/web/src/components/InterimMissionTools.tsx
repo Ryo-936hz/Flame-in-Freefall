@@ -19,7 +19,7 @@ export interface MissionSlotProps {
 }
 
 function message(error: unknown): string {
-  return error instanceof ApiError ? `${error.message} (${error.code})` : "No se pudo completar la operación.";
+  return error instanceof ApiError ? `${error.message} (${error.code})` : "The operation could not be completed.";
 }
 
 export default function InterimMissionTools({ api, research, request, onOpenRun }: MissionSlotProps) {
@@ -37,8 +37,8 @@ export default function InterimMissionTools({ api, research, request, onOpenRun 
   const compareLunar = () => run(async () => {
     if (!request) return;
     setScenario(await api.scenarios({
-      name_a: "A · filtros actuales",
-      name_b: "B · gravedad lunar",
+      name_a: "A · current filters",
+      name_b: "B · lunar gravity",
       scenario_a: request,
       scenario_b: {
         ...request,
@@ -49,17 +49,17 @@ export default function InterimMissionTools({ api, research, request, onOpenRun 
     }));
   });
 
-  return <Panel id="lab" title="Mission Lab · provisional" className="lab"
-    meta={<Tag tone="warn">Montaje provisional hasta los paneles de P6</Tag>}>
+  return <Panel id="lab" title="Mission Lab · interim" className="lab"
+    meta={<Tag tone="warn">Interim mount until P6 panels</Tag>}>
     <div className="panel-b lab-grid">
       <section aria-labelledby="ab-title">
-        <h3 id="ab-title" className="cap">Escenario A/B</h3>
-        <p className="hint">Compara qué evidencia es aplicable. No simula la combustión ni predice seguridad.</p>
-        <button type="button" className="btn" disabled={busy || !request} onClick={compareLunar}>Comparar con gravedad lunar</button>
+        <h3 id="ab-title" className="cap">A/B scenario</h3>
+        <p className="hint">Compares which evidence applies. It does not simulate combustion or predict safety.</p>
+        <button type="button" className="btn" disabled={busy || !request} onClick={compareLunar}>Compare with lunar gravity</button>
         {scenario && <div className="ab">
           {([[scenario.name_a, scenario.ranking_a], [scenario.name_b, scenario.ranking_b]] as const).map(([name, ranking]) => <div key={name} className="ab-col">
             <p><b>{name}</b></p>
-            <p className="num big">{ranking.items.length} <small>elegibles</small></p>
+            <p className="num big">{ranking.items.length} <small>eligible</small></p>
             <ul>{ranking.items.map((item) => <li key={item.trial_id} className="id">{shortId(item.trial_id)}</li>)}</ul>
             {!ranking.items.length && <ul className="reasons">{[...new Set(ranking.excluded.flatMap((item) => item.reasons))].map((reason) => <li key={reason}>{reasonText(reason)}</li>)}</ul>}
           </div>)}
@@ -67,19 +67,19 @@ export default function InterimMissionTools({ api, research, request, onOpenRun 
       </section>
 
       <section aria-labelledby="report-title">
-        <h3 id="report-title" className="cap">Expediente</h3>
+        <h3 id="report-title" className="cap">Research record</h3>
         <div className="actions">
-          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Informe persistido · Markdown sin ejecutar", body: await api.report(research.id) }); })}>Abrir informe</button>
-          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Eventos guardados · reproducción, no en vivo", body: await api.events(research.id) }); })}>Reproducir eventos</button>
+          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Saved report · Markdown, not rendered", body: await api.report(research.id) }); })}>Open report</button>
+          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Saved events · replay, not live", body: await api.events(research.id) }); })}>Replay events</button>
         </div>
         <form className="recover" onSubmit={(event) => { event.preventDefault(); const id = runId.trim(); if (id) run(async () => onOpenRun(await api.getResearch(id))); }}>
-          <label className="field"><span className="cap">Recuperar investigación guardada</span>
+          <label className="field"><span className="cap">Recover saved research</span>
             <input className="input" value={runId} onChange={(event) => setRunId(event.target.value)} placeholder={research?.id ?? "research:…"} />
           </label>
-          <button type="submit" className="btn" disabled={busy || !runId.trim()}>Recuperar</button>
+          <button type="submit" className="btn" disabled={busy || !runId.trim()}>Recover</button>
         </form>
       </section>
-      {error && <div className="lab-full"><StateMessage kind="error" title="Operación no completada"><p>{error}</p></StateMessage></div>}
+      {error && <div className="lab-full"><StateMessage kind="error" title="Operation not completed"><p>{error}</p></StateMessage></div>}
       {text && <div className="lab-full"><p className="cap">{text.title}</p><pre className="ev-text">{text.body}</pre></div>}
     </div>
   </Panel>;

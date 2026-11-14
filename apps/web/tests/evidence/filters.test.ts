@@ -41,8 +41,8 @@ test("empty or non-numeric inputs are reported per field and nothing is sent", (
 
 test("the interpreted summary states synthetic inclusion and the studied variable", () => {
   const lines = describeRanking(demoRanking);
-  assert.ok(lines.some((line) => line.includes("sintéticos")));
-  assert.ok(lines.some((line) => line.includes("Velocidad de flujo")));
+  assert.ok(lines.some((line) => line.includes("synthetic")));
+  assert.ok(lines.some((line) => line.includes("Flow velocity")));
 });
 
 test("a late response from an older request is not current", () => {

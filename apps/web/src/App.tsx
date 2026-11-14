@@ -25,8 +25,8 @@ type Run =
   | { state: "ready"; result: ResearchResponse };
 
 function failure(error: unknown): string {
-  if (error instanceof ApiError) return `${error.message} · ${error.code} (HTTP ${error.status})${error.requestId ? ` · solicitud ${error.requestId}` : ""}`;
-  return error instanceof Error ? error.message : "No se pudo completar la operación.";
+  if (error instanceof ApiError) return `${error.message} · ${error.code} (HTTP ${error.status})${error.requestId ? ` · request ${error.requestId}` : ""}`;
+  return error instanceof Error ? error.message : "The operation could not be completed.";
 }
 
 function initialTheme(): "dark" | "light" {
@@ -118,37 +118,37 @@ export default function App() {
   };
 
   return <>
-    <a className="skip" href="#brief">Saltar al formulario</a>
+    <a className="skip" href="#brief">Skip to the form</a>
     <TopBar health={health} offline={Boolean(offline)} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")} />
     <main className="shell">
       <div className="col-brief">
         <MissionBrief draft={draft} onChange={setDraft} onSubmit={(request) => void investigate(request)} onReset={() => setDraft(demoDraft())}
           busy={run.state === "loading"} suggestions={suggestions} />
-        {profile && <p className="corpus num">{profile.n_studies} estudios · {profile.n_trials} ensayos ({profile.synthetic_trials} sintéticos) · {profile.n_observations} obs. · {profile.n_independent_units} unidades indep.</p>}
+        {profile && <p className="corpus num">{profile.n_studies} studies · {profile.n_trials} trials ({profile.synthetic_trials} synthetic) · {profile.n_observations} obs. · {profile.n_independent_units} indep. units</p>}
       </div>
 
       <div className="col-work">
-        {offline && <StateMessage kind="error" title="No hay conexión con la API" action={<button type="button" className="btn" onClick={() => void connect()}>Reintentar conexión</button>}>
-          <p>{offline}</p><p>Arranca la API con <code>scripts/dev-api.ps1</code> y vuelve a intentarlo.</p>
+        {offline && <StateMessage kind="error" title="No connection to the API" action={<button type="button" className="btn" onClick={() => void connect()}>Retry connection</button>}>
+          <p>{offline}</p><p>Start the API with <code>scripts/dev-api.ps1</code> and try again.</p>
         </StateMessage>}
 
         {run.state === "idle" && <Panel id="canvas" title="Evidence Canvas">
-          <div className="panel-b"><StateMessage kind="empty" title="Formula una pregunta y pulsa «Investigar»">
-            <p>Los resultados aparecen aquí: gráfico, tabla de observaciones y ranking con cobertura. Cada punto, fila y cita abre su evidencia.</p>
+          <div className="panel-b"><StateMessage kind="empty" title="Ask a question and press “Investigate”">
+            <p>Results appear here: chart, observation table and ranking with coverage. Every point, row and citation opens its evidence.</p>
           </StateMessage></div>
         </Panel>}
         {run.state === "loading" && <Panel id="canvas" title="Evidence Canvas">
-          <div className="panel-b"><StateMessage kind="loading" title="Consultando la API: perfil, ranking, comparación y evidencia…" /></div>
+          <div className="panel-b"><StateMessage kind="loading" title="Querying the API: profile, ranking, comparison and evidence…" /></div>
         </Panel>}
         {run.state === "error" && <Panel id="canvas" title="Evidence Canvas">
-          <div className="panel-b"><StateMessage kind="error" title="La investigación no se completó"
-            action={currentRequest && <button type="button" className="btn" onClick={() => void investigate(currentRequest)}>Reintentar</button>}>
-            <p>{run.message}</p><p>Revisa los valores del formulario; la API valida rangos y combinaciones.</p>
+          <div className="panel-b"><StateMessage kind="error" title="The investigation did not complete"
+            action={currentRequest && <button type="button" className="btn" onClick={() => void investigate(currentRequest)}>Retry</button>}>
+            <p>{run.message}</p><p>Check the form values; the API validates ranges and combinations.</p>
           </StateMessage></div>
         </Panel>}
 
         {result && <>
-          <p className="run-id num">Expediente <span className="id">{result.id}</span> · {new Date(result.created_at).toLocaleString()} · «{result.question}»</p>
+          <p className="run-id num">Research record <span className="id">{result.id}</span> · {new Date(result.created_at).toLocaleString("en-GB")} · “{result.question}”</p>
           <EvidenceCanvas result={result} labels={labels} selection={selection}
             onSelectObservation={(id) => setSelection(selectObservation(result, id))}
             onSelectTrial={(id) => setSelection(selectTrial(result, id))} />
@@ -165,8 +165,8 @@ export default function App() {
       </div>
     </main>
     <footer className="foot">
-      <span>FlameLab SI · Los TTS · NASA Space Apps 2026 «Flame in Freefall»</span>
-      <span>Dirección visual inspirada en sistemas de control; sin afiliación ni activos de terceros.</span>
+      <span>FlameLab SI · Los TTS · NASA Space Apps 2026 “Flame in Freefall”</span>
+      <span>Visual direction inspired by control-system software; no affiliation or third-party assets.</span>
     </footer>
   </>;
 }

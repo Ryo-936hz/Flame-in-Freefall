@@ -36,7 +36,7 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
       (evidence) => { if (latest.current.isCurrent(token)) setLoad({ state: "ready", evidence }); },
       (error: unknown) => {
         if (!latest.current.isCurrent(token)) return;
-        setLoad({ state: "error", message: error instanceof ApiError ? `${error.message} (${error.code}${error.requestId ? ` · ${error.requestId}` : ""})` : "No se pudo cargar la evidencia." });
+        setLoad({ state: "error", message: error instanceof ApiError ? `${error.message} (${error.code}${error.requestId ? ` · ${error.requestId}` : ""})` : "The evidence could not be loaded." });
       },
     );
   }, [api, activeId, researchId, retrieved, attempt]);
@@ -44,36 +44,36 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
   const evidence = load.state === "ready" ? load.evidence : null;
   const link = sourceLink(evidence?.source_url);
 
-  return <Panel id="evidence" title="Evidencia" className="evidence" meta={context && <span className="id">{context}</span>}>
+  return <Panel id="evidence" title="Evidence" className="evidence" meta={context && <span className="id">{context}</span>}>
     <div className="panel-b">
-      {ids.length > 1 && <div className="ev-tabs" role="group" aria-label="Evidencias de la selección">
+      {ids.length > 1 && <div className="ev-tabs" role="group" aria-label="Evidence for the selection">
         {ids.map((id) => <button type="button" key={id} className="chip" aria-pressed={id === activeId} onClick={() => onPick(id)}>{shortId(id)}</button>)}
       </div>}
-      {load.state === "idle" && <StateMessage kind="empty" title="Nada seleccionado">
-        <p>Elige un punto del gráfico, una fila de la tabla o una cita para ver su fuente.</p>
+      {load.state === "idle" && <StateMessage kind="empty" title="Nothing selected">
+        <p>Pick a chart point, a table row or a citation to see its source.</p>
       </StateMessage>}
-      {load.state === "loading" && <StateMessage kind="loading" title="Cargando evidencia del expediente…" />}
-      {load.state === "error" && <StateMessage kind="error" title="No se pudo abrir la evidencia" action={<button type="button" className="btn" onClick={() => setAttempt(attempt + 1)}>Reintentar</button>}>
+      {load.state === "loading" && <StateMessage kind="loading" title="Loading evidence from the research record…" />}
+      {load.state === "error" && <StateMessage kind="error" title="The evidence could not be opened" action={<button type="button" className="btn" onClick={() => setAttempt(attempt + 1)}>Retry</button>}>
         <p>{load.message}</p>
       </StateMessage>}
       {evidence && <article className="ev">
         <div className="ev-tags">
           <ProvenanceTag value={evidence.provenance} />
-          <Tag tone={evidence.reviewed ? "neutral" : "warn"}>{evidence.reviewed ? "Revisada" : "Revisión pendiente"}</Tag>
-          {!retrieved && <Tag tone="warn">Corpus activo · no está en este expediente</Tag>}
+          <Tag tone={evidence.reviewed ? "neutral" : "warn"}>{evidence.reviewed ? "Reviewed" : "Review pending"}</Tag>
+          {!retrieved && <Tag tone="warn">Active corpus · not in this research record</Tag>}
         </div>
         <h3>{evidence.title}</h3>
         <dl className="ev-meta">
           <div><dt>ID</dt><dd className="id">{evidence.id}</dd></div>
-          <div><dt>Estudio</dt><dd className="id">{evidence.study_id}</dd></div>
-          <div><dt>Localizador</dt><dd className="id">{evidence.locator}{evidence.page != null ? ` · página PDF ${evidence.page}` : ""}</dd></div>
+          <div><dt>Study</dt><dd className="id">{evidence.study_id}</dd></div>
+          <div><dt>Locator</dt><dd className="id">{evidence.locator}{evidence.page != null ? ` · PDF page ${evidence.page}` : ""}</dd></div>
         </dl>
         <pre className="ev-text">{evidence.text}</pre>
         {link
-          ? <a className="btn" href={link} target="_blank" rel="noreferrer">Abrir fuente pública ↗</a>
+          ? <a className="btn" href={link} target="_blank" rel="noreferrer">Open public source ↗</a>
           : <p className="hint">{evidence.provenance === "synthetic"
-            ? "Fixture sintético: no enlaza a ninguna medición NASA."
-            : "Sin URL pública. La fuente es localizable con el localizador de archivo; no se inventa un enlace."}</p>}
+            ? "Synthetic fixture: it does not link to any NASA measurement."
+            : "No public URL. The source can be found with the file locator; no link is invented."}</p>}
       </article>}
     </div>
   </Panel>;

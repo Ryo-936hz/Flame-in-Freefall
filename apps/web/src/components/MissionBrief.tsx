@@ -23,14 +23,14 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
   return <Panel id="brief" title="Mission Brief" className="brief">
     <form className="panel-b" onSubmit={(event) => { event.preventDefault(); if (canSubmit && built.request) onSubmit(built.request); }}>
       <label className="field">
-        <span className="cap">Pregunta</span>
+        <span className="cap">Question</span>
         <textarea value={draft.question} rows={3} maxLength={4000}
           onChange={(event) => onChange({ ...draft, question: event.target.value })} />
-        <small className="hint">Acompaña la síntesis. Los filtros de abajo son los que mandan; la demo no interpreta restricciones escritas.</small>
+        <small className="hint">Shown with the synthesis. The filters below drive the analysis; the demo does not interpret written constraints.</small>
       </label>
 
       <fieldset className="conditions">
-        <legend className="cap">Condiciones</legend>
+        <legend className="cap">Conditions</legend>
         {CONDITIONS.map(({ key, label, unit, numeric }) => {
           const condition = draft.conditions[key];
           const error = built.errors[key];
@@ -42,10 +42,10 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
               {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}
             </select>
             {needsValue && <>
-              <input aria-label={`Valor de ${label}`} className="input" value={condition.value}
+              <input aria-label={`Value for ${label}`} className="input" value={condition.value}
                 inputMode={numeric ? "decimal" : "text"} list={numeric ? undefined : `values-${key}`}
                 aria-invalid={Boolean(error)} aria-describedby={error ? `err-${key}` : undefined}
-                placeholder={numeric ? "0" : "valor"}
+                placeholder={numeric ? "0" : "value"}
                 onChange={(event) => setCondition(key, { value: event.target.value })} />
               {!numeric && <datalist id={`values-${key}`}>{(suggestions[key] ?? []).map((value) => <option key={value} value={value} />)}</datalist>}
             </>}
@@ -56,36 +56,36 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
 
       <div className="field-row">
         <label className="field">
-          <span className="cap">Métrica</span>
+          <span className="cap">Metric</span>
           <select className="select" value={draft.metric} onChange={(event) => onChange({ ...draft, metric: event.target.value as BriefDraft["metric"] })}>
             {METRICS.map((metric) => <option key={metric.key} value={metric.key}>{metric.label}</option>)}
           </select>
         </label>
         <label className="field">
-          <span className="cap">Máx. ensayos</span>
+          <span className="cap">Max. trials</span>
           <input className="input" type="number" min={1} max={50} value={draft.limit}
             onChange={(event) => onChange({ ...draft, limit: Math.min(50, Math.max(1, Number(event.target.value) || 1)) })} />
         </label>
       </div>
       <label className="field">
-        <span className="field-top"><span className="cap">Cobertura mínima</span><output className="num">{Math.round(draft.minimumCoverage * 100)} %</output></span>
+        <span className="field-top"><span className="cap">Minimum coverage</span><output className="num">{Math.round(draft.minimumCoverage * 100)}%</output></span>
         <input type="range" min={0} max={1} step={0.05} value={draft.minimumCoverage}
           style={{ ["--p" as string]: `${draft.minimumCoverage * 100}%` }}
           onChange={(event) => onChange({ ...draft, minimumCoverage: Number(event.target.value) })} />
       </label>
       <label className="check">
         <input type="checkbox" checked={draft.allowSynthetic} onChange={(event) => onChange({ ...draft, allowSynthetic: event.target.checked })} />
-        <span>Incluir datos sintéticos de demostración <small>(no son mediciones NASA)</small></span>
+        <span>Include synthetic demo data <small>(not NASA measurements)</small></span>
       </label>
 
       {built.request && <div className="interpreted" aria-live="polite">
-        <p className="cap">Filtros que se enviarán</p>
+        <p className="cap">Filters to be sent</p>
         <ul>{describeRanking(built.request).map((line) => <li key={line}>{line}</li>)}</ul>
       </div>}
 
       <div className="actions">
-        <button type="submit" className="btn primary" disabled={!canSubmit}>{busy ? "Investigando…" : "Investigar"}</button>
-        <button type="button" className="btn" onClick={onReset} disabled={busy}>Restaurar consulta demo</button>
+        <button type="submit" className="btn primary" disabled={!canSubmit}>{busy ? "Investigating…" : "Investigate"}</button>
+        <button type="button" className="btn" onClick={onReset} disabled={busy}>Reset demo query</button>
       </div>
     </form>
   </Panel>;
