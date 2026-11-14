@@ -16,7 +16,35 @@ const representatives = [
 ];
 const sorted = (items) => [...items].sort();
 
+export async function openView(page, view) {
+  const hash = `#/dashboard/${view}`;
+  if (!page.url().endsWith(hash)) {
+    await page.locator(`.sb-nav a[href="${hash}"], .mobile-tabs a[href="${hash}"]`).filter({ visible: true }).first().click();
+  }
+  await page.locator(`[data-view="${view}"]:not([hidden])`).waitFor();
+  await page.waitForURL(`**/${hash}`);
+}
+
+export async function chooseOption(page, trigger, label) {
+  await trigger.click();
+  await page.getByRole("listbox").getByRole("option").filter({
+    has: page.getByText(label, { exact: true }),
+  }).click();
+}
+
+export async function askSI(page, question) {
+  await openView(page, "chat");
+  const answer = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/v1/chat"
+    && response.request().method() === "POST");
+  await page.locator("#chat-input").fill(question);
+  await page.getByRole("button", { name: "Ask", exact: true }).click();
+  const response = await answer;
+  assert(response.ok());
+  return response.json();
+}
+
 export async function verifySaffireContext({ page, check, screenshots }) {
+  await openView(page, "saffire");
   const card = page.getByRole("region", { name: "Saffire documentary context", exact: true });
   await card.waitFor();
   check(await card.getAttribute("data-saffire-context") !== null, "Saffire is a separate documentary context node");
@@ -31,27 +59,49 @@ export async function verifySaffireContext({ page, check, screenshots }) {
   check(await card.locator("canvas, svg, [data-bass-case], [data-bass-comparison]").count() === 0, "documentary context does not render numerical BASS points or a simulation");
   if (screenshots) await card.screenshot({ path: path.join(screenshots, "saffire-context-desktop.png") });
   await page.setViewportSize({ width: 390, height: 844 });
-  check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Saffire context has no page horizontal overflow at 390px");
+  const width = await page.evaluate(() => ({
+    viewport: innerWidth, scroll: document.documentElement.scrollWidth,
+    widest: [...document.querySelectorAll(".dash, .dash-main, .dash-header, .dash-content, .saffire-panel")].map((node) =>
+      [node.className, node.getBoundingClientRect().width, node.scrollWidth]),
+  }));
+  check(width.scroll <= width.viewport + 1, `Saffire context fits at 390px: ${JSON.stringify(width)}`);
   if (screenshots) await card.screenshot({ path: path.join(screenshots, "saffire-context-mobile.png") });
   await page.setViewportSize({ width: 1440, height: 1000 });
 }
 
 export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step, screenshots }) {
+  await openView(page, "investigate");
   const campaigns = [
-    ["psi:PSI-69", "flex_burn_duration_s", "s", "methanol"],
-    ["psi:PSI-102", "same_reported_mass_loss_rate_mg_min", "mg/min", "teflon"],
-    ["psi:PSI-101", "samer_run_duration_s", "s", "kapton"],
-    ["psi:PSI-159", "peak_burner_temperature_k", "K", "ethane"],
-    ["psi:PSI-98", "saffire_reported_burn_duration_s", "s", "sibal fabric"],
+    ["psi:PSI-69", "flex_burn_duration_s", "s", "methanol", "FLEX · reported burn duration"],
+    ["psi:PSI-102", "same_reported_mass_loss_rate_mg_min", "mg/min", "teflon", "SAME · reported mass loss rate"],
+    ["psi:PSI-101", "samer_run_duration_s", "s", "kapton", "SAME-R · run duration"],
+    ["psi:PSI-159", "peak_burner_temperature_k", "K", "ethane", "CFI-G · peak burner temperature"],
+    ["psi:PSI-98", "saffire_reported_burn_duration_s", "s", "sibal fabric", "Saffire I · reported burn duration"],
   ];
   const report = page.getByRole("region", { name: "Report and recovery", exact: true });
   const observations = new Map(bundle.observations.map((item) => [item.id, item]));
   const trials = new Map(bundle.trials.map((item) => [item.id, item]));
+  await step("Update chart loads the selected campaign with its own filters", async () => {
+    const metric = page.getByRole("combobox", { name: "Chart metric", exact: true });
+    await chooseOption(page, metric, "SAME-R · run duration");
+    const research = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/v1/research"
+      && response.request().method() === "POST");
+    await page.getByRole("button", { name: "Update chart", exact: true }).click();
+    const response = await research;
+    const sent = response.request().postDataJSON();
+    assert.deepEqual(sent.ranking.study_ids, ["psi:PSI-101"]);
+    assert.equal(sent.ranking.target.gravity_regime, undefined);
+    const run = await response.json();
+    check(response.ok() && run.status === "completed" && run.comparison.points.every((point) =>
+      point.y === observations.get(point.observation_id)?.value),
+    "published chart points match the selected campaign's measurements");
+    await page.locator(".canvas .chart .pt-dot").first().waitFor();
+  });
   await step("an empty target remains insufficient even at zero minimum coverage", async () => {
-    await page.locator("#role-gravity_regime").selectOption("off");
-    await page.locator("#role-flow_velocity_cm_s").selectOption("off");
+    await chooseOption(page, page.locator("#role-gravity_regime"), "Not used");
+    await chooseOption(page, page.locator("#role-flow_velocity_cm_s"), "Not used");
     await page.getByRole("slider", { name: "Minimum coverage", exact: true }).press("Home");
-    await page.getByRole("combobox", { name: "Metric", exact: true }).selectOption("flex_burn_duration_s");
+    await chooseOption(page, page.getByRole("combobox", { name: "Metric", exact: true }), "FLEX · reported burn duration");
     const responsePromise = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/v1/research" && response.request().method() === "POST");
     await page.getByRole("button", { name: "Investigate", exact: true }).click();
     const response = await responsePromise;
@@ -61,16 +111,17 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
     check(run.status === "insufficient_evidence" && run.ranking.items.length === 0 && run.comparison === null, "no target does not create an ungrounded ranking");
     check(run.ranking.excluded.some((item) => item.reasons.includes("no_active_target_weights")), "the saved result states the missing active target explicitly");
   });
-  for (const [studyId, metric, unit, material] of campaigns) {
+  for (const [studyId, metric, unit, material, metricLabel] of campaigns) {
     await step(`P2 ${studyId} metric travels through investigation, values and saved report`, async () => {
-      await page.locator("#role-gravity_regime").selectOption("off");
-      await page.locator("#role-flow_velocity_cm_s").selectOption("off");
+      await openView(page, "investigate");
+      await chooseOption(page, page.locator("#role-gravity_regime"), "Not used");
+      await chooseOption(page, page.locator("#role-flow_velocity_cm_s"), "Not used");
       await page.getByRole("checkbox", { name: /Include synthetic demo data/ }).uncheck();
       // One source-reported control activates ranking; no gravity is inferred from the campaign name.
-      await page.locator("#role-material").selectOption("similar");
-      await page.getByLabel("Value for Material", { exact: true }).fill(material);
+      await chooseOption(page, page.locator("#role-material"), "Rank by similarity");
+      await chooseOption(page, page.getByRole("combobox", { name: "Value for Material", exact: true }), material);
       await page.getByRole("slider", { name: "Minimum coverage", exact: true }).press("Home");
-      await page.getByRole("combobox", { name: "Metric", exact: true }).selectOption(metric);
+      await chooseOption(page, page.getByRole("combobox", { name: "Metric", exact: true }), metricLabel);
       await page.getByRole("textbox", { name: /^Question/ }).fill(`Browse reported ${metric} from ${studyId}, with material similarity to ${material}; preserve campaign boundaries.`);
       const responsePromise = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/v1/research" && response.request().method() === "POST");
       await page.getByRole("button", { name: "Investigate", exact: true }).click();
@@ -108,6 +159,7 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
       });
       check(true, `${metric}: every visible table value, physical unit ID and Y unit matches the API`);
       if (screenshots) await table.screenshot({ path: path.join(screenshots, `p2-${studyId.replace(":", "-")}-metric.png`) });
+      await openView(page, "report");
       const pre = report.locator(`pre[data-research-id="${run.id}"]`).first();
       await pre.waitFor();
       const reportResponse = await fetch(`${apiUrl}/api/v1/research/${encodeURIComponent(run.id)}/report`, { signal: AbortSignal.timeout(30000) });
@@ -119,12 +171,14 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
       check(true, `${metric}: persisted report is literal, retains campaign trial IDs and canonical units`);
     });
   }
+  await openView(page, "investigate");
   await page.getByRole("button", { name: "Reset filters", exact: true }).click();
 }
 
 export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, screenshots }) {
   const catalog = page.getByRole("region", { name: "Catálogo de estudios", exact: true });
   const selector = catalog.getByRole("combobox", { name: "Estudio", exact: true });
+  const chooseStudy = (id) => chooseOption(page, selector, bundle.studies.find((study) => study.id === id).title);
   const evidenceDetails = () => catalog.locator("details").filter({ has: page.locator("summary", { hasText: /^Fuentes y registros/ }) });
   const observationDetails = () => catalog.locator("details").filter({ has: page.locator("summary", { hasText: /^Observaciones normalizadas/ }) });
   const studyPath = (id, kind) => `/api/v1/studies/${id}/${kind}`;
@@ -142,8 +196,7 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
     return bundle.observations.filter((item) => trialIds.has(item.trial_id));
   };
   async function openCatalog() {
-    const summary = page.locator(".p6-catalog > details > summary");
-    if (await summary.evaluate((element) => !element.parentElement.open)) await summary.click();
+    await openView(page, "catalog");
     await catalog.waitFor();
   }
   async function verifyPages(id, evidence, observations, offset) {
@@ -179,7 +232,7 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
   }
   async function selectStudy(id) {
     const pending = [pageResponse(id, "evidence"), pageResponse(id, "observations")];
-    await selector.selectOption(id);
+    await chooseStudy(id);
     const responses = await Promise.all(pending);
     assert(responses.every((response) => response.ok()));
     const [evidence, observations] = await Promise.all(responses.map((response) => response.json()));
@@ -220,13 +273,15 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
         await catalog.getByRole("button", { name: "Reintentar catálogo", exact: true }).waitFor();
         resume();
         await catalog.getByRole("button", { name: "Reintentar catálogo", exact: true }).click();
-        await selector.locator('option[value="psi:PSI-159"]').waitFor({ state: "attached" });
+        await selector.click();
+        await page.getByRole("listbox").getByText(bundle.studies.find((study) => study.id === "psi:PSI-159").title, { exact: true }).waitFor();
       });
       const studies = await apiGet("/api/v1/studies");
       assert.equal(studies.length, 24);
       assert.deepEqual(sorted(studies.map((item) => item.id)), sorted(bundle.studies.map((item) => item.id)));
-      const options = await selector.locator("option").evaluateAll((items) => items.filter((item) => item.value).map((item) => ({ id: item.value, title: item.textContent })));
-      assert.deepEqual(options, studies.map((item) => ({ id: item.id, title: item.title })));
+      const options = await page.getByRole("listbox").locator(".dd-label").allTextContents();
+      assert.deepEqual(options, studies.map((item) => item.title));
+      await selector.press("Escape");
       check(true, "all 24 study IDs and titles are selectable after retry, with no synthetic substitution");
     });
 
@@ -258,7 +313,7 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
     await step("P2 evidence and observation pagination retries without losing identity or sources", async () => {
       const id = "psi:PSI-25";
       await withTransientFailure(studyPath(id, "evidence"), async (resume) => {
-        await selector.selectOption(id);
+        await chooseStudy(id);
         await catalog.getByRole("button", { name: "Reintentar página", exact: true }).waitFor();
         assert.equal(await catalog.locator("article").count(), 0, "Switching study must clear its old source.");
         const pending = [pageResponse(id, "evidence"), pageResponse(id, "observations")];
@@ -292,7 +347,6 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
       check(await catalog.getByRole("button", { name: "Anterior", exact: true }).isDisabled(), "previous page is disabled at offset zero");
       check(researchCalls === 0, "browsing P2 studies, sources and observations never starts a research run or mixes BASS points");
       if (screenshots) await catalog.screenshot({ path: path.join(screenshots, "p2-catalog-bass-page.png") });
-      await page.locator(".p6-catalog > details > summary").click();
     });
   } catch (error) {
     if (screenshots) await page.screenshot({ path: path.join(screenshots, "p2-catalog-failure.png") }).catch(() => {});

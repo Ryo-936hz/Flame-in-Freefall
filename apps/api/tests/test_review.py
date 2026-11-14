@@ -106,7 +106,7 @@ def test_report_labels_local_document_and_synthetic_fixture_by_provenance(review
     assert "fixture local; sin fuente NASA" not in documentary_line
 
 
-def test_saved_report_and_evidence_survive_same_id_corpus_replacement(review_bundle, tmp_path):
+def test_saved_report_and_evidence_survive_same_id_corpus_replacement(review_bundle, tmp_path, monkeypatch):
     settings = Settings(_env_file=None, database_url="sqlite:///" + (tmp_path / "snapshot.db").as_posix())
     migrate(settings)
     engine, sessions = create_engine_and_session(settings)
@@ -120,21 +120,32 @@ def test_saved_report_and_evidence_survive_same_id_corpus_replacement(review_bun
         replacement = review_bundle.model_dump()
         replacement["evidence"][0]["text"] = "Changed later; not the source used in the saved run."
         replacement["observations"][0]["value"] = 9.0
-        with sessions() as session:
-            Repository(session).replace_bundle(DatasetBundle.model_validate(replacement), allow_replace=True)
-        with sessions() as session:
-            repository = Repository(session)
-            assert render_report(repository.get_run(run.id)) == original_report
-            assert repository.get_run_bundle(run.id) == review_bundle
+        read_snapshot = Repository.get_snapshot
+        reads = []
+
+        def track_snapshot(repository, digest):
+            reads.append(digest)
+            return read_snapshot(repository, digest)
+
+        monkeypatch.setattr(Repository, "get_snapshot", track_snapshot)
+        with TestClient(create_app(settings)) as client:
+            evidence_id = review_bundle.evidence[0].id
+            path = f"/api/v1/evidence/{evidence_id}"
+            assert client.get(path).json()["text"] == review_bundle.evidence[0].text
+            assert client.get("/api/v1/health").status_code == 200
+            assert client.get("/api/v1/datasets/profile").status_code == 200
+            assert len(reads) == 1
+
+            with sessions() as session:
+                Repository(session).replace_bundle(DatasetBundle.model_validate(replacement), allow_replace=True)
+            assert client.get(path).json()["text"] == replacement["evidence"][0]["text"]
+            assert client.get(path, params={"research_id": run.id}).json()["text"] == review_bundle.evidence[0].text
+            assert client.get(f"/api/v1/research/{run.id}/report").text == original_report
+
+            with sessions() as session:
+                assert Repository(session).get_run_bundle(run.id) == review_bundle
     finally:
         engine.dispose()
-    # Exercise the run-scoped source route after the application opens the same database.
-    with TestClient(create_app(settings)) as client:
-        evidence_id = review_bundle.evidence[0].id
-        current = client.get(f"/api/v1/evidence/{evidence_id}").json()
-        historical = client.get(f"/api/v1/evidence/{evidence_id}", params={"research_id": run.id}).json()
-        assert current["text"] != historical["text"]
-        assert historical["text"] == review_bundle.evidence[0].text
 
 
 def test_identifier_cannot_contain_unroutable_path_separators():

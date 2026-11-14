@@ -1,20 +1,22 @@
-import { useMemo, useState } from "react";
-import type { ResearchResponse } from "../../lib/client";
-import { conditionLabel } from "../../lib/filters";
+import { useMemo, useState, type ReactNode } from "react";
+import type { Models, ResearchResponse } from "../../lib/client";
+import { conditionLabel, metricLabel } from "../../lib/filters";
 import { fmt, reasonText } from "../../lib/format";
 import { tx } from "../../lib/backendText";
 import { Panel, StateMessage, Tag } from "../../components/ui";
-import ScatterChart, { CHART_FORMS } from "./ScatterChart";
+import ScatterChart, { CHART_FORMS, segmentSeries } from "./ScatterChart";
 import type { ChartForm } from "./ScatterChart";
 import PointsTable from "./PointsTable";
 import RankingTable from "./RankingTable";
 import type { Selection } from "./selection";
 import { comparisonCsv, csvFileName, downloadCsv } from "./exportCsv";
 
-export default function EvidenceCanvas({ result, labels, selection, onSelectObservation, onSelectTrial, show = "all" }: {
+export default function EvidenceCanvas({ result, labels, selection, trials, metricControl, onSelectObservation, onSelectTrial, show = "all" }: {
   result: ResearchResponse;
   labels: Map<string, string>;
   selection: Selection;
+  trials: Models["Trial"][];
+  metricControl?: ReactNode;
   onSelectObservation: (observationId: string) => void;
   onSelectTrial: (trialId: string) => void;
   /** Which block to render; the host may split comparison and ranking into tabs. */
@@ -25,6 +27,9 @@ export default function EvidenceCanvas({ result, labels, selection, onSelectObse
   const [view, setView] = useState<"chart" | "table">("chart");
   const [form, setForm] = useState<ChartForm>("points");
   const comparison = result.comparison;
+  const lines = useMemo(() => comparison ? segmentSeries(comparison, trials) : [], [comparison, trials]);
+  const chartForm = form === "line" && !lines.length ? "points" : form;
+  const hasNumericX = comparison?.points.some((point) => point.x !== null);
   const groupIndex = useMemo(() => new Map((comparison?.groups ?? []).map((group, index) => [group.id, index])), [comparison]);
   const synthetic = result.ranking.items.some((item) => item.provenance === "synthetic");
   const missingReasons = [...new Set(result.ranking.excluded.flatMap((item) => item.reasons))];
@@ -35,16 +40,19 @@ export default function EvidenceCanvas({ result, labels, selection, onSelectObse
   </>}>
     <div className="panel-b">
       <p className="summary">{tx(result.summary)}</p>
+      {showComparison && metricControl}
 
       {result.status === "insufficient_evidence" && <StateMessage kind="insufficient" title="Not enough evidence to answer with these filters">
-        <p>No figures are substituted and no conclusion is forced. Reasons returned by the ranking:</p>
-        <ul>{missingReasons.map((reason) => <li key={reason}>{reasonText(reason)}</li>)}</ul>
-        <p>Try relaxing a “Must match” condition, lowering the minimum coverage or allowing synthetic data.</p>
+        {missingReasons.length > 0 && <><p>Reasons returned by the ranking:</p>
+          <ul>{missingReasons.map((reason) => <li key={reason}>{reasonText(reason)}</li>)}</ul></>}
+        <p>Use the study preset when available, or review the required conditions and minimum coverage.</p>
       </StateMessage>}
 
       {showComparison && comparison && comparison.points.length > 0 && <section className="block" aria-labelledby="cmp-title">
         <div className="block-h">
-          <h3 id="cmp-title">Comparison · metric vs {conditionLabel(comparison.x_condition ?? "")}</h3>
+          <h3 id="cmp-title">{metricLabel(comparison.metric)}{hasNumericX
+            ? ` vs ${conditionLabel(comparison.x_condition ?? "")}`
+            : " by observation"}</h3>
           <div className="block-actions">
           <button type="button" className="btn ghost" onClick={() => downloadCsv(csvFileName(result), comparisonCsv(result, comparison))}
             title="One row per observation, with units, provenance and evidence IDs">Export CSV</button>
@@ -53,13 +61,16 @@ export default function EvidenceCanvas({ result, labels, selection, onSelectObse
             <button type="button" aria-pressed={view === "table"} onClick={() => setView("table")}>Table</button>
           </div>
           {view === "chart" && <div className="seg" role="group" aria-label="Chart form">
-            {CHART_FORMS.map(({ id, label }) => <button key={id} type="button" aria-pressed={form === id} onClick={() => setForm(id)}>{label}</button>)}
+            {CHART_FORMS.map(({ id, label }) => <button key={id} type="button" aria-pressed={chartForm === id}
+              disabled={id === "line" && !lines.length}
+              title={id === "line" && !lines.length ? "Requires consecutive measured segments of the same trial" : undefined}
+              onClick={() => setForm(id)}>{label}</button>)}
           </div>}
           </div>
         </div>
         {view === "chart"
           ? <ScatterChart comparison={comparison} groupIndex={groupIndex} selectedObservation={selection.observationId}
-            selectedTrial={selection.trialId} onSelect={onSelectObservation} form={form} />
+            selectedTrial={selection.trialId} onSelect={onSelectObservation} form={chartForm} lines={lines} />
           : <PointsTable comparison={comparison} groupIndex={groupIndex} selectedObservation={selection.observationId}
             selectedTrial={selection.trialId} onSelect={onSelectObservation} />}
         <ul className="groups" aria-label="Descriptive groups">

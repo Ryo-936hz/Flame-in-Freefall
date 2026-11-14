@@ -37,6 +37,9 @@ export function createApi(baseUrl = "", fetcher: typeof fetch = fetch) {
   return {
     health: async () => unwrap(await client.GET("/api/v1/health")),
     studies: async () => unwrap(await client.GET("/api/v1/studies")),
+    studyChart: async (id: string) => unwrap(await client.GET(
+      "/api/v1/studies/{study_id}/chart", { params: { path: { study_id: id } } }
+    )),
     studyEvidence: async (id: string, offset: number, limit: number) => unwrap(await client.GET(
       "/api/v1/studies/{study_id}/evidence", { params: { path: { study_id: id }, query: { offset, limit } } }
     )),
@@ -49,6 +52,7 @@ export function createApi(baseUrl = "", fetcher: typeof fetch = fetch) {
     rank: async (body: RankingRequest) => unwrap(await client.POST("/api/v1/rankings", { body })),
     compare: async (body: Models["ComparisonRequest"]) => unwrap(await client.POST("/api/v1/comparisons", { body })),
     research: async (body: ResearchRequest) => unwrap(await client.POST("/api/v1/research", { body })),
+    chat: async (body: Models["ChatRequest"]) => unwrap(await client.POST("/api/v1/chat", { body })),
     getResearch: async (id: string) => unwrap(await client.GET("/api/v1/research/{run_id}", { params: { path: { run_id: id } } })),
     scenarios: async (body: Models["ScenarioComparisonRequest"]) => unwrap(await client.POST("/api/v1/scenarios/compare", { body })),
     report: async (id: string) => unwrap(await client.GET("/api/v1/research/{run_id}/report", { params: { path: { run_id: id } }, parseAs: "text" })),

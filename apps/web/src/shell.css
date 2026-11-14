@@ -315,6 +315,7 @@ details.interpreted[open] summary { margin-bottom: 6px; }
 .pt-line[data-series="1"] { stroke: var(--s1); }
 .pt-line[data-series="2"] { stroke: var(--s2); }
 .pt-line[data-series="3"] { stroke: var(--s3); }
+.comparison-meter { flex: 0 1 120px; width: 120px; height: 10px; }
 
 /* Investigate results: Comparison · Ranking · Synthesis tabs */
 .subtabs { display: flex; gap: 2px; padding: 3px; width: fit-content; max-width: 100%; overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
@@ -433,9 +434,9 @@ details.interpreted[open] summary { margin-bottom: 6px; }
   }
 }
 @media (max-width: 760px) {
-  .dash { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 100dvh; overflow: visible; }
+  .dash:is([data-sidebar], [data-inspector]) { grid-template-columns: minmax(0, 1fr); height: auto; min-height: 100dvh; overflow: visible; }
   .sidebar { display: none; }
-  .dash-main { grid-template-rows: auto auto auto; }
+  .dash-main { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
   .dash-header { position: sticky; top: 0; z-index: 20; padding-inline: 16px; }
   .dash-content { overflow: visible; padding-inline: 16px; }
   .mobile-tabs {

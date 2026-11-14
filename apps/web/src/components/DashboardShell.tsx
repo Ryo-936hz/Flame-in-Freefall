@@ -12,7 +12,7 @@ import { Mark, RollText, Tag } from "./ui";
 export const VIEW_META: Record<View, { label: string; summary: string }> = {
   overview: { label: "Overview", summary: "Corpus, latest investigation and system status at a glance." },
   investigate: { label: "Investigate", summary: "Describe the conditions, rank compatible trials and read each result with its source." },
-  chat: { label: "Ask SI", summary: "Ask in your own words. Each question runs an investigation with the brief’s filters and answers with cited sources." },
+  chat: { label: "Ask SI", summary: "Ask about the app or the imported studies and follow the sources behind each answer." },
   lab: { label: "Mission Lab", summary: "Compare two evidence scenarios side by side and run the approved BASS-II cases." },
   report: { label: "Report", summary: "Read, download or recover the saved report of a research record." },
   catalog: { label: "Catalog", summary: "Browse the imported studies, their sources and normalized observations." },

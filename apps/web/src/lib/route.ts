@@ -5,7 +5,7 @@
  */
 export const VIEWS = ["overview", "investigate", "chat", "lab", "report", "catalog", "saffire"] as const;
 export type View = typeof VIEWS[number];
-export type Route = { page: "home" } | { page: "dashboard"; view: View };
+export type Route = { page: "home" } | { page: "dashboard"; view: View; studyIds?: [string, string] };
 
 export const HOME: Route = { page: "home" };
 
@@ -19,9 +19,18 @@ export function parseRoute(hash: string): Route | null {
   if (!hash.startsWith("#/")) return null;
   const [page, view] = hash.slice(2).split(/[/?]/);
   if (page !== "dashboard") return HOME;
+  if (view === "lab") {
+    const studies = new URLSearchParams(hash.split("?")[1]).getAll("study");
+    if (studies.length === 2 && studies[0] && studies[1] && studies[0] !== studies[1]) {
+      return { page, view, studyIds: [studies[0], studies[1]] };
+    }
+  }
   return { page: "dashboard", view: isView(view) ? view : "overview" };
 }
 
 export function routeHash(route: Route): string {
-  return route.page === "home" ? "#/" : `#/dashboard/${route.view}`;
+  if (route.page === "home") return "#/";
+  const pair = route.view === "lab" ? route.studyIds : undefined;
+  const query = pair ? new URLSearchParams(pair.map((id) => ["study", id])).toString() : "";
+  return `#/dashboard/${route.view}${query ? `?${query}` : ""}`;
 }

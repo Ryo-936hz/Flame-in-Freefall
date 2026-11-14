@@ -9,17 +9,21 @@ from flamelab.ai.review import NarrativeReviewError, narrative_catalog, review_n
 from flamelab.config import Settings
 from flamelab.domain.contracts import (
     ActivityEvent, Citation, Claim, ComparisonRequest,
-    DatasetBundle, Hypothesis, Panel, RankingResponse, ResearchRequest, ResearchResponse,
+    CONDITION_UNITS, DatasetBundle, Hypothesis, METRIC_STUDIES, Panel, RankingResponse, ResearchRequest, ResearchResponse,
 )
 from flamelab.science.comparison import compare_trials
-from flamelab.science.profiling import profile_dataset
 from flamelab.science.ranking import rank_trials
 
-TOOL_CATALOG = ("profile_dataset", "rank_trials", "compare_trials", "retrieve_evidence")
+def research_panels() -> list[Panel]:
+    return [
+        Panel(id=kind, kind=kind, title=kind, data_ref="warnings" if kind == "limitations" else kind)
+        for kind in ("ranking", "comparison", "evidence", "hypotheses", "limitations")
+    ]
 
 
 async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings: Settings) -> ResearchResponse:
     events = []
+    provider = settings.ai_provider if settings.ai_provider != "qwen" else "demo"
     def event(stage, message, ids=None):
         events.append(ActivityEvent(sequence=len(events) + 1, stage=stage, message=message, evidence_ids=ids or []))
     plan = plan_research(request)
@@ -37,15 +41,13 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
         event("complete", "Investigación detenida antes del análisis por revisión del plan.")
         return ResearchResponse(
             id=f"research:{uuid4()}", created_at=datetime.now(timezone.utc),
-            provider=settings.ai_provider, status="insufficient_evidence",
+            provider=provider, status="insufficient_evidence",
             question=request.question, plan=plan, summary=summary, claims=[], ranking=ranking,
             comparison=None, evidence=[], hypotheses=[],
             events=events,
             warnings=[warning, "No se solicitó ni se presentó una inferencia de un modelo externo."],
-            panels=[Panel(id=kind, kind=kind, title=kind, data_ref="warnings" if kind == "limitations" else kind)
-                    for kind in ("ranking", "comparison", "evidence", "hypotheses", "limitations")],
+            panels=research_panels(),
         )
-    profile = profile_dataset(bundle)
     ranking = rank_trials(bundle, plan.ranking, metric=request.metric)
     selected = {item.trial_id for item in ranking.items}
     refs = {ref for item in ranking.items for ref in item.evidence_ids}
@@ -60,9 +62,11 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
     if comparison:
         refs.update(ref for point in comparison.points for ref in point.evidence_ids)
     evidence = [item for item in bundle.evidence if item.id in refs]
-    event("retrieve", f"Perfil: {profile.n_trials} registros; {len(selected)} candidatos elegibles; {len(evidence)} evidencias recuperadas.", sorted(refs))
+    event("retrieve", f"Perfil: {len(bundle.trials)} registros; {len(selected)} candidatos elegibles; {len(evidence)} evidencias recuperadas.", sorted(refs))
     event("analyze", "Ranking y comparación calculados por herramientas Python; no por un modelo.")
-    enough = bool(comparison and any(point.x is not None for point in comparison.points))
+    has_pairs = bool(comparison and any(point.x is not None for point in comparison.points))
+    descriptive = request.metric in METRIC_STUDIES and not any(key in CONDITION_UNITS for key in plan.ranking.vary)
+    enough = has_pairs or bool(descriptive and comparison and comparison.points)
     warnings = [*plan.limits, *ranking.warnings, *(comparison.warnings if comparison else []),
                 ("Plan interpretado de forma acotada: " + plan.intent + "."),
                 "No es una certificación de seguridad ni una predicción de combustión."]
@@ -72,6 +76,8 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
     claims = []
     if enough:
         summary = "Demostración determinista con datos sintéticos." if synthetic else "Análisis determinista de la evidencia disponible."
+        if not has_pairs:
+            warnings.append("Hay mediciones de la métrica, pero faltan valores numéricos del eje X. Se muestran por observación.")
         for item in ranking.items:
             claims.append(Claim(text=f"{item.trial_id}: elegible bajo los filtros explícitos; cobertura={item.coverage:.3f}. No implica equivalencia física ni riesgo.", kind="finding", citations=[Citation(evidence_id=ref, trial_id=item.trial_id) for ref in item.evidence_ids]))
     else:
@@ -125,12 +131,11 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
     event("complete", "Análisis completado; el endpoint guardará el expediente antes de responder.")
     try:
         return ResearchResponse(
-            id=f"research:{uuid4()}", created_at=datetime.now(timezone.utc), provider=settings.ai_provider,
+            id=f"research:{uuid4()}", created_at=datetime.now(timezone.utc), provider=provider,
             status="completed" if enough else "insufficient_evidence", question=request.question, plan=plan,
             summary=summary, claims=claims, ranking=ranking, comparison=comparison, evidence=evidence,
             hypotheses=hypotheses, events=events, warnings=list(dict.fromkeys(warnings)),
-            panels=[Panel(id=kind, kind=kind, title=kind, data_ref="warnings" if kind == "limitations" else kind)
-                    for kind in ("ranking", "comparison", "evidence", "hypotheses", "limitations")],
+            panels=research_panels(),
         )
     except ValidationError as exc:
         raise ProviderFailure("provider_invalid_citations") from exc

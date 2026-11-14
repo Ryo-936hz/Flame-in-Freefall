@@ -4,11 +4,12 @@ import type { Health, Models, Profile, RankingRequest, ResearchResponse } from "
 import { PROVENANCE_LABEL } from "./lib/format";
 import type { SearchItem } from "./lib/search";
 import CommandPalette from "./components/CommandPalette";
-import { applyHabitat, buildRanking, demoDraft, describeRanking } from "./lib/filters";
+import { applyHabitat, buildRanking, demoDraft, METRICS, metricLabel } from "./lib/filters";
 import type { BriefDraft, ConditionKey, HabitatId } from "./lib/filters";
 import ChatPanel from "./components/ChatPanel";
 import type { ChatMessage } from "./components/ChatPanel";
 import { createLatest } from "./lib/latest";
+import { metricPreset } from "./lib/metricPresets";
 import { tx } from "./lib/backendText";
 import { countUp, gsap, prefersReducedMotion, reveal, useGSAP, useInk, useRollHover } from "./lib/motion";
 import { shortId } from "./lib/format";
@@ -17,6 +18,7 @@ import type { Route, View } from "./lib/route";
 import { DashboardHeader, MobileTabs, Sidebar, VIEW_META } from "./components/DashboardShell";
 import { Icon } from "./components/icons";
 import MissionBrief from "./components/MissionBrief";
+import Select from "./components/Select";
 import SynthesisPanel from "./components/SynthesisPanel";
 import Landing from "./pages/Landing";
 import Overview from "./pages/Overview";
@@ -31,12 +33,14 @@ import "./shell.css";
 import { Panel, StateMessage } from "./components/ui";
 import EvidenceCanvas from "./features/evidence/EvidenceCanvas";
 import EvidenceViewer from "./features/evidence/EvidenceViewer";
+import { StudyComparison } from "./features/evidence/StudyComparison";
 import { EMPTY_SELECTION, evidenceFor, isRetrieved, selectEvidence, selectObservation, selectTrial } from "./features/evidence/selection";
 import type { Selection } from "./features/evidence/selection";
 
 const api = createApi(import.meta.env.VITE_API_BASE_URL ?? "");
 const THEME_KEY = "flamelab-theme";
 const SIDEBAR_KEY = "flamelab-sidebar";
+const chartMetricOptions = METRICS.map(({ key, label }) => ({ value: key, label }));
 
 type ResultTab = "comparison" | "ranking" | "synthesis";
 const RESULT_TABS: { id: ResultTab; label: string }[] = [
@@ -48,7 +52,7 @@ const RESULT_TABS: { id: ResultTab; label: string }[] = [
 type Run =
   | { state: "idle" }
   | { state: "loading" }
-  | { state: "error"; message: string }
+  | { state: "error"; message: string; request: RankingRequest; question: string; metric: BriefDraft["metric"] }
   | { state: "ready"; result: ResearchResponse };
 
 function failure(error: unknown): string {
@@ -90,6 +94,10 @@ function useRoute(): Route {
 }
 
 const sameRoute = (a: Route, b: Route) => routeHash(a) === routeHash(b);
+const chatViews: Record<Models["ChatSource"]["section"], View> = {
+  dashboard: "overview", brief: "investigate", canvas: "investigate", ranking: "investigate",
+  lab: "lab", catalog: "catalog", evidence: "investigate", synthesis: "investigate",
+};
 
 export default function App() {
   const target = useRoute();
@@ -123,19 +131,25 @@ export default function App() {
   const [sidebar, setSidebar] = useState(() => stored(SIDEBAR_KEY, ["expanded", "collapsed"] as const, "expanded"));
   const [health, setHealth] = useState<Health | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [labels, setLabels] = useState<Map<string, string>>(new Map());
   const [trials, setTrials] = useState<Models["Trial"][]>([]);
   const [studies, setStudies] = useState<Models["Study"][]>([]);
   const [catalogRequest, setCatalogRequest] = useState<{ id: string; nonce: number } | null>(null);
-  const [suggestions, setSuggestions] = useState<Partial<Record<ConditionKey, string[]>>>({});
   const [offline, setOffline] = useState<string | null>(null);
+  const [dataIssues, setDataIssues] = useState<string[]>([]);
   const [draft, setDraft] = useState<BriefDraft>(demoDraft);
   const [run, setRun] = useState<Run>({ state: "idle" });
   const [selection, setSelection] = useState<Selection>(EMPTY_SELECTION);
   const [evidenceSource, setEvidenceSource] = useState<EvidenceSource>("record");
+  const [citationRunId, setCitationRunId] = useState<string | null>(null);
   const [inspector, setInspector] = useState(false);
   const [resultTab, setResultTab] = useState<ResultTab>("comparison");
+  const [chartMetricOverride, setChartMetricOverride] = useState<BriefDraft["metric"] | null>(null);
   const latest = useRef(createLatest());
+  const connectionLatest = useRef(createLatest());
+  const chatLatest = useRef(createLatest());
+  const chatRequestActive = useRef(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const nextMessage = useRef(1);
   const dash = useRef<HTMLDivElement>(null);
   const subtabs = useRef<HTMLDivElement>(null);
   useRollHover(dash);
@@ -147,29 +161,37 @@ export default function App() {
   // such as Ask SI, it waits for an explicit citation or source click (onOpenEvidence).
   useEffect(() => { if (selection.evidenceId && view === "investigate") setInspector(true); }, [selection.evidenceId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const connect = useCallback(async () => {
-    try {
-      const [newHealth, newProfile, trials] = await Promise.all([api.health(), api.profile(), api.trials()]);
-      setHealth(newHealth); setProfile(newProfile); setOffline(null); setTrials(trials);
-      // Studies only feed the header search; a failure here leaves search with sections and trials.
-      api.studies().then(setStudies, () => setStudies([]));
-      setLabels(new Map(trials.map((trial) => [trial.id, tx(trial.label)])));
-      const values: Partial<Record<ConditionKey, Set<string>>> = {};
-      for (const trial of trials) {
-        for (const [key, condition] of Object.entries(trial.conditions)) {
-          if (condition.status === "known" && typeof condition.value === "string") {
-            (values[key as ConditionKey] ??= new Set()).add(condition.value);
-          }
+  const labels = useMemo(() => new Map(trials.map((trial) => [trial.id, tx(trial.label)])), [trials]);
+  const suggestions = useMemo(() => {
+    const values: Partial<Record<ConditionKey, Set<string>>> = {};
+    for (const trial of trials) {
+      for (const conditions of [trial.conditions, ...(trial.segments ?? []).map((segment) => segment.conditions)]) {
+        for (const [key, condition] of Object.entries(conditions)) {
+          if (condition.status === "known" && typeof condition.value === "string") (values[key as ConditionKey] ??= new Set()).add(condition.value);
         }
       }
-      setSuggestions(Object.fromEntries(Object.entries(values).map(([key, set]) => [key, [...set].sort()])));
-    } catch (error) {
-      setOffline(failure(error));
     }
+    return Object.fromEntries(Object.entries(values).map(([key, set]) => [key, [...set].sort()]));
+  }, [trials]);
+
+  const connect = useCallback(async () => {
+    const token = connectionLatest.current.begin();
+    const isCurrent = () => connectionLatest.current.isCurrent(token);
+    const issues: string[] = [];
+    setDataIssues([]);
+    await Promise.all([
+      api.health().then((status) => {
+        if (isCurrent()) { setHealth(status); setOffline(null); }
+      }, (error: unknown) => { if (isCurrent()) setOffline(failure(error)); }),
+      api.profile().then((value) => { if (isCurrent()) setProfile(value); }, (error: unknown) => { issues.push(`Corpus summary · ${failure(error)}`); }),
+      api.trials().then((value) => { if (isCurrent()) setTrials(value); }, (error: unknown) => { issues.push(`Trial index · ${failure(error)}`); }),
+      api.studies().then((value) => { if (isCurrent()) setStudies(value); }, (error: unknown) => { issues.push(`Study index · ${failure(error)}`); }),
+    ]);
+    if (isCurrent()) setDataIssues(issues);
   }, []);
 
-  useEffect(() => { void connect(); }, [connect]);
-  useEffect(() => () => latest.current.cancel(), []);
+  useEffect(() => { void connect(); return () => connectionLatest.current.cancel(); }, [connect]);
+  useEffect(() => () => { latest.current.cancel(); chatLatest.current.cancel(); }, []);
 
   // Research and recovery share one publication order across both hosts.
   const beginResearchIntent = useCallback(() => {
@@ -185,10 +207,14 @@ export default function App() {
     setRun({ state: "idle" });
     setSelection(EMPTY_SELECTION);
     setEvidenceSource("record");
+    setCitationRunId(null);
     setInspector(false);
     setDraft(demoDraft());
+    setChartMetricOverride(null);
     setLabKey((k) => k + 1);
     setMessages([]);
+    chatLatest.current.cancel();
+    chatRequestActive.current = false;
     root.current?.querySelectorAll(".dash-content, .inv-brief").forEach((el) => el.scrollTo({ top: 0 }));
   }, []);
 
@@ -197,6 +223,8 @@ export default function App() {
     setRun({ state: "ready", result });
     setSelection(initialSelection(result));
     setEvidenceSource("record");
+    setCitationRunId(null);
+    setChartMetricOverride(null);
   }, []);
 
   /** Runs one investigation. Returns the record, an error message, or null when a newer request superseded it. */
@@ -205,6 +233,8 @@ export default function App() {
     setRun({ state: "loading" });
     setSelection(EMPTY_SELECTION);
     setEvidenceSource("record");
+    setCitationRunId(null);
+    setChartMetricOverride(null);
     try {
       const result = await api.research({ question, ranking: request, metric, include_hypotheses: true });
       // A slower earlier request must never replace the current one.
@@ -215,34 +245,61 @@ export default function App() {
     } catch (error) {
       if (!latest.current.isCurrent(token)) return null;
       const message = failure(error);
-      setRun({ state: "error", message });
+      setRun({ state: "error", message, request, question, metric });
       return message;
     }
   }
 
-  // Ask SI: each question is the same investigation, recorded as a conversation turn.
-  // The written question travels with the run; the brief's filters drive the analysis.
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const nextMessage = useRef(1);
-  async function ask(question: string, from: BriefDraft = draft) {
-    const request = buildRanking(from).request;
-    if (!request) return;
+  const result = run.state === "ready" ? run.result : null;
+  const chatBusy = messages.some((message) => "pending" in message);
+
+  async function answerChat(id: number, request: Models["ChatRequest"]) {
+    if (chatRequestActive.current) return;
+    chatRequestActive.current = true;
+    const token = chatLatest.current.begin();
+    const replace = (next: ChatMessage) =>
+      setMessages((list) => list.map((message) => message.id === id ? next : message));
+    replace({ id, role: "si", pending: true });
+    try {
+      const answer = await api.chat(request);
+      if (chatLatest.current.isCurrent(token)) replace({ id, role: "si", answer });
+    } catch (error) {
+      if (chatLatest.current.isCurrent(token)) replace({ id, role: "si", error: failure(error), retry: request });
+    } finally {
+      if (chatLatest.current.isCurrent(token)) chatRequestActive.current = false;
+    }
+  }
+
+  function ask(question: string) {
+    const clean = question.trim();
+    if (chatBusy || chatRequestActive.current || clean.length < 3 || clean.length > 500) return;
     const userId = nextMessage.current++;
     const pendingId = nextMessage.current++;
-    setDraft({ ...from, question });
+    const previousQuestion = messages.reduce<string | undefined>((previous, message, index) => {
+      const reply = messages[index + 1];
+      return message.role === "user" && reply && "answer" in reply ? message.text : previous;
+    }, undefined);
+    setMessages((list) => [...list, { id: userId, role: "user", text: clean }, { id: pendingId, role: "si", pending: true }]);
+    void answerChat(pendingId, { question: clean, previous_question: previousQuestion, research_id: result?.id });
+  }
+
+  async function askPreset(id: HabitatId) {
+    if (chatBusy || chatRequestActive.current || run.state === "loading") return;
+    const next = applyHabitat(draft, id);
+    const request = buildRanking(next).request;
+    if (!request) return;
+    const question = next.question;
+    const userId = nextMessage.current++;
+    const pendingId = nextMessage.current++;
+    setDraft(next);
     setMessages((list) => [...list, { id: userId, role: "user", text: question }, { id: pendingId, role: "si", pending: true }]);
-    const outcome = await investigate(request, question, from.metric);
+    const outcome = await investigate(request, question, next.metric);
     setMessages((list) => list.map((message) => message.id !== pendingId ? message
       : outcome === null ? { id: pendingId, role: "si", error: "Superseded by a newer question." }
       : typeof outcome === "string" ? { id: pendingId, role: "si", error: outcome }
       : { id: pendingId, role: "si", run: outcome }));
   }
-  const askPreset = (id: HabitatId) => {
-    const next = applyHabitat(draft, id);
-    void ask(next.question, next);
-  };
 
-  const result = run.state === "ready" ? run.result : null;
   // Brief values that drive the illustrative flame (display only, never sent anywhere).
   const used = (key: "gravity_regime" | "oxygen_pct" | "flow_velocity_cm_s") => {
     const c = draft.conditions[key];
@@ -251,19 +308,60 @@ export default function App() {
   const asNumber = (v: string | null) => (v !== null && Number.isFinite(Number(v.replace(",", "."))) ? Number(v.replace(",", ".")) : null);
   const flame = { gravityLabel: used("gravity_regime"), o2: asNumber(used("oxygen_pct")), flow: asNumber(used("flow_velocity_cm_s")) };
   const currentRequest = useMemo(() => buildRanking(draft).request, [draft]);
+  const chartMetric = chartMetricOverride ?? result?.plan?.metric ?? result?.comparison?.metric ?? draft.metric;
+  const chartPreset = metricPreset(chartMetric, trials);
+  const chartRequest = chartPreset?.request ?? result?.plan?.ranking ?? currentRequest;
+  const chartQuestion = chartPreset
+    ? `What measurements did ${chartPreset.name} report for ${metricLabel(chartMetric)}?`
+    : result?.question ?? draft.question.trim();
+  const chartControl = <form className="actions" onSubmit={(event) => {
+    event.preventDefault();
+    if (!chartRequest || chartQuestion.length < 3 || run.state === "loading") return;
+    setResultTab("comparison");
+    void investigate(chartRequest, chartQuestion, chartMetric);
+  }}>
+    <Select ariaLabel="Chart metric" value={chartMetric} options={chartMetricOptions}
+      onChange={(metric) => setChartMetricOverride(metric as BriefDraft["metric"])} />
+    <button type="submit" className="btn ghost" disabled={!chartRequest || chartQuestion.length < 3 || run.state === "loading"}>Update chart</button>
+    {chartPreset && <p className="hint">Charts use the {chartPreset.name} study preset. Use the Mission Brief to apply your own filters.</p>}
+  </form>;
   const evidenceIds = useMemo(() => {
-    if (evidenceSource === "corpus") return selection.evidenceId ? [selection.evidenceId] : [];
+    if (citationRunId || evidenceSource === "corpus") return selection.evidenceId ? [selection.evidenceId] : [];
     if (!result) return [];
     const ids = evidenceFor(result, selection);
     return selection.evidenceId && !ids.includes(selection.evidenceId) ? [selection.evidenceId, ...ids] : ids;
-  }, [result, selection, evidenceSource]);
+  }, [result, selection, evidenceSource, citationRunId]);
   const context = selection.observationId ? shortId(selection.observationId) : selection.trialId ? (labels.get(selection.trialId) ?? shortId(selection.trialId)) : null;
 
   const onOpenEvidence = useCallback((evidenceId: string, trialId: string | null, source: EvidenceSource = "record") => {
+    setCitationRunId(null);
     setEvidenceSource(source);
     setSelection({ trialId, observationId: null, evidenceId });
     setInspector(true);
   }, []);
+  const openStudy = (id: string) => {
+    setCatalogRequest({ id, nonce: Date.now() });
+    window.location.hash = routeHash({ page: "dashboard", view: "catalog" });
+  };
+  const openCitation = (evidenceId: string, researchId: string, trialId: string | null = null) => {
+    onOpenEvidence(evidenceId, trialId);
+    setCitationRunId(researchId);
+  };
+  const openChatSource = (source: Models["ChatSource"]) => {
+    if (source.evidence_id) {
+      if (source.research_id) openCitation(source.evidence_id, source.research_id);
+      else onOpenEvidence(source.evidence_id, null, "corpus");
+      return;
+    }
+    if (source.study_id) { openStudy(source.study_id); return; }
+    if (source.section === "ranking" || source.section === "synthesis") setResultTab(source.section);
+    else if (source.section === "canvas" || source.section === "brief") setResultTab("comparison");
+    window.location.hash = routeHash({ page: "dashboard", view: chatViews[source.section] });
+  };
+  const openStudyComparison = (ids: string[]) => {
+    const [a, b] = ids;
+    if (a && b && a !== b) window.location.hash = routeHash({ page: "dashboard", view: "lab", studyIds: [a, b] });
+  };
   // Header search covers what is already loaded: sections, catalog studies and corpus trials.
   const searchIndex = useMemo<SearchItem[]>(() => {
     const studyTitle = new Map(studies.map((study) => [study.id, study.title]));
@@ -280,25 +378,20 @@ export default function App() {
 
   const onSearch = (item: SearchItem) => {
     if (item.kind === "section") { window.location.hash = routeHash({ page: "dashboard", view: item.id as View }); return; }
-    if (item.kind === "study") {
-      setCatalogRequest({ id: item.id, nonce: Date.now() });
-      window.location.hash = routeHash({ page: "dashboard", view: "catalog" });
-      return;
-    }
+    if (item.kind === "study") { openStudy(item.id); return; }
     const trial = trials.find((candidate) => candidate.id === item.id);
     if (!trial) return;
     // A trial opens its first source from the active corpus, labelled as not part of any research record.
     const evidenceId = trial.evidence_ids[0];
     if (evidenceId) { onOpenEvidence(evidenceId, trial.id, "corpus"); return; }
-    setCatalogRequest({ id: trial.study_id, nonce: Date.now() });
-    window.location.hash = routeHash({ page: "dashboard", view: "catalog" });
+    openStudy(trial.study_id);
   };
 
   const slot: MissionSlotProps = {
     api, research: result, request: currentRequest, metric: draft.metric,
     researchState: run.state, onOpenRun: showRun, onOpenEvidence, beginResearchIntent,
   };
-  const retrieved = evidenceSource !== "corpus" && Boolean(result && selection.evidenceId && isRetrieved(result, selection.evidenceId));
+  const retrieved = Boolean(citationRunId) || (evidenceSource !== "corpus" && Boolean(result && selection.evidenceId && isRetrieved(result, selection.evidenceId)));
   const inspectorOpen = inspector && (evidenceIds.length > 0 || Boolean(selection.evidenceId));
 
   // Entering the dashboard from the welcome page: sidebar slides in, header drops, then the view.
@@ -377,6 +470,10 @@ export default function App() {
           {offline && <StateMessage kind="error" title="No connection to the API" action={<button type="button" className="btn" onClick={() => void connect()}>Retry connection</button>}>
             <p>{offline}</p><p>Start the API with <code>scripts/dev-api.ps1</code> and try again.</p>
           </StateMessage>}
+          {!offline && dataIssues.length > 0 && <StateMessage kind="error" title="Could not load all corpus data"
+            action={<button type="button" className="btn" onClick={() => void connect()}>Retry data loading</button>}>
+            <ul>{dataIssues.map((issue) => <li key={issue}>{issue}</li>)}</ul>
+          </StateMessage>}
 
           <section className="view" data-view="overview" hidden={view !== "overview"} aria-labelledby="view-overview-title">
             {viewHead("overview")}
@@ -399,6 +496,7 @@ export default function App() {
                 </section>}
                 {run.state === "idle" &&<Panel id="canvas" title="Evidence Canvas">
                   <div className="panel-b">
+                    {chartControl}
                     <StateMessage kind="empty" title="Ask a question and press “Investigate”">
                       <p>The chart, observation table and ranking appear here. Every point, row and citation opens its source.</p>
                     </StateMessage>
@@ -409,7 +507,7 @@ export default function App() {
                 </Panel>}
                 {run.state === "error" && <Panel id="canvas" title="Evidence Canvas">
                   <div className="panel-b"><StateMessage kind="error" title="The investigation did not complete"
-                    action={currentRequest && <button type="button" className="btn" onClick={() => void investigate(currentRequest)}>Retry</button>}>
+                    action={<button type="button" className="btn" onClick={() => void investigate(run.request, run.question, run.metric)}>Retry</button>}>
                     <p>{run.message}</p><p>Check the form values; the API validates ranges and combinations.</p>
                   </StateMessage></div>
                 </Panel>}
@@ -437,8 +535,13 @@ export default function App() {
                     {resultTab === "synthesis"
                       ? <SynthesisPanel result={result} onCite={onOpenEvidence} />
                       : <EvidenceCanvas result={result} labels={labels} selection={selection} show={resultTab}
-                        onSelectObservation={(id) => { setEvidenceSource("record"); setSelection(selectObservation(result, id)); }}
-                        onSelectTrial={(id) => { setEvidenceSource("record"); setSelection(selectTrial(result, id)); }} />}
+                        trials={trials} metricControl={chartControl}
+                        onSelectObservation={(id) => {
+                          setCitationRunId(null); setEvidenceSource("record"); setSelection(selectObservation(result, id)); setInspector(true);
+                        }}
+                        onSelectTrial={(id) => {
+                          setCitationRunId(null); setEvidenceSource("record"); setSelection(selectTrial(result, id)); setInspector(true);
+                        }} />}
                   </div>
                 </>}
               </div>
@@ -452,9 +555,10 @@ export default function App() {
               <h1 id="view-chat-title"><span className="chat-face"><Icon name="chat" /></span>Ask SI</h1>
               <p>{VIEW_META.chat.summary}</p>
             </div>
-            <ChatPanel open={route.page === "dashboard" && view === "chat"} messages={messages} busy={run.state === "loading"}
-              filters={currentRequest ? describeRanking(currentRequest) : null} activeRunId={result?.id ?? null}
-              onAsk={(question) => void ask(question)} onPreset={askPreset} onCite={onOpenEvidence}
+            <ChatPanel open={route.page === "dashboard" && view === "chat"} messages={messages} busy={chatBusy}
+              activeRunId={result?.id ?? null} onAsk={ask} onPreset={(id) => void askPreset(id)}
+              onCite={openCitation} onSource={openChatSource} onCompare={openStudyComparison}
+              onRetry={(id, request) => { if (!chatBusy) void answerChat(id, request); }}
               onShowRun={(record) => { showRun(record); window.location.hash = routeHash({ page: "dashboard", view: "investigate" }); }}
               onClose={() => {
                 // Escape also closes the search dialog; leave the chat only when nothing else is open.
@@ -464,6 +568,8 @@ export default function App() {
           </section>
 
           <div id="lab" className="view p6-slot" data-view="lab" hidden={view !== "lab"}>
+            {route.page === "dashboard" && route.view === "lab" && route.studyIds && <StudyComparison key={routeHash(route)}
+              api={api} ids={route.studyIds} onStudy={openStudy} />}
             <MissionLabPanel key={`lab-${labKey}`} {...slot} question={draft.question} />
           </div>
 
@@ -491,7 +597,7 @@ export default function App() {
         <button type="button" className="icon-btn inspector-close" onClick={() => setInspector(false)} aria-label="Close evidence" title="Close evidence">
           <Icon name="close" />
         </button>
-        <EvidenceViewer api={api} researchId={result?.id ?? null} ids={evidenceIds}
+        <EvidenceViewer api={api} researchId={citationRunId ?? result?.id ?? null} ids={evidenceIds}
           retrieved={retrieved} activeId={selection.evidenceId}
           context={context} onPick={(id) => setSelection(selectEvidence(selection, id))} />
       </aside>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { ResearchResponse } from "../lib/client";
+import type { Models, ResearchResponse } from "../lib/client";
 import { tx } from "../lib/backendText";
 import { HABITATS } from "../lib/filters";
 import type { HabitatId } from "../lib/filters";
@@ -10,26 +10,23 @@ import { Tag } from "./ui";
 export type ChatMessage =
   | { id: number; role: "user"; text: string }
   | { id: number; role: "si"; pending: true }
-  | { id: number; role: "si"; error: string }
+  | { id: number; role: "si"; error: string; retry?: Models["ChatRequest"] }
+  | { id: number; role: "si"; answer: Models["ChatResponse"] }
   | { id: number; role: "si"; run: ResearchResponse };
 
-/**
- * Conversation side panel. Each question runs a real investigation with the
- * brief's explicit filters; the answer summarises that run and links its
- * citations to the shared evidence viewer. It overlays the evidence column so
- * the comparison never leaves the screen.
- */
-export default function ChatPanel({ open, onClose, messages, busy, filters, activeRunId, onAsk, onPreset, onCite, onShowRun }: {
+/** Free-form answers cite corpus sources. Habitat shortcuts run explicit investigations. */
+export default function ChatPanel({ open, onClose, messages, busy, activeRunId, onAsk, onPreset, onCite, onSource, onCompare, onRetry, onShowRun }: {
   open: boolean;
   onClose: () => void;
   messages: ChatMessage[];
   busy: boolean;
-  /** Plain-language filters that the next question will use. */
-  filters: string[] | null;
   activeRunId: string | null;
   onAsk: (question: string) => void;
   onPreset: (id: HabitatId) => void;
-  onCite: (evidenceId: string, trialId: string | null) => void;
+  onCite: (evidenceId: string, researchId: string, trialId: string | null) => void;
+  onSource: (source: Models["ChatSource"]) => void;
+  onCompare: (ids: string[]) => void;
+  onRetry: (id: number, request: Models["ChatRequest"]) => void;
   onShowRun: (run: ResearchResponse) => void;
 }) {
   const [text, setText] = useState("");
@@ -62,7 +59,7 @@ export default function ChatPanel({ open, onClose, messages, busy, filters, acti
   if (!open) return null;
   const send = () => {
     const question = text.trim();
-    if (question.length < 3 || busy || !filters) return;
+    if (question.length < 3 || question.length > 500 || busy) return;
     onAsk(question);
     setText("");
   };
@@ -73,7 +70,7 @@ export default function ChatPanel({ open, onClose, messages, busy, filters, acti
       <button type="button" className="btn ghost" onClick={onClose} aria-label="Close conversation">Close</button>
     </header>
     <p className="chat-note">
-      Answers use the brief’s filters; constraints in your text are not read yet.
+      Ask about studies, measurements or how the app works. Choose a habitat to run a filtered investigation.
     </p>
 
     <ol className="chat-log" ref={log} aria-live="polite">
@@ -81,7 +78,30 @@ export default function ChatPanel({ open, onClose, messages, busy, filters, acti
       {messages.map((message) => {
         if (message.role === "user") return <li key={message.id} className="msg user">{message.text}</li>;
         if ("pending" in message) return <li key={message.id} className="msg si"><span className="typing" aria-label="Investigating"><i /><i /><i /></span></li>;
-        if ("error" in message) return <li key={message.id} className="msg si error">{message.error}</li>;
+        if ("error" in message) return <li key={message.id} className="msg si error">
+          {message.error}
+          {message.retry && <button type="button" className="btn ghost" disabled={busy}
+            onClick={() => { if (message.retry) onRetry(message.id, message.retry); }}>Try again</button>}
+        </li>;
+        if ("answer" in message) {
+          const { answer } = message;
+          const followUp = answer.suggested_question;
+          const pair = answer.comparison_studies;
+          return <li key={message.id} className="msg si">
+            <p>{answer.answer}</p>
+            {followUp && <button type="button" className="btn ghost" disabled={busy} onClick={() => onAsk(followUp)}>{followUp}</button>}
+            {pair?.length === 2 && <button type="button" className="btn ghost" onClick={() => onCompare(pair)}>Open study comparison</button>}
+            {!!answer.technical_details?.length && <details className="msg-steps">
+              <summary>Technical details</summary>
+              <ul>{answer.technical_details.map((detail, index) => <li key={index}>{detail}</li>)}</ul>
+            </details>}
+            {!!answer.sources.length && <details className="msg-steps">
+              <summary>Sources ({answer.sources.length})</summary>
+              <div className="cites">{answer.sources.map((source, index) => <button type="button" className="chip"
+                key={index} onClick={() => onSource(source)}>{source.title}</button>)}</div>
+            </details>}
+          </li>;
+        }
         const run = message.run;
         const points = run.comparison?.points.length ?? 0;
         return <li key={message.id} className="msg si">
@@ -94,7 +114,7 @@ export default function ChatPanel({ open, onClose, messages, busy, filters, acti
           {run.claims.slice(0, 3).map((claim, index) => <div key={index} className="msg-claim">
             <p>{tx(claim.text)}</p>
             <div className="cites">{claim.citations.map((citation, i) => <button type="button" key={i} className="chip"
-              onClick={() => onCite(citation.evidence_id, citation.trial_id ?? null)}>{shortId(citation.evidence_id)}</button>)}</div>
+              onClick={() => onCite(citation.evidence_id, run.id, citation.trial_id ?? null)}>{shortId(citation.evidence_id)}</button>)}</div>
           </div>)}
           {run.hypotheses[0] && <p className="msg-hypo"><Tag tone="warn">Prepared proposal</Tag> {tx(run.hypotheses[0].statement)}</p>}
           <details className="msg-steps"><summary>Tool steps ({run.events.length})</summary>
@@ -109,14 +129,12 @@ export default function ChatPanel({ open, onClose, messages, busy, filters, acti
       {HABITATS.slice(0, 4).map((habitat) => <button type="button" key={habitat.id} className="chip" disabled={busy}
         onClick={() => onPreset(habitat.id)}>{habitat.label}</button>)}
     </div>
-    {filters && <p className="chat-filters">Uses: {filters.slice(0, 3).join(" · ")}</p>}
-    {!filters && <p className="chat-filters field-error">Fix the highlighted brief conditions before asking.</p>}
     <form className="chat-form" onSubmit={(event) => { event.preventDefault(); send(); }}>
       <label htmlFor="chat-input" className="sr-only">Question</label>
-      <textarea id="chat-input" ref={input} rows={2} value={text} maxLength={4000} placeholder="Ask about the evidence…"
+      <textarea id="chat-input" ref={input} rows={2} value={text} maxLength={500} placeholder="Ask about the evidence…"
         onChange={(event) => setText(event.target.value)}
-        onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); send(); } }} />
-      <button type="submit" className="btn primary" disabled={busy || text.trim().length < 3 || !filters}>Ask</button>
+        onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); send(); } }} />
+      <button type="submit" className="btn primary" disabled={busy || text.trim().length < 3}>Ask</button>
     </form>
   </aside>;
 }

@@ -6,7 +6,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRuntime } from "./runtime.mjs";
-import { verifyCampaignResearch, verifyP2Catalog, verifySaffireContext } from "./p2-catalog-acceptance.mjs";
+import { askSI, chooseOption, openView, verifyCampaignResearch, verifyP2Catalog, verifySaffireContext } from "./p2-catalog-acceptance.mjs";
 
 const EXPECTED_SHA256 = "cb8b782fd73dbe4df0576b8047f3dea781a37d7c06c962ad2e978e607a00191d";
 const DATASET = "psi:nasa-local-corpus-v1";
@@ -151,6 +151,7 @@ try {
   let firstReport = "";
   const isPost = (response, suffix) => response.url().endsWith(suffix) && response.request().method() === "POST";
   async function runPreset(key, label) {
+    await openView(page, "lab");
     const responsePromise = page.waitForResponse((response) => isPost(response, "/api/v1/research"));
     await bass.getByRole("button", { name: label, exact: true }).click();
     const response = await responsePromise;
@@ -179,12 +180,27 @@ try {
     const profile = await (await fetch(`${API}/api/v1/datasets/profile`)).json();
     check(health.data_mode === "scientific_unverified" && health.ai_provider === "demo", "real corpus remains scientific_unverified in deterministic mode");
     check(profile.dataset_id === DATASET && profile.n_studies === 24 && profile.synthetic_trials === 0, "24-study corpus contains no synthetic trials");
-    await page.goto(WEB);
+    await page.goto(`${WEB}/#/dashboard/investigate`);
     await page.getByRole("heading", { name: "Mission Brief", exact: true }).waitFor();
-    await bass.waitFor(); await report.waitFor();
+    await openView(page, "report");
+    await report.waitFor();
+    await openView(page, "lab");
+    await bass.waitFor();
   });
 
   await verifyP2Catalog({ page, apiUrl: API, bundle, check, step, screenshots: SHOTS });
+  await step("Ask SI opens the requested published-study comparison", async () => {
+    const answer = await askSI(page, "Plot BASS-II and FLEX");
+    assert.deepEqual(answer.comparison_studies, ["psi:PSI-25", "psi:PSI-69"]);
+    const charts = answer.comparison_studies.map((id) => page.waitForResponse((response) =>
+      decodeURIComponent(new URL(response.url()).pathname) === `/api/v1/studies/${id}/chart`));
+    await page.getByRole("button", { name: "Open study comparison", exact: true }).click();
+    await page.waitForURL(/#\/dashboard\/lab\?study=/);
+    await page.getByRole("heading", { name: "Study comparison", exact: true }).waitFor();
+    const data = await Promise.all(charts.map(async (pending) => (await pending).json()));
+    check(data.every((item, index) => item.study.id === answer.comparison_studies[index] && item.metrics.length > 0),
+      "the selected studies load their documented measurements inside Mission Lab");
+  });
   await step("documentary Saffire context stays separate from imported BASS points", async () => {
     await verifySaffireContext({ page, check, screenshots: SHOTS });
   });
@@ -192,11 +208,13 @@ try {
 
   await step("approved 6 cm/s preset preserves four source observations", async () => {
     // Fixed, disclosed presets must not inherit unrelated current-form edits.
-    await page.getByRole("combobox", { name: "Metric", exact: true }).selectOption("heat_release_w");
+    await openView(page, "investigate");
+    await chooseOption(page, page.getByRole("combobox", { name: "Metric", exact: true }), "Heat release");
     await page.getByRole("spinbutton", { name: /Max\. trials/ }).fill("1");
     const run = await runPreset("bass_6", "Run BASS-II · 6 cm/s");
     verifyRun("bass_6", run);
     await openM8("bass_6", 2);
+    await openView(page, "report");
     const pre = report.locator(`pre[data-research-id="${run.id}"]`).first();
     await pre.waitFor();
     firstReport = await pre.textContent();
@@ -265,6 +283,7 @@ try {
   });
 
   await step("saved BASS-II report and M8 notice survive API restart and browser reload", async () => {
+    await openView(page, "report");
     const run = runs.bass_6;
     await report.getByLabel("Research id", { exact: true }).fill(run.id);
     await report.getByRole("button", { name: "Recover", exact: true }).click();
@@ -274,7 +293,7 @@ try {
     await stop(api); api = startApi();
     await waitHttp(`${API}/api/v1/health`, api);
     await page.reload();
-    await page.getByRole("heading", { name: "Mission Brief", exact: true }).waitFor();
+    await openView(page, "report");
     await report.getByText(/No active research\./).waitFor();
     await report.getByRole("button", { name: "Reopen last research", exact: true }).click();
     await pre.waitFor();
