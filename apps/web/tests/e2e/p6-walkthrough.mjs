@@ -73,12 +73,22 @@ const cleanup = () => closing ??= (async () => {
   await runtime.close();
 })();
 for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => { void cleanup().finally(() => process.exit(130)); });
+let fatal = false;
+const fatalError = (error) => {
+  if (fatal) return;
+  fatal = true;
+  console.error(`Fatal E2E error: ${error?.stack ?? error}`);
+  void cleanup().catch((cleanupError) => console.error(String(cleanupError))).finally(() => process.exit(1));
+};
+process.once("unhandledRejection", fatalError);
+process.once("uncaughtException", fatalError);
 try {
   if (SHOTS) mkdirSync(SHOTS, { recursive: true });
   api = startApi();
   const web = runtime.startWeb();
   await waitHttp(`${API}/api/v1/health`, api);
   await waitHttp(WEB, web);
+  console.log(`Owned demo servers: api=${API} web=${WEB}`);
   browser = await runtime.chromium.launch({ headless: args.headed !== "true" });
   const context = await browser.newContext({ acceptDownloads: true, viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
   const page = await context.newPage();
@@ -116,15 +126,26 @@ try {
     const done = new Promise((resolve) => { finished = resolve; });
     heldReleases.push(release);
     const matcher = (url) => decodeURIComponent(url.pathname) === pathname;
+    let claimed = false;
+    let failure = null;
     const handler = async (route) => {
-      if (route.request().method() !== method) { await route.continue(); return; }
-      await page.unroute(matcher, handler);
-      const response = await route.fetch();
-      arrived();
-      await gate;
-      try { await route.fulfill({ response }); }
-      catch (error) { if (!closing) throw error; }
-      finally { finished(); }
+      if (route.request().method() !== method || claimed) { await route.continue(); return; }
+      claimed = true;
+      try {
+        const response = await route.fetch();
+        arrived();
+        await gate;
+        await route.fulfill({ response });
+      } catch (error) {
+        // Browser cancellation is also a valid outcome when Reset aborts a request.
+        const networkFailure = route.request().failure()?.errorText ?? "";
+        if (!closing && !/ERR_ABORTED|NS_BINDING_ABORTED/.test(networkFailure)) failure = error;
+      } finally {
+        arrived();
+        // Remove the handler only after resolving its intercepted request.
+        await page.unroute(matcher, handler).catch(() => {});
+        finished();
+      }
     };
     await page.route(matcher, handler);
     const bounded = async (promise, label) => {
@@ -135,7 +156,8 @@ try {
         })]);
       } finally { clearTimeout(timer); }
     };
-    return { get seen() { return bounded(seen, "request"); }, release, get done() { return bounded(done, "response"); } };
+    const checked = async (promise, label) => { await bounded(promise, label); if (failure) throw failure; };
+    return { get seen() { return checked(seen, "request"); }, release, get done() { return checked(done, "response"); } };
   }
 
   await step("load host and P6 panels", async () => {
@@ -255,12 +277,34 @@ try {
   });
 
   await step("desktop themes and mobile layout keep P6 within the viewport", async () => {
-    const noOverflow = async (label) => check(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `${label}: no page horizontal overflow`);
+    const noOverflow = async (label) => {
+      await settle();
+      const bounds = await page.evaluate(() => ({
+        width: window.innerWidth, scroll: document.documentElement.scrollWidth,
+        offenders: [...document.querySelectorAll("body *")].map((element) => {
+          const rect = element.getBoundingClientRect();
+          return { tag: element.tagName, class: element.className, width: rect.width, left: rect.left, right: rect.right, height: rect.height };
+        }).filter((item) => item.height > 0 && item.right > window.innerWidth + 1).slice(-20),
+      }));
+      if (bounds.scroll > bounds.width + 1) {
+        console.log(`LAYOUT ${label}: ${JSON.stringify(bounds)}`);
+        if (SHOTS) await page.screenshot({ path: path.join(SHOTS, "p5-overflow.png"), fullPage: true });
+      }
+      check(bounds.scroll <= bounds.width + 1, `${label}: no page horizontal overflow (${bounds.scroll}/${bounds.width}px)`);
+    };
     await lab.scrollIntoViewIfNeeded();
     await noOverflow("desktop dark");
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, "p5-desktop-dark.png") });
     await page.getByRole("switch", { name: "Night mode" }).click();
     await page.waitForFunction(() => document.documentElement.dataset.theme === "light");
+    const inputColors = async (label) => console.log(`THEME ${label}: ${JSON.stringify(await page.evaluate(() =>
+      [...document.querySelectorAll('#brief [data-cond="gravity_regime"] input, #brief input[type="number"]')].map((element) => {
+        const style = getComputedStyle(element);
+        return { value: element.value, type: element.type, color: style.color, webkitTextFillColor: style.webkitTextFillColor, backgroundColor: style.backgroundColor };
+      })))}`);
+    await inputColors("light immediately");
+    await page.waitForTimeout(1100);
+    await inputColors("light after transition");
     await noOverflow("desktop light");
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, "p5-desktop-light.png") });
     await page.getByRole("switch", { name: "Night mode" }).click();
@@ -268,7 +312,10 @@ try {
     await page.setViewportSize({ width: 390, height: 844 });
     await lab.scrollIntoViewIfNeeded();
     await noOverflow("mobile 390px");
-    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, "p5-mobile-390.png"), fullPage: true });
+    if (SHOTS) {
+      await page.screenshot({ path: path.join(SHOTS, "p5-mobile-390.png") });
+      await page.screenshot({ path: path.join(SHOTS, "p5-mobile-full.png"), fullPage: true });
+    }
     await page.setViewportSize({ width: 1440, height: 1000 });
   });
 
@@ -327,7 +374,7 @@ try {
   });
 
   await step("question changes mark the prior query without invalidating numerical A/B", async () => {
-    const question = page.getByRole("textbox", { name: "Question", exact: true });
+    const question = page.getByRole("textbox", { name: /^Question/ });
     const original = await question.inputValue();
     await question.fill("A revised research description for the same explicit filters.");
     await freshness(queryResult(), "question_changed");
@@ -403,7 +450,7 @@ try {
     await report.getByLabel("Research id", { exact: true }).fill(researchId);
     await report.getByRole("button", { name: "Recover", exact: true }).click();
     await pendingRecovery.seen;
-    await page.getByRole("textbox", { name: "Question", exact: true }).fill("New investigation after a pending recovery.");
+    await page.getByRole("textbox", { name: /^Question/ }).fill("New investigation after a pending recovery.");
     const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/research") && r.request().method() === "POST");
     await host.investigate(page);
     const body = await (await response).json();
