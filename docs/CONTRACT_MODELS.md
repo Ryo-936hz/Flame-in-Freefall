@@ -1,6 +1,6 @@
 # Modelos de contrato y autoridad ejecutable
 
-El contrato `1.0` existe localmente en `apps/api/src/flamelab/domain/contracts.py`. Ese archivo y su OpenAPI
+El contrato `1.1` existe localmente (y mantiene lectura de bundles `1.0`) en `apps/api/src/flamelab/domain/contracts.py`. Ese archivo y su OpenAPI
 generado son la autoridad para campos y validación; esta guía explica las tablas procedentes de la propuesta
 documental. No hay una API desplegada. La inspección del ZIP mantuvo el contrato para la base sintética y
 pospuso la ingesta cuantitativa real hasta modelar correctamente condiciones sucesivas.
@@ -373,3 +373,9 @@ necesita representar condiciones sucesivas sin convertir mesetas en réplicas, c
 evitar asignar oxígeno inicial/final a una observación temporal sin respaldo. Revisar sensores, regiones de
 evidencia, unidades originales y diferencias CSV/PDF antes de ampliar la ingesta. Saffire no se agrega
 automáticamente al mismo análisis. Registrar cada ajuste en DECISIONS/ADR y actualizar consumidores juntos.
+
+## Contrato 1.1: condiciones sucesivas
+
+`DatasetBundle.schema_version` acepta 1.0 y 1.1; al escribir, el default es 1.1. Los bundles 1.0 siguen siendo legibles. Un `Trial` conserva la unidad experimental y puede contener `segments` ordenados por `sequence` (orden reportado, no tiempo medido). Cada segmento contiene condiciones efectivas explicitas y evidencia; no hereda condiciones implicitamente del ensayo. `Observation.segment_id` es opcional y solo puede referir a un segmento del mismo ensayo. Si la asignacion no esta respaldada, se deja nulo.
+
+`oxygen_initial_pct` y `oxygen_final_pct` son condiciones separadas del ensayo; no se propagan a segmentos. `combustion_face` es una condicion categorica de control y `geometry` conserva su significado previo. `ConditionValue` conserva valor y unidad originales y referencias. Los segmentos no son replicas ni unidades experimentales nuevas.

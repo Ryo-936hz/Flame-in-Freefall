@@ -10,8 +10,9 @@ from pydantic import (
 Number = StrictFloat | StrictInt
 Scalar = Number | StrictStr
 ConditionKey = Literal[
-    "oxygen_pct", "pressure_kpa", "flow_velocity_cm_s", "material", "geometry",
-    "thickness_mm", "diameter_mm", "sample_width_mm", "flow_direction", "gravity_regime",
+    "oxygen_pct", "oxygen_initial_pct", "oxygen_final_pct", "pressure_kpa",
+    "flow_velocity_cm_s", "material", "geometry", "combustion_face", "thickness_mm",
+    "diameter_mm", "sample_width_mm", "flow_direction", "gravity_regime",
 ]
 Metric = Literal["flame_spread_rate_mm_s", "extinction_oxygen_pct", "heat_release_w", "other"]
 MissingStatus = Literal["known", "not_measured", "not_reported", "not_extracted", "not_applicable"]
@@ -19,7 +20,8 @@ Provenance = Literal["published", "digitized", "derived", "synthetic"]
 Identifier = Annotated[str, Field(min_length=3, max_length=240, pattern=r"^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$")]
 CONDITION_KEYS = get_args(ConditionKey)
 CONDITION_UNITS = {
-    "oxygen_pct": "%", "pressure_kpa": "kPa", "flow_velocity_cm_s": "cm/s",
+    "oxygen_pct": "%", "oxygen_initial_pct": "%", "oxygen_final_pct": "%",
+    "pressure_kpa": "kPa", "flow_velocity_cm_s": "cm/s",
     "thickness_mm": "mm", "diameter_mm": "mm", "sample_width_mm": "mm",
 }
 METRIC_UNITS = {
@@ -35,7 +37,7 @@ def validate_scalar(key: str, value: Scalar) -> None:
     if key in CONDITION_UNITS:
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError(f"{key} requires a number")
-        if value < 0 or (key == "oxygen_pct" and value > 100):
+        if value < 0 or (key in {"oxygen_pct", "oxygen_initial_pct", "oxygen_final_pct"} and value > 100):
             raise ValueError(f"{key} is outside the admissible range")
     elif not isinstance(value, str) or not value.strip():
         raise ValueError(f"{key} requires nonempty text")
@@ -104,6 +106,7 @@ class Trial(Contract):
     provenance: Provenance
     material_grade: str | None = None
     notes: list[str] = Field(default_factory=list)
+    segments: list["ConditionSegment"] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def typed_conditions(self) -> Self:
@@ -114,12 +117,39 @@ class Trial(Contract):
                     raise ValueError(f"{key} must use canonical unit {CONDITION_UNITS.get(key)}")
                 if not condition.evidence_ids:
                     raise ValueError("known conditions require evidence")
+        if len({segment.id for segment in self.segments}) != len(self.segments):
+            raise ValueError("segment identifiers must be unique within a trial")
+        if len({segment.sequence for segment in self.segments}) != len(self.segments):
+            raise ValueError("segment sequence must be unique within a trial")
+        return self
+
+
+class ConditionSegment(Contract):
+    """Ordered, source-reported effective conditions within one trial."""
+
+    id: Identifier
+    sequence: Annotated[StrictInt, Field(ge=1)]
+    conditions: dict[ConditionKey, ConditionValue]
+    evidence_ids: list[Identifier] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def typed_conditions(self) -> Self:
+        if {"oxygen_initial_pct", "oxygen_final_pct"} & self.conditions.keys():
+            raise ValueError("oxygen_initial_pct and oxygen_final_pct are trial-only conditions")
+        for key, condition in self.conditions.items():
+            if condition.status == "known":
+                validate_scalar(key, condition.value)
+                if condition.unit != CONDITION_UNITS.get(key):
+                    raise ValueError(f"{key} must use canonical unit {CONDITION_UNITS.get(key)}")
+                if not condition.evidence_ids:
+                    raise ValueError("known segment conditions require evidence")
         return self
 
 
 class Observation(Contract):
     id: Identifier
     trial_id: Identifier
+    segment_id: Identifier | None = None
     metric: Metric
     value: Number | None = None
     unit: str
@@ -140,7 +170,7 @@ class Observation(Contract):
 
 
 class DatasetBundle(Contract):
-    schema_version: Literal["1.0"] = "1.0"
+    schema_version: Literal["1.0", "1.1"] = "1.1"
     dataset_id: Identifier
     description: str
     studies: list[Study] = Field(default_factory=list)
@@ -156,6 +186,12 @@ class DatasetBundle(Contract):
         studies = {x.id: x for x in self.studies}
         evidence = {x.id: x for x in self.evidence}
         trials = {x.id: x for x in self.trials}
+        segment_trials: dict[str, str] = {}
+        for trial in self.trials:
+            for segment in trial.segments:
+                if segment.id in segment_trials:
+                    raise ValueError("segment identifiers must be unique in the dataset")
+                segment_trials[segment.id] = trial.id
         for item in self.evidence:
             if item.study_id not in studies:
                 raise ValueError("evidence references unknown study")
@@ -177,10 +213,16 @@ class DatasetBundle(Contract):
             check_refs(trial.evidence_ids, trial.study_id, trial.provenance == "synthetic")
             for condition in trial.conditions.values():
                 check_refs(condition.evidence_ids, trial.study_id, trial.provenance == "synthetic")
+            for segment in trial.segments:
+                check_refs(segment.evidence_ids, trial.study_id, trial.provenance == "synthetic")
+                for condition in segment.conditions.values():
+                    check_refs(condition.evidence_ids, trial.study_id, trial.provenance == "synthetic")
         for observation in self.observations:
             if observation.trial_id not in trials:
                 raise ValueError("observation references unknown trial")
             trial = trials[observation.trial_id]
+            if observation.segment_id is not None and segment_trials.get(observation.segment_id) != trial.id:
+                raise ValueError("observation segment reference is missing or belongs to another trial")
             if (observation.provenance == "synthetic") != (trial.provenance == "synthetic"):
                 raise ValueError("observation/trial provenance mismatch")
             check_refs(observation.evidence_ids, trial.study_id, observation.provenance == "synthetic")
@@ -250,6 +292,7 @@ class ComparisonRequest(Contract):
 class PlotPoint(Contract):
     trial_id: Identifier
     observation_id: Identifier
+    segment_id: Identifier | None = None
     independent_unit_id: Identifier
     x: Number | None
     y: Number

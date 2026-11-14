@@ -10,14 +10,15 @@ from flamelab.domain.contracts import (
 from flamelab.science.common import CONDITION_KEYS, CONDITION_UNITS, METRIC_UNITS
 
 
-def _stratum(trial, vary):
+def _stratum(trial, vary, available_controls):
     conditions = {
         "study_id": trial.study_id, "material_grade": trial.material_grade or "not_reported",
         "provenance": trial.provenance,
     }
     unknown = trial.material_grade is None
     for key in CONDITION_KEYS:
-        if key in vary:
+        if key in vary or (key in {"oxygen_initial_pct", "oxygen_final_pct", "combustion_face"}
+                           and key not in available_controls):
             continue
         condition = trial.conditions.get(key)
         if condition is None or condition.status != "known":
@@ -61,7 +62,14 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
         warnings.append("categorical_x_axis_not_supported: x values remain null; use groups for categories")
     group_data = {}
     points = []
+    available_controls = {
+        key for trial_id in selected_ids for key in trials_by_id[trial_id].conditions
+        if key in {"oxygen_initial_pct", "oxygen_final_pct", "combustion_face"}
+    }
     observations_by_trial = {}
+    segments_by_id = {
+        segment.id: segment for trial in bundle.trials for segment in trial.segments
+    }
     for observation in bundle.observations:
         observations_by_trial.setdefault(observation.trial_id, []).append(observation)
     for trial_id in selected_ids:
@@ -69,7 +77,7 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
         if trial.provenance == "synthetic" and not request.allow_synthetic:
             warnings.append(f"synthetic_not_allowed:{trial_id}")
             continue
-        group_id, conditions, unknown = _stratum(trial, request.vary)
+        group_id, conditions, unknown = _stratum(trial, request.vary, available_controls)
         group = group_data.setdefault(group_id, {
             "conditions": conditions, "trials": [], "units": set(), "values": [], "warnings": [],
         })
@@ -77,10 +85,6 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
         group["units"].add(trial.independent_unit_id)
         if unknown and not group["warnings"]:
             group["warnings"].append("Incomplete control conditions; this trial is isolated, not pooled.")
-        x_value = trial.conditions.get(request.x_condition)
-        x = x_value.value if x_unit and x_value and x_value.status == "known" else None
-        if x is None:
-            warnings.append(f"x_unavailable:{trial_id}:{request.x_condition}")
         matching = [item for item in observations_by_trial.get(trial.id, []) if item.metric == request.metric]
         if not matching:
             group["warnings"].append(f"metric_not_reported:{trial_id}:{request.metric}")
@@ -96,11 +100,20 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
                 continue
             # A point retains observation provenance; evidence includes both measurement
             # and condition sources so the X coordinate is also traceable.
+            segment = segments_by_id.get(observation.segment_id)
+            effective_conditions = segment.conditions if segment else trial.conditions
+            x_value = effective_conditions.get(request.x_condition)
+            x = x_value.value if x_unit and x_value and x_value.status == "known" else None
+            if x is None:
+                warnings.append(f"x_unavailable:{trial_id}:{request.x_condition}")
             evidence_ids = list(dict.fromkeys(
-                observation.evidence_ids + trial.evidence_ids + (x_value.evidence_ids if x_value else [])
+                observation.evidence_ids + trial.evidence_ids
+                + (segment.evidence_ids if segment else [])
+                + (x_value.evidence_ids if x_value else [])
             ))
             points.append(PlotPoint(
                 trial_id=trial.id, observation_id=observation.id,
+                segment_id=observation.segment_id,
                 independent_unit_id=trial.independent_unit_id, x=x, y=observation.value,
                 group_id=group_id, evidence_ids=evidence_ids, provenance=observation.provenance,
             ))
