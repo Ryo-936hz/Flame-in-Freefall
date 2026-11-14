@@ -3,7 +3,9 @@
 El usuario asume conjuntamente integración, ciencia y coordinación de IA. Esta
 entrega se trabaja en `raul`, preservando la integración P2 de `main` (`04baeee`)
 y la rama P4 (`12555c1`). La referencia inicial `codex/team-start-v1` no se mueve.
-Usar el commit indicado en la entrega/PR; `git rev-parse HEAD` permite comprobarlo.
+Código verificado: `fd83a84aa24511e573a1b5f27cc859bcdddbf638` ([PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2)).
+La documentación de verificación posterior no cambia ese código; `git rev-parse HEAD`
+permite comprobar la referencia utilizada.
 
 ## Qué está cerrado
 
@@ -29,7 +31,7 @@ red para paquetes fijados por lockfiles. No hacen falta claves, ZIP NASA ni Dock
 ```powershell
 git clone https://github.com/Ryo-936hz/Flame-in-Freefall.git
 Set-Location .\Flame-in-Freefall
-git switch --no-track -c mi-demo origin/raul
+git switch --no-track -c mi-demo fd83a84aa24511e573a1b5f27cc859bcdddbf638
 git rev-parse HEAD
 .\scripts\setup.ps1
 .\scripts\check.ps1

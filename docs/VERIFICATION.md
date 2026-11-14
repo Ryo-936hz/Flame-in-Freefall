@@ -43,13 +43,41 @@ La auditoría prueba contratos, trazabilidad y comportamiento; no aprueba la
 interpretación científica. Siguen `unverified` y `reviewed=false`. Ver
 [P2_INTEGRATION_REVIEW](../evals/science/P2_INTEGRATION_REVIEW.md).
 
-### Clon limpio y CI de esta entrega
+### Clon limpio y CI de esta entrega — aprobados
 
-Se registrarán aquí con su SHA cuando terminen. El CI previo de `main` `04baeee`
-sí pasó en Windows, Linux y PostgreSQL 17:
-[ejecución 43608791293](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43608791293).
-Ese resultado no se atribuye a los cambios nuevos. La prueba PostgreSQL de esta
-entrega amplía reemplazo de corpus y recuperación histórica del plan/informe/fuentes.
+Commit de código verificado: **`fd83a84aa24511e573a1b5f27cc859bcdddbf638`**, [PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2).
+Esta anotación posterior modifica únicamente documentación.
+
+Clon nuevo `git clone --no-hardlinks --branch raul` desde el repositorio local,
+sin `.venv`, `node_modules` ni `.env` iniciales. Se instalaron dependencias propias
+con `scripts/setup.ps1` y se ejecutó `scripts/check.ps1`: ambos terminaron con
+salida 0. Entorno de proceso sin variables FLAMELAB/PYTHONPATH heredadas.
+Se comprobó que ROOT y sys.prefix apuntaran al clon, con directorios normales
+sin junctions, SHA exacto y árbol Git limpio después.
+
+- **340 Python aprobadas, 3 omitidas**: dos bundles reales no distribuidos y
+  PostgreSQL sin servidor local. Un aviso Starlette/httpx.
+- Ciencia 6+6 y disponibilidad, IA 18, cliente 6, Ruff, deriva de contratos,
+  tipado/build y smoke HTTP/reinicio correctos; los tres escenarios esperados.
+- Python 3.12.14, Node 24.22.1, PowerShell 7.6.9 y Git 2.55.0.windows.5.
+- Fue el mismo Windows con runtimes y posibles cachés compartidas, no una máquina
+  recién instalada; `.venv` y `node_modules` se crearon para este clon.
+
+CI remoto [43614900736](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43614900736), estado `completed`, conclusión `success`,
+head `fd83a84aa24511e573a1b5f27cc859bcdddbf638`:
+
+| Trabajo | Resultado observado |
+|---|---|
+| Windows, Python 3.12.10 | 340 Python aprobadas, 3 omitidas; evaluaciones, 6 cliente, contratos, build y smoke/reinicio correctos. |
+| Linux, Python 3.12.16 | 340 Python aprobadas, 3 omitidas; las mismas puertas correctas. |
+| PostgreSQL 17, Python 3.12.16 | 1 integración aprobada sobre servidor real: migración, corpus/reemplazo, snapshots y recuperación histórica de plan/informe/fuentes. |
+
+Las tres omisiones de cada job general son esperadas: los dos bundles locales
+y PostgreSQL, que tiene su job específico aprobado. El contenedor incluye
+pgvector, pero no se afirma uso ni validación de búsquedas vectoriales.
+El corpus real sí se verificó localmente en la puerta de 342 pruebas anterior.
+
+## Historial de verificaciones anteriores
 
 ## Integration of `main` and `lujan`
 

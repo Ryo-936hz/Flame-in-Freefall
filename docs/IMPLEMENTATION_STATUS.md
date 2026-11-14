@@ -25,10 +25,12 @@ HTTP/SQLite correctos. Evaluaciones: seis legacy, seis de segmentos, diagnóstic
 de disponibilidad aprobado, 18 casos IA y siete checks sobre el corpus real local.
 El resultado completo, clon limpio y CI se registran en VERIFICATION con sus SHA.
 
-PostgreSQL ya pasó en CI para `main` `04baeee`,
-[ejecución 43608791293](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43608791293).
-La prueba se amplía en esta entrega para reemplazo de corpus y recuperación
-histórica; consultar su nueva ejecución asociada al commit. No se valida pgvector.
+Clon limpio del código `fd83a84aa24511e573a1b5f27cc859bcdddbf638`: setup/check correctos,
+340 Python aprobadas y tres omisiones esperadas sin datos reales/PostgreSQL local.
+CI de la [PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2) aprobado en Windows, Linux y PostgreSQL 17:
+[ejecución 43614900736](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43614900736). PostgreSQL comprobó reemplazo de corpus y
+recuperación histórica; no se valida pgvector. La documentación posterior conserva
+este SHA de código verificado.
 
 ## Lo que requiere trabajo de otros puestos o validación externa
 

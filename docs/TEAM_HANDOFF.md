@@ -1,7 +1,7 @@
 # Relevo vigente — integración P1/P3/P4
 
-El usuario asume P1/P3/P4. Entrega en `raul`; el commit se consulta con
-`git log -1 --format=%H`. [Guía reproducible](INTEGRATION_P134.md),
+El usuario asume P1/P3/P4. Entrega publicada en `raul`, [PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2).
+Código verificado `fd83a84aa24511e573a1b5f27cc859bcdddbf638`; las anotaciones posteriores solo documentan pruebas. [Guía reproducible](INTEGRATION_P134.md),
 [estado](IMPLEMENTATION_STATUS.md), [verificación](VERIFICATION.md).
 
 P1 publica el contrato/preview/snapshots/CI; P3 conserva identidad, controles,
