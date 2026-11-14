@@ -1,5 +1,8 @@
 # P2 handoff for the 24-study NASA corpus
 
+For the versioned team demo, see [P2 demo handoff](handoffs/P2_DEMO.md) for the
+portable bundle, SHA-256 checks, verified BASS-II presets and Saffire contrast.
+
 Starting commit on `lujan`: `6e3350ef7fb2bdda2d57c26ce1111536381f60b6`.
 The scope follows the [P3 study matrix](https://github.com/Ryo-936hz/Flame-in-Freefall/blob/f25a4a251769d8bd1ed31617adee486dacf34425/evals/science/NASA_24_REVIEW.md).
 Every study has a profile with its question, source inventory, row granularity and review limits.
