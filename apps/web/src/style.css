@@ -313,3 +313,193 @@ table.sub td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
   100% { border-color: var(--panel-border); box-shadow: 0 0 0 1px transparent, 0 0 0 10px transparent; }
 }
 .panel h2:focus { outline: none; }
+
+/* Investigate stays reachable: the action bar sticks to the bottom of the brief column. */
+.brief-actions {
+  position: sticky; bottom: 0; z-index: 2; align-items: center;
+  margin: 14px -16px -16px; padding: 12px 16px;
+  background: var(--surface); border-top: 1px solid var(--rule);
+  box-shadow: 0 -12px 16px -12px rgba(0, 0, 0, 0.35);
+}
+.brief-actions .btn.primary { flex: 1 1 auto; justify-content: center; }
+.brief-error { flex-basis: 100%; margin: 0 0 4px; }
+.kbd-hint { font-family: var(--font-num); font-size: 10.5px; color: var(--ink-3); margin-left: auto; }
+.col-brief { scroll-padding-bottom: 72px; }
+
+/* ---------- Fixed app shell (desktop): the page never scrolls, footer always visible ---------- */
+@media (min-width: 901px) {
+  html, body, #root { height: 100%; overflow: hidden; }
+  .app { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .topbar { position: relative; }
+  .shell { min-height: 0; height: 100%; padding-bottom: 10px; align-items: stretch; }
+  .col-brief, .col-work, .col-evidence {
+    position: relative; top: auto; max-height: none; height: 100%; min-height: 0;
+    overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
+  }
+  .col-work { align-content: start; padding-right: 2px; }
+  .col-evidence .panel { min-height: 100%; }
+  .foot { padding: 8px clamp(14px, 2.4vw, 32px); }
+}
+@media (min-width: 901px) and (max-width: 1280px) {
+  .shell { grid-template-columns: minmax(280px, 4fr) minmax(0, 8fr); grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); }
+  .col-brief { grid-column: 1; grid-row: 1 / span 2; }
+  .col-work { grid-column: 2; grid-row: 1; }
+  .col-evidence { grid-column: 2; grid-row: 2; }
+}
+
+/* ---------- Day/night switch ---------- */
+.theme-switch {
+  display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px 4px 4px; border-radius: 999px;
+  border: 1px solid var(--signal); background: color-mix(in oklab, var(--surface) 75%, transparent); color: var(--ink);
+  backdrop-filter: blur(10px); transition: background 0.2s, color 0.2s, transform 0.12s var(--ease);
+}
+.theme-switch:hover { background: color-mix(in oklab, var(--signal) 14%, var(--surface)); }
+.theme-switch:active { transform: scale(0.97); }
+.ts-track {
+  position: relative; width: 54px; height: 26px; border-radius: 999px; padding: 0 6px;
+  display: inline-flex; align-items: center; justify-content: space-between;
+  background: var(--sunk); border: 1px solid var(--rule-strong);
+}
+.ts-icon { display: grid; color: var(--ink-3); }
+.ts-icon svg, .ts-knob svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.ts-knob {
+  position: absolute; left: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--signal); color: var(--signal-ink); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.ts-label { min-width: 40px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* ---------- Glassmorphism (frost + translucency + lit edge + depth), applied sparingly ---------- */
+:root {
+  --glass-bg: rgba(16, 16, 14, 0.55);
+  --glass-edge: rgba(255, 255, 255, 0.16);
+  --glass-lit: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 10px 34px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  --ambient: radial-gradient(60vw 50vh at 8% 0%, rgba(223, 241, 64, 0.10), transparent 70%),
+             radial-gradient(55vw 55vh at 100% 100%, rgba(80, 85, 68, 0.45), transparent 70%),
+             radial-gradient(40vw 40vh at 62% 38%, rgba(142, 146, 145, 0.10), transparent 70%);
+}
+:root[data-theme="light"] {
+  --glass-bg: rgba(255, 255, 255, 0.5);
+  --glass-edge: rgba(1, 1, 1, 0.12);
+  --glass-lit: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 10px 30px rgba(40, 42, 32, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(1, 1, 1, 0.05);
+  --ambient: radial-gradient(60vw 50vh at 8% 0%, rgba(223, 241, 64, 0.35), transparent 70%),
+             radial-gradient(55vw 55vh at 100% 100%, rgba(80, 85, 68, 0.22), transparent 70%),
+             radial-gradient(40vw 40vh at 62% 38%, rgba(142, 146, 145, 0.18), transparent 70%);
+}
+
+/* Busy-enough backdrop for the frost to read: ambient palette light plus faint grain against banding. */
+.app { position: relative; isolation: isolate; }
+.app::before { content: ""; position: fixed; inset: 0; z-index: -2; background: var(--ambient), var(--bg); pointer-events: none; }
+.app::after {
+  content: ""; position: fixed; inset: 0; z-index: -1; opacity: 0.045; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+body { background: var(--bg); }
+
+.panel, .topbar, .theme-switch {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+.panel { position: relative; box-shadow: var(--glass-shadow); transition: box-shadow 0.4s var(--ease), border-color 0.4s var(--ease); }
+/* Lit corner: a masked 1px ring bright at top-left, fading toward bottom-right. */
+.panel::before {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(135deg, var(--glass-lit), transparent 35%, transparent 70%, var(--glass-edge));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.55; transition: opacity 0.4s var(--ease);
+}
+.panel:hover::before { opacity: 1; }
+.topbar { border-bottom-color: var(--glass-edge); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
+/* The flame viewport style tile and nested bars stay solid: no glass on glass. */
+.brief-actions { background: color-mix(in oklab, var(--surface) 88%, transparent); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.chart, .ev-text, .interpreted, .state { background-color: color-mix(in oklab, var(--bg) 70%, transparent); }
+
+/* Specular sweep across the primary action on hover. */
+.btn.primary { position: relative; overflow: hidden; isolation: isolate; }
+.btn.primary::after {
+  content: ""; position: absolute; inset: -20% auto -20% -60%; width: 45%; z-index: -1; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  transform: skewX(-20deg) translateX(0); opacity: 0;
+}
+.btn.primary:hover:not(:disabled)::after { animation: sweep 0.9s var(--ease); }
+@keyframes sweep { 0% { transform: skewX(-20deg) translateX(0); opacity: 1; } 100% { transform: skewX(-20deg) translateX(420%); opacity: 0; } }
+
+/* Accessibility and support fallbacks. */
+@media (prefers-reduced-transparency: reduce) {
+  .panel, .topbar, .theme-switch { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .app::after { display: none; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .panel, .topbar, .theme-switch { background: color-mix(in oklab, var(--surface) 94%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel, .panel::before { transition: none; }
+  .btn.primary::after { animation: none; }
+}
+
+/* ---------- Illustrative flame (empty state) ---------- */
+.flame-ill { margin: 0 0 14px; }
+.flame-view {
+  position: relative; aspect-ratio: 16 / 7.5; border-radius: 4px; overflow: hidden; background-color: #000;
+  background-image: linear-gradient(rgba(223, 241, 64, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(223, 241, 64, 0.07) 1px, transparent 1px);
+  background-size: 32px 32px; background-position: center; border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.flame-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.flame-tag {
+  position: absolute; top: 10px; right: 10px; padding: 2px 8px; border-radius: 999px; font-size: 10px; letter-spacing: 0.06em;
+  text-transform: uppercase; color: #f2a33a; border: 1px solid #f2a33a; background: rgba(0, 0, 0, 0.55);
+}
+.flame-lbl { position: absolute; bottom: 12px; color: #f1f0ea; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+.flame-lbl.l { left: 16px; }
+.flame-lbl.r { left: calc(50% + 16px); }
+.flame-lbl span { display: block; margin-top: 4px; font-size: 10.5px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(241, 240, 234, 0.6); }
+.flame-divider { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid rgba(241, 240, 234, 0.12); }
+.flame-ill figcaption { margin-top: 8px; font-size: 13px; color: var(--ink-2); text-wrap: pretty; }
+@media (max-width: 900px) { .flame-view { aspect-ratio: 4 / 3; } .flame-lbl { font-size: 14px; } }
+
+/* ---------- Frosted glass panels, day and night (overrides the first glass pass) ---------- */
+:root {
+  --glass-bg: rgba(22, 22, 20, 0.46);
+  --frost: blur(28px) saturate(100%) brightness(0.92);
+  --frost-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+:root[data-theme="light"] {
+  --glass-bg: rgba(252, 251, 247, 0.5);
+  --frost: blur(28px) saturate(100%) brightness(1.04);
+  --frost-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+.panel {
+  background-color: var(--glass-bg);
+  background-image: var(--frost-grain);
+  -webkit-backdrop-filter: var(--frost);
+  backdrop-filter: var(--frost);
+}
+.topbar, .theme-switch { -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost); }
+
+/* Layer order: ambient glow and grain sit under everything; content always above. */
+.app::before { z-index: -2; }
+.app::after { z-index: -1; }
+.topbar { z-index: 20; }
+.shell, .foot { position: relative; z-index: 1; }
+@media (prefers-reduced-transparency: reduce) {
+  .panel, .topbar, .theme-switch { background-color: var(--surface); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .app::before { background: var(--bg); }
+  .app::after { display: none; }
+}
+
+/* Flame explainer lives in the evidence column before the first investigation. */
+.col-evidence { display: grid; align-content: start; gap: 10px; }
+.col-evidence .panel.evidence { min-height: 0; }
+.flame-panel .panel-b { padding: 12px 14px 14px; }
+.flame-ill { margin: 0; }
+.flame-title { margin: 0 0 8px; color: var(--ink-3); }
+.flame-view { aspect-ratio: 16 / 10; }
+.flame-tag { top: 8px; right: 8px; font-size: 9px; padding: 1px 6px; }
+.flame-lbl { bottom: 8px; font-size: 12.5px; }
+.flame-lbl.l { left: 10px; }
+.flame-lbl.r { left: calc(50% + 10px); }
+.flame-lbl span { font-size: 9px; margin-top: 2px; }
+.flame-ill figcaption { font-size: 12px; line-height: 1.45; }
+.col-evidence .panel { min-height: 0; }

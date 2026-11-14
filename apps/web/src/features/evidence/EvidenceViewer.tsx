@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { gsap, prefersReducedMotion, useGSAP } from "../../lib/motion";
 import type { Api, Evidence } from "../../lib/client";
 import { ApiError, sourceLink } from "../../lib/client";
 import { createLatest } from "../../lib/latest";
@@ -42,10 +43,16 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
   }, [api, activeId, researchId, retrieved, attempt]);
 
   const evidence = load.state === "ready" ? load.evidence : null;
+  const body = useRef<HTMLDivElement>(null);
+  // New evidence slides in: tags, title, metadata and text cascade.
+  useGSAP(() => {
+    if (!evidence || prefersReducedMotion()) return;
+    gsap.from(".ev > *", { opacity: 0, y: 10, stagger: 0.05, duration: 0.45, ease: "expo.out", clearProps: "opacity,transform" });
+  }, { scope: body, dependencies: [evidence?.id] });
   const link = sourceLink(evidence?.source_url);
 
   return <Panel id="evidence" title="Evidence" className="evidence" meta={context && <span className="id">{context}</span>}>
-    <div className="panel-b">
+    <div className="panel-b" ref={body}>
       {ids.length > 1 && <div className="ev-tabs" role="group" aria-label="Evidence for the selection">
         {ids.map((id) => <button type="button" key={id} className="chip" aria-pressed={id === activeId} onClick={() => onPick(id)}>{shortId(id)}</button>)}
       </div>}

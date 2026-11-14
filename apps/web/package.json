@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@gsap/react": "2.1.2",
+    "gsap": "3.13.0",
     "openapi-fetch": "0.17.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"

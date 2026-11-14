@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { gsap, prefersReducedMotion, useGSAP } from "../lib/motion";
 import type { Health } from "../lib/client";
 import { DATA_MODE_LABEL } from "../lib/format";
 import { Mark, RollText, Tag } from "./ui";
@@ -76,11 +77,37 @@ export default function TopBar({ health, offline, theme, onTheme, sections }: {
         <Tag tone={health.ai_provider === "demo" ? "neutral" : "signal"}>AI {health.ai_provider === "demo" ? "deterministic demo" : health.ai_provider}</Tag>
         <span className="status-db">{health.database} · v{health.version}</span>
       </> : <span className="status-db">Connecting…</span>}
-      <button type="button" className="icon-btn bracket" onClick={onTheme} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
-        {theme === "dark"
-          ? <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
-          : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" /></svg>}
-      </button>
+      <ThemeSwitch theme={theme} onToggle={onTheme} />
     </div>
   </header>;
+}
+
+const SUN = <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>;
+const MOON = <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" /></svg>;
+
+/** Labelled day/night switch; the knob slides with GSAP and the icon spins in. */
+function ThemeSwitch({ theme, onToggle }: { theme: "dark" | "light"; onToggle: () => void }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  const first = useRef(true);
+  const dark = theme === "dark";
+  useGSAP(() => {
+    const knob = ref.current?.querySelector(".ts-knob");
+    if (!knob) return;
+    const x = dark ? 0 : (ref.current!.querySelector(".ts-track") as HTMLElement).offsetWidth - (knob as HTMLElement).offsetWidth - 4;
+    if (first.current || prefersReducedMotion()) { gsap.set(knob, { x }); first.current = false; return; }
+    const slide = gsap.to(knob, { x, duration: 0.55, ease: "back.out(1.6)" });
+    window.setTimeout(() => slide.progress(1), 900);
+    gsap.fromTo(ref.current!.querySelector(".ts-knob svg"), { rotate: -120, scale: 0.4 }, { rotate: 0, scale: 1, duration: 0.6, ease: "back.out(2)" });
+    gsap.fromTo(ref.current!.querySelector(".ts-label"), { y: dark ? -8 : 8, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35 });
+  }, { dependencies: [dark], scope: ref });
+
+  return <button ref={ref} type="button" role="switch" aria-checked={dark} className="theme-switch" onClick={onToggle}
+    aria-label="Night mode" title={dark ? "Switch to day mode" : "Switch to night mode"}>
+    <span className="ts-track" aria-hidden="true">
+      <span className="ts-icon ts-moon">{MOON}</span>
+      <span className="ts-icon ts-sun">{SUN}</span>
+      <span className="ts-knob">{dark ? MOON : SUN}</span>
+    </span>
+    <span className="ts-label" aria-hidden="true">{dark ? "Night" : "Day"}</span>
+  </button>;
 }

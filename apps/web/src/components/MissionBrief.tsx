@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
+import { gsap, prefersReducedMotion, useGSAP } from "../lib/motion";
 import type { RankingRequest } from "../lib/client";
 import { CONDITIONS, METRICS, ROLE_LABELS, buildRanking, describeRanking } from "../lib/filters";
 import type { BriefDraft, ConditionKey, ConditionRole } from "../lib/filters";
@@ -19,13 +20,32 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
   const setCondition = (key: ConditionKey, patch: Partial<BriefDraft["conditions"][ConditionKey]>) =>
     onChange({ ...draft, conditions: { ...draft.conditions, [key]: { ...draft.conditions[key], ...patch } } });
   const canSubmit = !busy && built.request !== null && draft.question.trim().length >= 3;
+  const form = useRef<HTMLFormElement>(null);
+  const roles = CONDITIONS.map(({ key }) => draft.conditions[key].role).join("|");
+  const previous = useRef(roles);
+  // A value field that just appeared drops in; the rest of the form stays still.
+  useGSAP(() => {
+    const before = previous.current.split("|");
+    previous.current = roles;
+    if (prefersReducedMotion()) return;
+    CONDITIONS.forEach(({ key }, index) => {
+      const was = before[index];
+      const now = draft.conditions[key].role;
+      const shown = (role?: string) => role === "match" || role === "similar";
+      if (!shown(was) && shown(now)) gsap.from(`[data-cond="${key}"] .input`, { height: 0, opacity: 0, y: -6, duration: 0.4, ease: "expo.out", clearProps: "height,opacity,transform" });
+    });
+  }, { scope: form, dependencies: [roles] });
 
   return <Panel id="brief" title="Mission Brief" className="brief">
-    <form className="panel-b" onSubmit={(event) => { event.preventDefault(); if (canSubmit && built.request) onSubmit(built.request); }}>
+    <form ref={form} className="panel-b" onSubmit={(event) => { event.preventDefault(); if (canSubmit && built.request) onSubmit(built.request); }}>
       <label className="field">
         <span className="cap">Question</span>
         <textarea value={draft.question} rows={3} maxLength={4000}
-          onChange={(event) => onChange({ ...draft, question: event.target.value })} />
+          onChange={(event) => onChange({ ...draft, question: event.target.value })}
+          onKeyDown={(event) => {
+            // Ctrl/Cmd + Enter runs the investigation without leaving the keyboard.
+            if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); }
+          }} />
         <small className="hint">Shown with the synthesis. The filters below drive the analysis; the demo does not interpret written constraints.</small>
       </label>
 
@@ -35,7 +55,7 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
           const condition = draft.conditions[key];
           const error = built.errors[key];
           const needsValue = condition.role === "match" || condition.role === "similar";
-          return <div className="cond" key={key} data-role={condition.role}>
+          return <div className="cond" key={key} data-cond={key} data-role={condition.role}>
             <label className="cond-name" htmlFor={`role-${key}`}>{label}{unit && <span className="unit"> {unit}</span>}</label>
             <select id={`role-${key}`} className="select" value={condition.role}
               onChange={(event) => setCondition(key, { role: event.target.value as ConditionRole })}>
@@ -83,9 +103,11 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
         <ul>{describeRanking(built.request).map((line) => <li key={line}>{line}</li>)}</ul>
       </div>}
 
-      <div className="actions">
-        <button type="submit" className="btn primary" disabled={!canSubmit}>{busy ? "Investigating…" : "Investigate"}</button>
+      <div className="actions brief-actions">
+        {Object.keys(built.errors).length > 0 && <p className="field-error brief-error" role="status">Fix the highlighted condition to investigate.</p>}
+        <button type="submit" className="btn primary" disabled={!canSubmit} aria-keyshortcuts="Control+Enter">{busy ? "Investigating…" : "Investigate"}</button>
         <button type="button" className="btn" onClick={onReset} disabled={busy}>Reset demo query</button>
+        <span className="kbd-hint" aria-hidden="true">Ctrl + Enter</span>
       </div>
     </form>
   </Panel>;

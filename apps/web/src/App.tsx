@@ -4,11 +4,13 @@ import type { Health, Profile, RankingRequest, ResearchResponse } from "./lib/cl
 import { buildRanking, demoDraft } from "./lib/filters";
 import type { BriefDraft, ConditionKey } from "./lib/filters";
 import { createLatest } from "./lib/latest";
+import { countUp, reveal, useGSAP } from "./lib/motion";
 import { shortId } from "./lib/format";
 import TopBar from "./components/TopBar";
 import MissionBrief from "./components/MissionBrief";
 import SynthesisPanel from "./components/SynthesisPanel";
 import InterimMissionTools from "./components/InterimMissionTools";
+import FlameIllustration from "./components/FlameIllustration";
 import { Panel, StateMessage } from "./components/ui";
 import EvidenceCanvas from "./features/evidence/EvidenceCanvas";
 import EvidenceViewer from "./features/evidence/EvidenceViewer";
@@ -56,6 +58,7 @@ export default function App() {
   const [run, setRun] = useState<Run>({ state: "idle" });
   const [selection, setSelection] = useState<Selection>(EMPTY_SELECTION);
   const latest = useRef(createLatest());
+  const root = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -104,6 +107,12 @@ export default function App() {
   }
 
   const result = run.state === "ready" ? run.result : null;
+  // Brief values that drive the illustrative flame (display only, never sent anywhere).
+  const used = (key: "gravity_regime" | "oxygen_pct" | "flow_velocity_cm_s") => {
+    const c = draft.conditions[key];
+    return (c.role === "match" || c.role === "similar") && c.value.trim() ? c.value.trim() : null;
+  };
+  const asNumber = (v: string | null) => (v !== null && Number.isFinite(Number(v.replace(",", "."))) ? Number(v.replace(",", ".")) : null);
   const currentRequest = useMemo(() => buildRanking(draft).request, [draft]);
   const evidenceIds = useMemo(() => {
     if (!result) return [];
@@ -117,7 +126,34 @@ export default function App() {
     document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   };
 
-  return <>
+  // One authored entrance: bar drops in, columns wipe up left to right.
+  useGSAP(() => reveal((tl) => {
+    tl.from(".topbar", { yPercent: -100, opacity: 0, duration: 0.7 })
+      .from(".brand svg", { rotate: -180, scale: 0.4, duration: 0.9 }, 0.1)
+      .from(".nav-link", { y: -10, opacity: 0, stagger: 0.05, duration: 0.5 }, 0.2)
+      .from([".col-brief", ".col-work > *", ".col-evidence"], { clipPath: "inset(0 0 100% 0)", y: 18, stagger: 0.08, duration: 0.9, clearProps: "clipPath,transform" }, 0.25);
+  }), { scope: root });
+
+  // Each new research record animates its own content: points pop, rows and claims cascade, numbers count.
+  useGSAP(() => {
+    if (!result) return;
+    const cleanup = reveal((tl) => {
+      tl.from(".run-id", { opacity: 0, x: -12, duration: 0.4 })
+        .from(".chart .pt-dot", { scale: 0, transformOrigin: "50% 50%", stagger: 0.04, duration: 0.6, ease: "back.out(2.2)" }, 0.1)
+        .from(".chart .axis line", { opacity: 0, stagger: 0.01, duration: 0.4 }, 0)
+        .from(".groups li, .canvas .warnings li", { opacity: 0, x: -10, stagger: 0.05, duration: 0.45 }, 0.25)
+        .from(".ranking tbody tr.row", { opacity: 0, y: 10, stagger: 0.05, duration: 0.5 }, 0.3)
+        .from(".ranking .cov-bar i", { scaleX: 0, stagger: 0.05, duration: 0.8, ease: "power3.out" }, 0.35)
+        .from(".claims li, .hypo, .events li", { opacity: 0, y: 8, stagger: 0.04, duration: 0.45 }, 0.45);
+    });
+    root.current?.querySelectorAll(".ranking td.big").forEach((cell, index) => {
+      const value = Number(cell.textContent);
+      if (Number.isFinite(value)) countUp(cell, value, 3, 0.3 + index * 0.05);
+    });
+    return cleanup;
+  }, { scope: root, dependencies: [result?.id], revertOnUpdate: true });
+
+  return <div className="app" ref={root}>
     <a className="skip" href="#brief">Skip to the form</a>
     <TopBar health={health} offline={Boolean(offline)} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
       sections={result ? ["brief", "canvas", "evidence", "synthesis", "lab"] : ["brief", "canvas", "evidence", "lab"]} />
@@ -134,9 +170,11 @@ export default function App() {
         </StateMessage>}
 
         {run.state === "idle" && <Panel id="canvas" title="Evidence Canvas">
-          <div className="panel-b"><StateMessage kind="empty" title="Ask a question and press “Investigate”">
-            <p>Results appear here: chart, observation table and ranking with coverage. Every point, row and citation opens its evidence.</p>
-          </StateMessage></div>
+          <div className="panel-b">
+            <StateMessage kind="empty" title="Ask a question and press “Investigate”">
+              <p>Results appear here: chart, observation table and ranking with coverage. Every point, row and citation opens its evidence.</p>
+            </StateMessage>
+          </div>
         </Panel>}
         {run.state === "loading" && <Panel id="canvas" title="Evidence Canvas">
           <div className="panel-b"><StateMessage kind="loading" title="Querying the API: profile, ranking, comparison and evidence…" /></div>
@@ -160,6 +198,11 @@ export default function App() {
       </div>
 
       <div className="col-evidence">
+        {!result && <section className="panel flame-panel" aria-label="Illustration">
+          <div className="panel-b">
+            <FlameIllustration gravityLabel={used("gravity_regime")} o2={asNumber(used("oxygen_pct"))} flow={asNumber(used("flow_velocity_cm_s"))} />
+          </div>
+        </section>}
         <EvidenceViewer api={api} researchId={result?.id ?? null} ids={evidenceIds}
           retrieved={result && selection.evidenceId ? isRetrieved(result, selection.evidenceId) : true} activeId={result ? selection.evidenceId : null}
           context={context} onPick={(id) => setSelection(selectEvidence(selection, id))} />
@@ -169,5 +212,5 @@ export default function App() {
       <span>FlameLab SI · Los TTS · NASA Space Apps 2026 “Flame in Freefall”</span>
       <span>Visual direction inspired by control-system software; no affiliation or third-party assets.</span>
     </footer>
-  </>;
+  </div>;
 }

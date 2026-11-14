@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import type { KeyboardEvent } from "react";
+import { gsap, prefersReducedMotion, useGSAP } from "../../lib/motion";
 import type { Models } from "../../lib/client";
 import { conditionLabel, metricLabel } from "../../lib/filters";
 import { fmt, shortId } from "../../lib/format";
@@ -32,6 +34,14 @@ export default function ScatterChart({ comparison, groupIndex, selectedObservati
   selectedTrial: string | null;
   onSelect: (observationId: string) => void;
 }) {
+  const figure = useRef<HTMLElement>(null);
+  // Selection ring contracts onto the chosen point.
+  useGSAP(() => {
+    if (prefersReducedMotion()) return;
+    gsap.fromTo(".pt-ring", { scale: 2.4, opacity: 0, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: 0.55, ease: "expo.out" });
+    gsap.fromTo(".pt[data-related=\"true\"] .pt-dot", { scale: 1.6, transformOrigin: "50% 50%" }, { scale: 1, duration: 0.5, ease: "back.out(2)" });
+  }, { scope: figure, dependencies: [selectedObservation, selectedTrial] });
+
   const placed = comparison.points.filter((point) => point.x !== null);
   const unplaced = comparison.points.filter((point) => point.x === null);
   const xTicks = niceTicks(Math.max(0, ...placed.map((point) => point.x as number)) * 1.08 || 1);
@@ -57,7 +67,7 @@ export default function ScatterChart({ comparison, groupIndex, selectedObservati
     if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelect(id); }
   };
 
-  return <figure className="chart">
+  return <figure className="chart" ref={figure}>
     <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label={`Scatter chart: ${yTitle} vs ${xTitle}. ${placed.length} points.`}>
       <g className="axis" aria-hidden="true">
         {xTicks.map((t) => <g key={`x${t}`}><line x1={sx(t)} x2={sx(t)} y1={M.t} y2={H - M.b} /><text x={sx(t)} y={H - M.b + 16} textAnchor="middle">{fmt(t)}</text></g>)}
