@@ -86,3 +86,25 @@ Documents conserva SHA-256 del ZIP
 `5fcfa48e95a7c9ff84462c9fb498e144fc401bb22c0b09e18ff36d582e61c644`.
 No se versionan ZIP, PDFs completos, credenciales, bases ni node_modules. El paquete
 documental original sigue intacto fuera del clon; no había código ajeno en destino.
+
+### Puerta de integración PostgreSQL
+
+P1 añadió a CI una comprobación con PostgreSQL 17 para migraciones y recuperación. No se pudo ejecutar localmente en este entorno. PostgreSQL sigue sin verificar hasta que pase el nuevo job; pgvector continúa sin verificar.
+
+### Contrato de condiciones sucesivas
+
+P1 implemento el contrato 1.1 compatible con bundles 1.0: segmentos ordenados dentro del ensayo, enlace opcional de observaciones, condiciones O2 inicial/final a nivel de ensayo y control de cara de combustion. OpenAPI y TypeScript se regeneraron desde el modelo canonico. P3 debe adaptar comparacion/evaluacion antes de considerar completo el incremento integrado.
+
+### Integración compartida de P1 — 14 de noviembre de 2026
+
+Se incorpora `94989a7` a la línea de integración con dos correcciones: O₂ limitado
+a 0–100 % en condiciones/objetivos y extremos inicial/final prohibidos dentro de
+segmentos. 137 pruebas Python aprobadas y una omitida por falta de PostgreSQL local;
+6 pruebas cliente, Ruff, contratos, tipado/build y HTTP/SQLite con reinicio correctos.
+El resultado remoto de CI debe consultarse en Actions. El detalle y los comandos
+de actualización están en [el relevo P1](handoffs/P1.md).
+
+La adaptación completa de ciencia P3 ya existe en `raul` (`8134b1c`) y queda
+pendiente de integrarse en main. P2 debe adaptar su esquema alternativo al contrato
+1.1 compartido. Esta entrega mantiene el corpus sintético y no incorpora los datos
+cuantitativos ni las interfaces de las demás ramas.

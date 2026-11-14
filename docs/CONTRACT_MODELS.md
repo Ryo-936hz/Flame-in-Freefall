@@ -22,6 +22,8 @@ The trial-only keys `oxygen_initial_pct` and `oxygen_final_pct` use `%`,
 `count`. The categorical `combustion_face` identifies a face and has no unit.
 Keep the original basis and units. Segment `oxygen_pct` keeps the appropriate
 missing status when no segment-specific measurement is available.
+Known oxygen values and ranking targets are bounded to 0–100 inclusive. Segments
+reject initial and final oxygen fields regardless of their missingness status.
 
 Older canonical unstaged bundles load through the same models. A storage-only reader
 loads historical P2 snapshots without rewriting them. Identical legacy corpus reimports

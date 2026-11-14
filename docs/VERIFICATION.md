@@ -4,6 +4,19 @@
 construcción local Windows; la última registra la publicación y CI remota.
 Ninguna de estas verificaciones equivale a validación científica.
 
+## Integration of `main` and `lujan`
+
+Integrated `main` at `9ccc996` and `lujan` at `a4b03c7` after fast-forward-only
+pulls of both branches. The merged contract preserves the `main` oxygen scope and
+range checks, P3 comparison rules, and P2 corpus mappings. OpenAPI and TypeScript
+were regenerated from the merged schema. The PostgreSQL workflow and test from
+`main` are included.
+
+- Python with both real 1.1 bundles: **213 passed**. PostgreSQL was skipped in
+  this local run because a test database URL was not configured.
+- Both P3 evaluation suites passed. SQLite HTTP and restart smoke passed.
+- Ruff, OpenAPI/TypeScript drift, typecheck, **6 client tests** and Vite build passed.
+
 ## P2 follow-up after P1/P3 review
 
 Branch `lujan`, starting commit `cfc0795`. Used P1's segment contract at `94989a7`
@@ -189,3 +202,11 @@ de equipo incorpora esta documentación; consultar su ejecución propia en Actio
 Para nuevos cambios, revisar la ejecución asociada a su SHA: el éxito de #1 no
 acredita automáticamente futuras modificaciones. Los permisos de colaboradores,
 visibilidad y reglas de protección del repositorio no se han cambiado.
+
+## Comprobación de integración PostgreSQL
+
+El incremento P1 desde `422f6b03f410c6ac049b699e13fc204a3af67743` añade un job CI separado con PostgreSQL 17 y una prueba que aplica migraciones, guarda una investigación basada en fixtures sintéticos y comprueba que el informe y su snapshot se recuperen tras reconectar. Esta configuración aún no se ha ejecutado en CI ni contra un servidor local; PostgreSQL sigue pendiente hasta que termine correctamente el workflow del commit resultante. La prueba no habilita ni verifica pgvector.
+
+## Contrato 1.1 de condiciones sucesivas
+
+Verificado en el incremento P1: `apps/api/tests/test_contracts.py` y `test_science.py` (45 passed), Ruff de API/scripts, export OpenAPI `--check`, TypeScript generado `--check`, typecheck de cliente y 6 pruebas cliente. La suite Python completa no finalizo en este entorno: pytest no pudo crear temporales en el directorio de sistema y la reejecucion con `--basetemp work/pytest-p1` se interrumpio tras quedar sin salida. El ejemplo es totalmente sintetico. La comparacion extrae X y el `segment_id` enlazado, pero la estratificacion cientifica P3 completa sigue pendiente; PostgreSQL tampoco se verifico.

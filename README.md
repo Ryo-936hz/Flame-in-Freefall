@@ -116,3 +116,11 @@ y VERIFICATION antes de atribuir un resultado a CI. El historial de construcció
 local y su bundle se conservan como referencia histórica. Documents y el paquete
 original permanecen intactos. No necesitas el ZIP para arrancar la demo.
 [Dirección visual](docs/DESIGN_ANDURIL.md).
+
+## Comprobación de integración PostgreSQL
+
+El workflow incluye un job independiente con PostgreSQL 17 y el driver opcional. Para ejecutarlo localmente, instala `uv sync --locked --extra postgres`, define `FLAMELAB_TEST_POSTGRES_URL` con una base desechable de prueba y ejecuta `uv run pytest -q apps/api/tests/test_postgres_integration.py`. La prueba aplica migraciones y comprueba la recuperación de un informe sintético tras reconectar. PostgreSQL solo se considerará verificado para el equipo cuando pase la primera ejecución de CI.
+
+## Ejemplo de condiciones sucesivas
+
+`docs/examples/sequential_conditions.json` es un ejemplo totalmente sintetico: un ensayo y una unidad experimental, dos segmentos en orden reportado, O2 inicial/final en el ensayo y observaciones enlazadas a cada segmento. No representa mediciones NASA ni tiempos medidos.

@@ -58,6 +58,11 @@ Initial and final oxygen describe the trial. `burning_faces` is a count and
 independent unit IDs stay on the physical trial. See the exact P1
 [sequential example](examples/sequential_conditions.json).
 
+Known oxygen values and ranking targets must be between 0 and 100 inclusive.
+Segments reject the initial and final oxygen keys even when explicitly missing.
+Sequences may have gaps. An observation can leave `segment_id` null when its
+segment assignment lacks evidence.
+
 Ranking uses explicit trial conditions by default. An explicit
 `condition_scope: "segment"` evaluates segment conditions and ranks each physical
 trial once using the best eligible segment. Research forwards `eligible_segment_ids`

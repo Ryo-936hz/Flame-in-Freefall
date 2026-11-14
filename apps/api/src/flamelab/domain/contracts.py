@@ -150,6 +150,8 @@ class ConditionSegment(Contract):
 
     @model_validator(mode="after")
     def typed_conditions(self) -> Self:
+        if {"oxygen_initial_pct", "oxygen_final_pct"} & self.conditions.keys():
+            raise ValueError("oxygen_initial_pct and oxygen_final_pct are trial-only conditions")
         validate_conditions(self.conditions)
         return self
 
