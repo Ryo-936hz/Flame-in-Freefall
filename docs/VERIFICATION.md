@@ -103,3 +103,7 @@ de equipo incorpora esta documentación; consultar su ejecución propia en Actio
 Para nuevos cambios, revisar la ejecución asociada a su SHA: el éxito de #1 no
 acredita automáticamente futuras modificaciones. Los permisos de colaboradores,
 visibilidad y reglas de protección del repositorio no se han cambiado.
+
+## Comprobación de integración PostgreSQL
+
+El incremento P1 desde `422f6b03f410c6ac049b699e13fc204a3af67743` añade un job CI separado con PostgreSQL 17 y una prueba que aplica migraciones, guarda una investigación basada en fixtures sintéticos y comprueba que el informe y su snapshot se recuperen tras reconectar. Esta configuración aún no se ha ejecutado en CI ni contra un servidor local; PostgreSQL sigue pendiente hasta que termine correctamente el workflow del commit resultante. La prueba no habilita ni verifica pgvector.
