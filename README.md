@@ -14,10 +14,17 @@ compartida se publica en [GitHub](https://github.com/Ryo-936hz/Flame-in-Freefall
 `main` integra cambios; `codex/team-start-v1` conserva el punto de partida común.
 Cada persona crea su propia rama desde esa referencia, aunque `main` avance.
 
-El recorrido numérico utiliza **datos sintéticos**, no mediciones NASA. El ZIP real
-se inventarió: 24 investigaciones, 22 CSV y 27 PDF, sin vídeos. El catálogo real se
-importa como `metadata_only`, sin observaciones numéricas. La serie BASS-II candidata
-y los problemas de Saffire están en [inspección](docs/DATA_INSPECTION.md).
+The default numerical demo uses **synthetic data**, not NASA measurements. The
+separate metadata catalog contains 24 studies. P2 now provides an explicit local
+BASS-II Table 5.1 extraction/import path, retaining physical trials, successive
+conditions, source cells and missing values. Its scientific review status remains
+`unverified`; Saffire stays documentary context. See the English
+[P2 delivery and commands](docs/P2_DELIVERY.md) and
+[source audit](docs/P2_SOURCE_AUDIT.md).
+
+The [24-study corpus](docs/P2_NASA_24.md) extends this path with browsable documentary
+evidence for every study and campaign-specific numeric or configuration fields for the
+first seven candidates. Its commands generate the local bundle and initialize a separate database.
 
 ## Arrancar en Windows
 
@@ -109,3 +116,11 @@ y VERIFICATION antes de atribuir un resultado a CI. El historial de construcció
 local y su bundle se conservan como referencia histórica. Documents y el paquete
 original permanecen intactos. No necesitas el ZIP para arrancar la demo.
 [Dirección visual](docs/DESIGN_ANDURIL.md).
+
+## Comprobación de integración PostgreSQL
+
+El workflow incluye un job independiente con PostgreSQL 17 y el driver opcional. Para ejecutarlo localmente, instala `uv sync --locked --extra postgres`, define `FLAMELAB_TEST_POSTGRES_URL` con una base desechable de prueba y ejecuta `uv run pytest -q apps/api/tests/test_postgres_integration.py`. La prueba aplica migraciones y comprueba la recuperación de un informe sintético tras reconectar. PostgreSQL solo se considerará verificado para el equipo cuando pase la primera ejecución de CI.
+
+## Ejemplo de condiciones sucesivas
+
+`docs/examples/sequential_conditions.json` es un ejemplo totalmente sintetico: un ensayo y una unidad experimental, dos segmentos en orden reportado, O2 inicial/final en el ensayo y observaciones enlazadas a cada segmento. No representa mediciones NASA ni tiempos medidos.

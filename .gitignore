@@ -1,3 +1,4 @@
+# Local environments and build outputs
 .venv/
 work/
 node_modules/
@@ -6,12 +7,25 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .ruff_cache/
+
+# Local settings and credentials
 .env
+.env.*
+!.env.example
+
+# Local databases, including SQLite sidecar files
 *.db
 *.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+
+# Source files and generated data stored locally
 data/raw/
 data/processed/
+/datasets/
+*:Zone.Identifier
 *.zip
 *.pdf
 *.docx
-!.env.example

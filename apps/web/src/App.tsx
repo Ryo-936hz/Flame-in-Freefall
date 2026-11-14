@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ApiError, createApi, demoRanking, sourceLink } from "./lib/client";
 import type { Evidence, Health, Profile, RankingRequest, ResearchResponse } from "./lib/client";
 import MissionLab, { type ScenarioTrigger } from "./features/mission-lab/MissionLab";
+import { StudyCatalog } from "./features/catalog/StudyCatalog";
 
 const api = createApi(import.meta.env.VITE_API_BASE_URL ?? "");
 
@@ -81,6 +82,8 @@ export default function App() {
       <a href="/docs" target="_blank" rel="noreferrer">Contrato HTTP</a>
     </section>
 
+    <StudyCatalog api={api} />
+
     <section aria-labelledby="query-title">
       <h2 id="query-title">Consulta y filtros explícitos</h2>
       <p>Los filtros mandan. La pregunta acompaña la síntesis; el modo demo no interpreta restricciones verbales adicionales.</p>
@@ -134,7 +137,7 @@ export default function App() {
           <div className="table-scroll"><table>
             <thead><tr><th>Observación</th><th>X</th><th>Y</th><th>Unidad independiente / grupo</th><th>Procedencia / evidencia</th></tr></thead>
             <tbody>{result.comparison.points.map((point) => <tr key={point.observation_id}>
-              <td>{point.observation_id}<br />{point.trial_id}</td><td>{point.x ?? "no disponible"}</td><td>{point.y}</td><td>{point.independent_unit_id}<br />{point.group_id}</td>
+              <td>{point.observation_id}<br />{point.trial_id}</td><td>{point.x ?? "no disponible"}</td><td>{point.y}</td><td>{point.independent_unit_status === "unresolved" ? "Independencia por verificar" : point.independent_unit_id}<br />{point.group_id}</td>
               <td><strong>{point.provenance}</strong><br />{point.evidence_ids.map((id) => <button className="reference" key={id} disabled={busy} onClick={() => selectEvidence(id)}>{id}</button>)}</td>
             </tr>)}</tbody>
           </table></div>

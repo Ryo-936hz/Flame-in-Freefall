@@ -1,5 +1,10 @@
 # Inspección local del corpus NASA
 
+This document records the historical inspection. The subsequent P2 increment
+implements local Table 5.1 extraction, successive conditions and canonical import;
+see [P2_DELIVERY](P2_DELIVERY.md), [source audit](P2_SOURCE_AUDIT.md) and current
+[verification](VERIFICATION.md). The scientific review status remains unverified.
+
 Fecha: 14 de noviembre de 2026. Inspección previa a la implementación. Fuente: archivos locales indicados por el usuario. No se ejecutó contenido del archivo ni se modificó `NASA/Documents`. La presencia de un dato en el ZIP no valida automáticamente su interpretación científica ni su licencia de redistribución.
 
 ## Archivo e integridad

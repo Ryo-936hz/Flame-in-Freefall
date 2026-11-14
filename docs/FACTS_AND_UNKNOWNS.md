@@ -14,6 +14,10 @@ Actualización local: 14 de noviembre de 2026. Cada afirmación nueva debe indic
 
 ## Instrucción vigente
 
+The current P2 request authorizes rebuilding the data increment on `lujan` after
+incorporating main, including provisional shared contract/consumer changes.
+The previous attempt is preserved in Git backups. See [P2_DELIVERY](P2_DELIVERY.md).
+
 El usuario ha autorizado además publicar la base en GitHub y dejar instrucciones
 para seis personas. Se conserva Documents y el historial local. `main` es la
 integración y `codex/team-start-v1` la referencia común de arranque, según TEAM_START.
@@ -24,7 +28,7 @@ La fase limitada a Markdown y la entrega exclusivamente local son antecedentes.
 - El paquete estaba en `NASA/FlameLab_Contexto_Codex/FlameLab_Contexto`; se integró tras comparar rutas y hashes, conservando el original.
 - GitHub fue consultado de nuevo el 14 de noviembre de 2026: repositorio público vacío, sin refs/commits. No existía `NASA/Flame-in-Freefall`; se clonó y se creó la rama `codex/integrated-skeleton`.
 - `datasets_lujan.zip` fue inspeccionado sin ejecutar su contenido ni modificar Documents: 24 investigaciones, 22 CSV, 27 PDF, 48 TXT ISA, 24 ZIP de metadatos, 2 DOC y ningún vídeo. Inventario, hashes y límites en [DATA_INSPECTION](DATA_INSPECTION.md).
-- BASS-II ofrece una tabla candidata de tasas y condiciones sucesivas. El oxígeno inicial/final no permite asignar automáticamente un valor a cada meseta; hay discrepancias y ambigüedades que impiden importar una serie revisada por simple cambio de nombres de columnas.
+- BASS-II Table 5.1 has now been extracted into a canonical local bundle: 20 tests, 43 conditions, 39 known rates and four missing rates. The scientific status is `unverified`. Initial/final oxygen are distinct test-level fields; intermediate oxygen remains unmeasured. Source discrepancies and review requirements are retained.
 - El catálogo real tiene 24 estudios `metadata_only`, sin ensayos ni observaciones cuantitativas. El bundle demo separado contiene 2 estudios, 5 ensayos y 6 observaciones sintéticas.
 - Hay API, contratos canónicos, repositorio SQLite con snapshots, CLI, ciencia, coordinación determinista y cliente técnico. Las pruebas concretas se registran en [VERIFICATION](VERIFICATION.md); los mocks del proveedor no son llamadas reales ni evaluación científica.
 
@@ -59,7 +63,7 @@ Enlaces y precisión del alcance en [SOURCES](SOURCES.md).
 | Incógnita | Responsable | Cómo se resuelve |
 |---|---|---|
 | Calidad y licencia de cada fuente inventariada | P2 | Ampliar la revisión más allá del inventario de archivos. |
-| Serie BASS-II concreta | P2 + P3 | Identificar variable objetivo, ensayos y procedencia. |
+| BASS-II scientific review | P2 + P3 | Review the extracted series, source discrepancies and comparability; extraction and import are implemented. |
 | Caso Saffire adecuado | P2 + P3 | Revisar escala, material y configuración. |
 | Réplicas independientes | P3 | Reconstruir unidad experimental. |
 | Acceso a un modelo externo y presupuesto | P4 + P1 | Configuración de servidor y prueba acotada autorizada. |

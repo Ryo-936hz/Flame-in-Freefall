@@ -1,0 +1,325 @@
+{
+  "expected_profile": {
+    "n_studies": 1,
+    "n_trials": 3,
+    "n_observations": 6,
+    "n_independent_units": 3,
+    "synthetic_trials": 3
+  },
+  "cases": [
+    {
+      "id": "reference",
+      "rationale": "Three reported conditions on one independent specimen; sequence is order, not time. Zero flow is a known value.",
+      "request": {
+        "question": "Synthetic regression: reference; compare reported flow conditions.",
+        "ranking": {
+          "target": {
+            "material": "demo_polymer",
+            "oxygen_initial_pct": 21
+          },
+          "required_match": [
+            "material",
+            "oxygen_initial_pct"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true
+        },
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "completed",
+        "provider": "demo",
+        "selected_trial_ids": [
+          "synthetic:reference-trial"
+        ],
+        "similarities": [
+          1.0
+        ],
+        "coverages": [
+          1.0
+        ],
+        "comparison_units": {
+          "x": "cm/s",
+          "y": "mm/s"
+        },
+        "points": [
+          {
+            "observation_id": "synthetic:reference-observation-z",
+            "trial_id": "synthetic:reference-trial",
+            "segment_id": "synthetic:reference-segment-z",
+            "sequence": 30,
+            "independent_unit_id": "synthetic:reference-unit",
+            "x": 0,
+            "y": 1,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:reference-observation-source-z",
+              "synthetic:reference-segment-source-z",
+              "synthetic:reference-trial-source",
+              "synthetic:shared-controls"
+            ]
+          },
+          {
+            "observation_id": "synthetic:reference-observation-m",
+            "trial_id": "synthetic:reference-trial",
+            "segment_id": "synthetic:reference-segment-m",
+            "sequence": 50,
+            "independent_unit_id": "synthetic:reference-unit",
+            "x": 5,
+            "y": 2,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:reference-observation-source-m",
+              "synthetic:reference-segment-source-m",
+              "synthetic:reference-trial-source",
+              "synthetic:shared-controls"
+            ]
+          },
+          {
+            "observation_id": "synthetic:reference-observation-a",
+            "trial_id": "synthetic:reference-trial",
+            "segment_id": "synthetic:reference-segment-a",
+            "sequence": 80,
+            "independent_unit_id": "synthetic:reference-unit",
+            "x": 10,
+            "y": 3,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:reference-observation-source-a",
+              "synthetic:reference-segment-source-a",
+              "synthetic:reference-trial-source",
+              "synthetic:shared-controls"
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "trial_ids": [
+              "synthetic:reference-trial"
+            ],
+            "geometry": "sheet",
+            "combustion_face": "face_a",
+            "oxygen_initial_pct": "21",
+            "oxygen_final_pct": "18",
+            "n_trials": 1,
+            "n_observations": 3,
+            "n_independent_units": 1,
+            "median": 2,
+            "interval": null
+          }
+        ],
+        "observed_independent_units": 1,
+        "retrieved_evidence_ids": [
+          "synthetic:reference-observation-source-a",
+          "synthetic:reference-observation-source-m",
+          "synthetic:reference-observation-source-z",
+          "synthetic:reference-segment-source-a",
+          "synthetic:reference-segment-source-m",
+          "synthetic:reference-segment-source-z",
+          "synthetic:reference-trial-source",
+          "synthetic:shared-controls"
+        ],
+        "missing_x_reported": false,
+        "hypothesis_count": 0
+      }
+    },
+    {
+      "id": "changed",
+      "rationale": "Geometry and combustion face differ inside one trial; two descriptive strata still represent one independent unit globally.",
+      "request": {
+        "question": "Synthetic regression: changed; compare reported flow conditions.",
+        "ranking": {
+          "target": {
+            "material": "demo_polymer",
+            "oxygen_initial_pct": 22
+          },
+          "required_match": [
+            "material",
+            "oxygen_initial_pct"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true
+        },
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "completed",
+        "provider": "demo",
+        "selected_trial_ids": [
+          "synthetic:changed-trial"
+        ],
+        "similarities": [
+          1.0
+        ],
+        "coverages": [
+          1.0
+        ],
+        "comparison_units": {
+          "x": "cm/s",
+          "y": "mm/s"
+        },
+        "points": [
+          {
+            "observation_id": "synthetic:changed-observation-z",
+            "trial_id": "synthetic:changed-trial",
+            "segment_id": "synthetic:changed-segment-z",
+            "sequence": 2,
+            "independent_unit_id": "synthetic:changed-unit",
+            "x": 5,
+            "y": 4,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:changed-observation-source-z",
+              "synthetic:changed-segment-source-z",
+              "synthetic:changed-trial-source",
+              "synthetic:shared-controls"
+            ]
+          },
+          {
+            "observation_id": "synthetic:changed-observation-a",
+            "trial_id": "synthetic:changed-trial",
+            "segment_id": "synthetic:changed-segment-a",
+            "sequence": 9,
+            "independent_unit_id": "synthetic:changed-unit",
+            "x": 10,
+            "y": 8,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:changed-observation-source-a",
+              "synthetic:changed-segment-source-a",
+              "synthetic:changed-trial-source",
+              "synthetic:shared-controls"
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "trial_ids": [
+              "synthetic:changed-trial"
+            ],
+            "geometry": "cylinder",
+            "combustion_face": "face_b",
+            "oxygen_initial_pct": "22",
+            "oxygen_final_pct": "18",
+            "n_trials": 1,
+            "n_observations": 1,
+            "n_independent_units": 1,
+            "median": 8,
+            "interval": null
+          },
+          {
+            "trial_ids": [
+              "synthetic:changed-trial"
+            ],
+            "geometry": "sheet",
+            "combustion_face": "face_a",
+            "oxygen_initial_pct": "22",
+            "oxygen_final_pct": "18",
+            "n_trials": 1,
+            "n_observations": 1,
+            "n_independent_units": 1,
+            "median": 4,
+            "interval": null
+          }
+        ],
+        "observed_independent_units": 1,
+        "retrieved_evidence_ids": [
+          "synthetic:changed-observation-source-a",
+          "synthetic:changed-observation-source-z",
+          "synthetic:changed-segment-source-a",
+          "synthetic:changed-segment-source-z",
+          "synthetic:changed-trial-source",
+          "synthetic:shared-controls"
+        ],
+        "missing_x_reported": false,
+        "hypothesis_count": 0
+      }
+    },
+    {
+      "id": "missing",
+      "rationale": "The segment has no measured X. Trial-level flow 99 must not fill it; retain the observation with x=null and report insufficient evidence.",
+      "request": {
+        "question": "Synthetic regression: missing; compare reported flow conditions.",
+        "ranking": {
+          "target": {
+            "material": "demo_polymer",
+            "oxygen_initial_pct": 23
+          },
+          "required_match": [
+            "material",
+            "oxygen_initial_pct"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true
+        },
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "insufficient_evidence",
+        "provider": "demo",
+        "selected_trial_ids": [
+          "synthetic:missing-trial"
+        ],
+        "similarities": [
+          1.0
+        ],
+        "coverages": [
+          1.0
+        ],
+        "comparison_units": {
+          "x": "cm/s",
+          "y": "mm/s"
+        },
+        "points": [
+          {
+            "observation_id": "synthetic:missing-observation-z",
+            "trial_id": "synthetic:missing-trial",
+            "segment_id": "synthetic:missing-segment-z",
+            "sequence": 4,
+            "independent_unit_id": "synthetic:missing-unit",
+            "x": null,
+            "y": 7,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:missing-observation-source-z",
+              "synthetic:missing-segment-source-z",
+              "synthetic:missing-trial-source",
+              "synthetic:shared-controls"
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "trial_ids": [
+              "synthetic:missing-trial"
+            ],
+            "geometry": "sheet",
+            "combustion_face": "face_a",
+            "oxygen_initial_pct": "23",
+            "oxygen_final_pct": "18",
+            "n_trials": 1,
+            "n_observations": 1,
+            "n_independent_units": 1,
+            "median": 7,
+            "interval": null
+          }
+        ],
+        "observed_independent_units": 1,
+        "retrieved_evidence_ids": [
+          "synthetic:missing-observation-source-z",
+          "synthetic:missing-segment-source-z",
+          "synthetic:missing-trial-source",
+          "synthetic:shared-controls"
+        ],
+        "missing_x_reported": true,
+        "hypothesis_count": 0
+      }
+    }
+  ]
+}

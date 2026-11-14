@@ -1,0 +1,1135 @@
+{
+  "PSI-10": {
+    "study": {
+      "id": "psi:PSI-10",
+      "title": "Advanced Combustion via Microgravity Experiments / Flame Design",
+      "family": "ACME/Flame Design",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/w4zy-bt45"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-10/Experimental table/PSI-10_Experimental table_Flame Design_Inverse Flame.csv",
+        "header": [
+          "Flame Type",
+          "Day",
+          "Test",
+          "XO2",
+          "mO2 (mg/s)",
+          "mN2 (mg/s)",
+          "mtot (mg/s)",
+          "XC2H4 initial",
+          "XC2H4 final",
+          "pinit (atm)",
+          "pfinal (atm)",
+          "pmean (atm)",
+          "mean Zst",
+          "Tad (K)"
+        ],
+        "n_records": 120,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "path": "PSI-10/Experimental table/PSI-10_Experimental table_Flame Design_Normal Flame.csv",
+        "header": [
+          "Flame Type",
+          "Day",
+          "Fuel",
+          "Test",
+          "Xfuel",
+          "mfuel (mg/s)",
+          "mN2 (mg/s)",
+          "mtot (mg/s)",
+          "XO2 (init)",
+          "XO2 (final)",
+          "pinit (atm)",
+          "pfinal (atm)",
+          "pmean (atm)",
+          "mean Zst",
+          "Tad (K)"
+        ],
+        "n_records": 207,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-10/Investigation Metadata Files/PSI-10_metadata_PSI-10-ISA/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tAdvanced Combustion via Microgravity Experiments / Flame Design"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-10/Reports/PSI-10_Reports_FinalRpt_ACMEFlameDesign.pdf",
+      "PSI-10/Reports/PSI-10_Reports_TaskbookPubsList_Feb2023.pdf",
+      "PSI-10/Reports/PSI-10_Reports_TaskbookRpts.pdf"
+    ]
+  },
+  "PSI-20": {
+    "study": {
+      "id": "psi:PSI-20",
+      "title": "Advanced Combustion via Microgravity Experiments - Burning Rate Emulator",
+      "family": "ACME BRE",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/vb93-3y72"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-20/Experimental table/PSI-20_Experimental table_ACME BRE.csv",
+        "header": [
+          "Year",
+          "Month",
+          "Date",
+          "Burner Size (mm)",
+          "Fuel Bottle",
+          "Oxygen Conc (percent)",
+          "Flames Ignited",
+          "Notes"
+        ],
+        "n_records": 18,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-20/Investigation Metadata Files/PSI-20_metadata_PSI-96_ACME BRE/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tAdvanced Combustion via Microgravity Experiments - Burning Rate Emulator"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-20/Reports/PSI-20_Reports_Dissertation-PD-revised_.pdf",
+      "PSI-20/Reports/PSI-20_Reports_Final_20220201.pdf"
+    ]
+  },
+  "PSI-21": {
+    "study": {
+      "id": "psi:PSI-21",
+      "title": "Advanced Combustion via Microgravity Experiments / Coflow Laminar Diffusion Flame",
+      "family": "ACME CLD Flame",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/23e1-9950"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-21/Experimental table/PSI-21_Experimental table_CLD Flame.csv",
+        "header": [
+          "Test Type",
+          "Test Day",
+          "Fuel MFC",
+          "N2 MFC",
+          "Fuel Bottle",
+          "Fuel conc. Range",
+          "Flames ignited",
+          "Notes"
+        ],
+        "n_records": 32,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-21/Investigation Metadata Files/PSI-21_metadata_PSI-97_ACME CLD Flame/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tAdvanced Combustion via Microgravity Experiments / Coflow Laminar Diffusion Flame"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-22": {
+    "study": {
+      "id": "psi:PSI-22",
+      "title": "Advanced Combustion via Microgravity Experiments Electric-Field Effects on Laminar Diffusion Flames",
+      "family": "ACME E-FIELD Flames",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/se5a-8c73"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-22/Experimental table/PSI-22_Experimental table_ACME E-FIELD Flames.csv",
+        "header": [
+          "Test Type",
+          "Test Day",
+          "Year",
+          "Month",
+          "Date",
+          "Mesh Polarity",
+          "Fuel Bottle",
+          "Fuel Conc",
+          "Flames Ignited",
+          "Notes"
+        ],
+        "n_records": 32,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-22/Investigation Metadata Files/PSI-22_metadata_ACME E-FIELD Flames/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tAdvanced Combustion via Microgravity Experiments Electric-Field Effects on Laminar Diffusion Flames"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-22/Reports/PSI-22_Reports_2018 - E-FIELD Flames 30-day Operation Accomplishments Report for ISS Increments 55 and 56 20181115.pdf",
+      "PSI-22/Reports/PSI-22_Reports_2019 - E-FIELD Flames 30-Day Operation Accomplishments Report for ISS Increments 57 and 58 20190601.pdf",
+      "PSI-22/Reports/PSI-22_Reports_ACME fact sheet 20180519.pdf",
+      "PSI-22/Reports/PSI-22_Reports_ACME fact sheet 20180820.pdf",
+      "PSI-22/Reports/PSI-22_Reports_E-FIELD Flames Final Report.pdf",
+      "PSI-22/Reports/PSI-22_Reports_PS-01548 ACME info sheet.pdf",
+      "PSI-22/Reports/PSI-22_Reports_PS-02788 ACME info sheet.pdf",
+      "PSI-22/Reports/PSI-22_Reports_PS-03055 ACME info sheet.pdf",
+      "PSI-22/Reports/PSI-22_Reports_PS_00538  Unlocking Mysteries.pdf"
+    ]
+  },
+  "PSI-23": {
+    "study": {
+      "id": "psi:PSI-23",
+      "title": "Advanced Combustion via Microgravity Experiments-Structure and Response of Spherical Diffusion Flames",
+      "family": "ACME s-Flame",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/k57n-p030"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-23/Experimental table/PSI-23_Experimental table_ACME s-Flame.csv",
+        "header": [
+          "Test Type",
+          "Test Day*",
+          "Year",
+          "Month",
+          "Date",
+          "Atmosphere*",
+          "Fuel Bottle",
+          "Flames Ignited*",
+          "Notes"
+        ],
+        "n_records": 18,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-23/Investigation Metadata Files/PSI-23_metadata_PSI-99_ACME s-Flame/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tAdvanced Combustion via Microgravity Experiments-Structure and Response of Spherical Diffusion Flames"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-23/Reports/PSI-23_Reports_s-Flame 30-day report Inc 63 20201216.pdf",
+      "PSI-23/Reports/PSI-23_Reports_s_Flame_final_report_20210729.pdf"
+    ]
+  },
+  "PSI-25": {
+    "study": {
+      "id": "psi:PSI-25",
+      "title": "Burning and Suppression of Solids - II",
+      "family": "BASS-II",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/4qc4-de67"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-25/Experimental table/PSI-25_Experimental table_BASS-II.csv",
+        "header": [
+          "PI",
+          "Test #",
+          "Date",
+          "GMT",
+          "Sample #",
+          "Fuel Sample Material",
+          "Flow restrictor",
+          "Fan display",
+          "Air display",
+          "Radiometer gain   (1000   250   50   10)",
+          "Total Frames Shot",
+          "Calibrated  initial O2 % by vol ",
+          "Calibrated final O2 % by vol",
+          "Initial CO2 % by vol",
+          "Final CO2 % by vol",
+          "Initial CO (ppm)",
+          "Final CO (ppm)"
+        ],
+        "n_records": 129,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-25/Investigation Metadata Files/PSI-25_metadata_PSI_metadata_PSI-101_BASS-II/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tBurning and Suppression of Solids - II"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-25/Reports/PSI-25_Reports_BASS-II Summary Report.pdf"
+    ]
+  },
+  "PSI-26": {
+    "study": {
+      "id": "psi:PSI-26",
+      "title": "Burning and Suppression of Solids",
+      "family": "BASS",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/58h4-dy80"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-26/Experimental table/PSI-26_Experimental table_BASS.csv",
+        "header": [
+          "Date",
+          "GMT",
+          "As Run Test #",
+          "Test #",
+          "Sample #",
+          "Fuel Sample Material"
+        ],
+        "n_records": 122,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-26/Investigation Metadata Files/PSI-26_metadata_PSI-102_BASS/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tBurning and Suppression of Solids"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-39": {
+    "study": {
+      "id": "psi:PSI-39",
+      "title": "Cool Flames Investigation",
+      "family": "CFI",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/m6pj-a914"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-39/Experimental table/PSI-39_Experimental table_CFI.csv",
+        "header": [
+          "Flex Number",
+          "Test Date",
+          "Local Time",
+          "CIR ",
+          "Pressure",
+          "Oxygen",
+          "Nitrogen",
+          "Helium",
+          "Fiber",
+          "Fuel "
+        ],
+        "n_records": 87,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-39/Investigation Metadata Files/PSI-39_metadata_PSI-118_CFI/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tCool Flames Investigation"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-39/Reports/PSI-39_Reports_CFI Science Final Report.pdf"
+    ]
+  },
+  "PSI-47": {
+    "study": {
+      "id": "psi:PSI-47",
+      "title": "Dust and Aerosol Measurement Feasibility Test / Dust and Aerosol Measurement Feasibility Test-2",
+      "family": "DAFT / DAFT-2",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/ztgj-d202"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-47/Experimental table/PSI-47_Experimental table_DAFT.csv",
+        "header": [
+          "Session Name",
+          "Actual Day",
+          "Hardware Description",
+          "Sample Material",
+          "Sampled Location"
+        ],
+        "n_records": 2,
+        "sample_record_numbers": [
+          2,
+          3
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-47/Investigation Metadata Files/PSI-47_metadata_PSI-126_DAFT_DAFT-2/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tDust and Aerosol Measurement Feasibility Test / Dust and Aerosol Measurement Feasibility Test-2"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-47/Reports/PSI-47_Reports_DAFT_1YearReport.doc",
+      "PSI-47/Reports/PSI-47_Reports_DAFT_30Day.PostFlightReport.pdf",
+      "PSI-47/Reports/PSI-47_Reports_DAFT_FinalReport.doc"
+    ]
+  },
+  "PSI-60": {
+    "study": {
+      "id": "psi:PSI-60",
+      "title": "Computational and Experimental Analysis of SPICE Data Sets",
+      "family": "PSI-60",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/mzjm-yv57"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [],
+    "metadata": [
+      {
+        "path": "PSI-60/Investigation Metadata Files/PSI-60_metadata_NEWID-5_Computational and Ex/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tComputational and Experimental Analysis of SPICE Data Sets"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-62": {
+    "study": {
+      "id": "psi:PSI-62",
+      "title": "Concurrent Flame Spread Modeling using Flamelet Generated Manifolds in Microgravity with Comparison to BASS Experiments using Two-Color Tomography",
+      "family": "PSI-62",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/e9xp-ex83"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [],
+    "metadata": [
+      {
+        "path": "PSI-62/Investigation Metadata Files/PSI-62_metadata_NEWID-7_Concurrent Flame Spr/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tConcurrent Flame Spread Modeling using Flamelet Generated Manifolds in Microgravity with Comparison to BASS Experiments using Two-Color Tomography"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-68": {
+    "study": {
+      "id": "psi:PSI-68",
+      "title": "Flame Extinguishment Experiment - 2",
+      "family": "FLEX-2",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/byp8-h018"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-68/Experimental table/PSI-68_Experimental table_Flex2.csv",
+        "header": [
+          "Sample (Fuel Type)",
+          "Initial Droplet Diameter (mm)",
+          "Ambient Gas Mixture ",
+          "Oxygen Mole Fraction",
+          "Ambient Pressure (atm)",
+          " Ambient Temperature (C)",
+          "Flow Velocity (cm/s)"
+        ],
+        "n_records": 8,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-68/Investigation Metadata Files/PSI-68_metadata_PSI-132_FLEX-2/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tFlame Extinguishment Experiment - 2"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-69": {
+    "study": {
+      "id": "psi:PSI-69",
+      "title": "Flame Extinguishment Experiment",
+      "family": "FLEX",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/mbq8-0451"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-69/Experimental table/PSI-69_Experimental table_FLEX.csv",
+        "header": [
+          "FLEX Test #",
+          "FLEX Identifier",
+          "Test Date",
+          "Test GMT",
+          "Fuel",
+          "Ambient pressure; mmHg",
+          "O initial ambient composition; mole fraction",
+          "N initial ambient composition; mole fraction",
+          "CO initial ambient composition; mole fraction",
+          "He initial ambient composition; mole fraction",
+          "Droplet initial diameter; mm",
+          "Visible flame extinction diameter; mm",
+          "Burning rate; mm",
+          "Burn time; s",
+          "Test end"
+        ],
+        "n_records": 274,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-69/Investigation Metadata Files/PSI-69_metadata_PSI-133_FLEX/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tFlame Extinguishment Experiment"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-98": {
+    "study": {
+      "id": "psi:PSI-98",
+      "title": "Spacecraft Fire Safety Experiment-I",
+      "family": "SAFFIRE-I",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/0t15-1z43"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-98/Experimental table/PSI-98_Experimental table_SAFFIRE-1.csv",
+        "header": [
+          "Sample Number ",
+          "Material",
+          "Sample Thickness (cm)",
+          "Sample Length (cm)",
+          "Sample Width (cm)",
+          "Air Flow (cm/s)",
+          "Percent O2",
+          "Ignition Power (W)",
+          "Ignition Time (s)",
+          "Burn Time (s)",
+          "Flow Direction ",
+          "Camera 1",
+          "Camera 2"
+        ],
+        "n_records": 4,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-98/Investigation Metadata Files/PSI-98_metadata_PSI-166_SAFFIRE-I/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tSpacecraft Fire Safety Experiment-I"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-99": {
+    "study": {
+      "id": "psi:PSI-99",
+      "title": "Spacecraft Fire Experiment-II",
+      "family": "SAFFIRE-II",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/2chp-m469"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-99/Experimental table/PSI-99_Experimental table_SAFFIRE-2.csv",
+        "header": [
+          "Sample Number",
+          "Material",
+          "Samle Thickness ",
+          "Sample Length ",
+          "Sample Width (cm)",
+          "Air Flow (cm/s)",
+          "Percent O2 (Note 1)",
+          "Ignition Power (W)",
+          "Ignition Time (s)",
+          "Burn Time (s)",
+          "Flow Direction",
+          "?-g Burn Length",
+          "?-g Spread Length",
+          "1-g Burn Length",
+          "1-g Spread Rate",
+          "Camera 1",
+          "Camera 2"
+        ],
+        "n_records": 15,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-99/Investigation Metadata Files/PSI-99_metadata_PSI-167_SAFFIRE-II/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tSpacecraft Fire Experiment-II"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-100": {
+    "study": {
+      "id": "psi:PSI-100",
+      "title": "Spacecraft Fire Experiment-III",
+      "family": "SAFFIRE-III",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/040q-4h36"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-100/Experimental table/PSI-100_Experimental table_SAFFIRE-3.csv",
+        "header": [
+          "Sample Number ",
+          "Material",
+          "Sample Thickness",
+          "Sample Length",
+          "Sample Width",
+          "Air Flow ",
+          "Direction",
+          "Camera 1",
+          "Camera 2"
+        ],
+        "n_records": 2,
+        "sample_record_numbers": [
+          2,
+          3
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-100/Investigation Metadata Files/PSI-100_metadata_PSI-168_SAFFIRE-III/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tSpacecraft Fire Experiment-III"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-101": {
+    "study": {
+      "id": "psi:PSI-101",
+      "title": "Smoke Aerosol Measurement Experiment-Reflight",
+      "family": "SAME-R",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/2np7-jv14"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-101/Experimental table/PSI-101_Experimental table_SAME-R.csv",
+        "header": [
+          "Sample Type",
+          "SAME Test #",
+          "Description",
+          "Date",
+          "Inlet velocity (cm/s)",
+          "Rt/R0",
+          "Duration (sec)",
+          "Primary aging time (sec)",
+          "Primary mixing time (sec)",
+          "Net aging time (sec)"
+        ],
+        "n_records": 109,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-101/Investigation Metadata Files/PSI-101_metadata_PSI-169_SAME-R/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tSmoke Aerosol Measurement Experiment-Reflight"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-101/Reports/PSI-101_Reports_SAME-R_Final Report.pdf"
+    ]
+  },
+  "PSI-102": {
+    "study": {
+      "id": "psi:PSI-102",
+      "title": "Smoke and Aerosol Measurement Experiment",
+      "family": "SAME",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/gd4k-8h62"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-102/Experimental table/PSI-102_Experimental table_SAME.csv",
+        "header": [
+          "Sample #",
+          "Sample Material  ",
+          "Air Flow (cm/s)",
+          "Weight loss rate (mg/min)",
+          "Aging Duration (minutes)"
+        ],
+        "n_records": 8,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-102/Investigation Metadata Files/PSI-102_metadata_PSI-170_SAME/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tSmoke and Aerosol Measurement Experiment"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-102/Reports/PSI-102_Reports_SAME_Final Science Report.pdf"
+    ]
+  },
+  "PSI-106": {
+    "study": {
+      "id": "psi:PSI-106",
+      "title": "Structure and Liftoff In Combustion Experiment",
+      "family": "SLICE",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/pm12-rg61"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-106/Experimental table/PSI-106_Experimental table_Slice.csv",
+        "header": [
+          "Test Date",
+          "Fuel Type"
+        ],
+        "n_records": 12,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-106/Investigation Metadata Files/PSI-106_metadata_PSI-174_SLICE/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tStructure and Liftoff In Combustion Experiment"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-107": {
+    "study": {
+      "id": "psi:PSI-107",
+      "title": "Smoke Point In Co-flow Experiment",
+      "family": "SPICE",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/9kbh-e962"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-107/Experimental table/PSI-107_Experimental table_Spice.csv",
+        "header": [
+          "GMT date",
+          "GMT ignition",
+          "GMT  Flame Off ",
+          "Fuel",
+          "Nozzle (mm)",
+          "Fuel Rate (sccm)",
+          "Fuel Rate (mg/s)",
+          "HC Fuel Rate (mg/s)",
+          "Air Rate (cm/s)"
+        ],
+        "n_records": 469,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-107/Investigation Metadata Files/PSI-107_metadata_PSI-176_SPICE/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tSmoke Point In Co-flow Experiment"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-107/Reports/PSI-107_Reports_SMOKE POINTS OF MICROGRAVITY AND  NORMAL GRAVITY COFLOW DIFFUSION  FLAMES_DotsonThesis.pdf",
+      "PSI-107/Reports/PSI-107_Reports_SPICE_30-DayPostFlightReport.pdf",
+      "PSI-107/Reports/PSI-107_Reports_SPICE_FinalReport.pdf"
+    ]
+  },
+  "PSI-115": {
+    "study": {
+      "id": "psi:PSI-115",
+      "title": "Utilization of the Smoke Aerosol Measurement Experiment Data for Advanced Modeling and Simulation of Smoke Generation in Micro-Gravity",
+      "family": "PSI-115",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/q0v5-1v28"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [],
+    "metadata": [
+      {
+        "path": "PSI-115/Investigation Metadata Files/PSI-115_metadata_PSI-185_Utilization of the S/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tUtilization of the Smoke Aerosol Measurement Experiment Data for Advanced Modeling and Simulation of Smoke Generation in Micro-Gravity"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-115/Reports/PSI-115_Reports_NNX17AF08A_FinalReport.pdf"
+    ]
+  },
+  "PSI-117": {
+    "study": {
+      "id": "psi:PSI-117",
+      "title": "Effect of External Thermo-Convective Perturbation on Cool Flame Dynamics: A Multidimensional Multi-Physics CFD Analysis",
+      "family": "PSI-117",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/gz0q-b577"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [],
+    "metadata": [
+      {
+        "path": "PSI-117/Investigation Metadata Files/PSI-117_metadata_NEWID-13_Effect of External T/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tEffect of External Thermo-Convective Perturbation on Cool Flame Dynamics: A Multidimensional Multi-Physics CFD Analysis"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-117/Reports/PSI-117_Reports_Dissertation_Combustion Behavior Of Sub-Millimeter Sized Oxygenated And N-Alka.pdf"
+    ]
+  },
+  "PSI-142": {
+    "study": {
+      "id": "psi:PSI-142",
+      "title": "Quantitative Studies of Cool Flame Transitions at Radiation / Stretch Extinction Using Counterflow Flames",
+      "family": "PSI-142",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/80qf-vj95"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-142/Experimental table/PSI-142_Experimental table_Data Summary Table.csv",
+        "header": [
+          "Data ID",
+          "Data Description",
+          "Reference Publication Link",
+          "Figure ID in Reference"
+        ],
+        "n_records": 8,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-142/Investigation Metadata Files/PSI-142_metadata_PSI-164_Quantitative Studies/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tQuantitative Studies of Cool Flame Transitions at Radiation / Stretch Extinction Using Counterflow Flames"
+          ]
+        ]
+      }
+    ],
+    "documents": []
+  },
+  "PSI-159": {
+    "study": {
+      "id": "psi:PSI-159",
+      "title": "Advanced Combustion via Microgravity Experiments / Cool Flames Investigation with Gases",
+      "family": "ACME CFI-G",
+      "description": "Metadatos del ZIP local inspeccionado; observaciones científicas pendientes de extracción y revisión. Licencia de redistribución de originales pendiente.",
+      "source_urls": [
+        "https://doi.org/10.60555/cyt1-kh64"
+      ],
+      "dataset_status": "metadata_only"
+    },
+    "csv": [
+      {
+        "path": "PSI-159/Experimental table/PSI-159_Experimental table_CFI-G_Inverse Flames.csv",
+        "header": [
+          "Flame Type",
+          "Day",
+          "Fuel",
+          "Test",
+          "Xf  before test",
+          "Xf  after test",
+          "approx p (bar)",
+          "XO2",
+          "HC burnrate (mg/s)",
+          "O2 flow rate (mg/s)",
+          "TFP",
+          "Tad (K)",
+          "Zst",
+          "Hot ignition",
+          "burn time (sec)",
+          "Self -ext or flow term",
+          "Peak burner Temp (C)",
+          "Peak burner temp (K)",
+          "Color",
+          "Comments"
+        ],
+        "n_records": 154,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      },
+      {
+        "path": "PSI-159/Experimental table/PSI-159_Experimental table_CFI-G_Normal Flames.csv",
+        "header": [
+          "Flame Type",
+          "Day",
+          "Fuel",
+          "Test",
+          "Cool flame?",
+          " XO2 before test",
+          "XO2  after test",
+          "approx p (bar)",
+          "Xf",
+          "mHC (mg/s)",
+          "TFP",
+          "Tad (K)",
+          "Zst",
+          "Hot ignition",
+          "burn time (sec)",
+          "Self-ext or flow term",
+          "Peak burner T (C )",
+          "Comments"
+        ],
+        "n_records": 179,
+        "sample_record_numbers": [
+          2,
+          3,
+          4
+        ]
+      }
+    ],
+    "metadata": [
+      {
+        "path": "PSI-159/Investigation Metadata Files/PSI-159_metadata_PSI-159-ISA/i_Investigation.txt",
+        "title_lines": [
+          [
+            34,
+            "Study Title\tAdvanced Combustion via Microgravity Experiments / Cool Flames Investigation with Gases"
+          ]
+        ]
+      }
+    ],
+    "documents": [
+      "PSI-159/Reports/PSI-159_Reports_FinalRpt_ACME.CFI-G.pdf"
+    ]
+  }
+}
