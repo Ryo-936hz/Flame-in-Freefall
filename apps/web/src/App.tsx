@@ -1,185 +1,262 @@
-import { useEffect, useState } from "react";
-import { ApiError, createApi, demoRanking, sourceLink } from "./lib/client";
-import type { Evidence, Health, Profile, RankingRequest, ResearchResponse, ScenarioComparison } from "./lib/client";
-import { StudyCatalog } from "./features/catalog/StudyCatalog";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ApiError, createApi } from "./lib/client";
+import type { Health, Profile, RankingRequest, ResearchResponse } from "./lib/client";
+import { applyHabitat, buildRanking, demoDraft, describeRanking } from "./lib/filters";
+import type { BriefDraft, ConditionKey, HabitatId } from "./lib/filters";
+import { createLatest } from "./lib/latest";
+import { tx } from "./lib/backendText";
+import { countUp, reveal, useGSAP } from "./lib/motion";
+import { shortId } from "./lib/format";
+import TopBar from "./components/TopBar";
+import MissionBrief from "./components/MissionBrief";
+import SynthesisPanel from "./components/SynthesisPanel";
+import InterimMissionTools from "./components/InterimMissionTools";
+import FlameIllustration from "./components/FlameIllustration";
+import ChatPanel from "./components/ChatPanel";
+import type { ChatMessage } from "./components/ChatPanel";
+import { Panel, StateMessage } from "./components/ui";
+import EvidenceCanvas from "./features/evidence/EvidenceCanvas";
+import EvidenceViewer from "./features/evidence/EvidenceViewer";
+import { EMPTY_SELECTION, evidenceFor, isRetrieved, selectEvidence, selectObservation, selectTrial } from "./features/evidence/selection";
+import type { Selection } from "./features/evidence/selection";
 
 const api = createApi(import.meta.env.VITE_API_BASE_URL ?? "");
+const THEME_KEY = "flamelab-theme";
+
+type Run =
+  | { state: "idle" }
+  | { state: "loading" }
+  | { state: "error"; message: string }
+  | { state: "ready"; result: ResearchResponse };
 
 function failure(error: unknown): string {
-  if (error instanceof ApiError) return `${error.code} (HTTP ${error.status}): ${error.message}${error.requestId ? ` · solicitud ${error.requestId}` : ""}`;
-  return error instanceof Error ? error.message : "No se pudo completar la operación.";
+  if (error instanceof ApiError) return `${tx(error.message)} · ${error.code} (HTTP ${error.status})${error.requestId ? ` · request ${error.requestId}` : ""}`;
+  return error instanceof Error ? error.message : "The operation could not be completed.";
+}
+
+function initialTheme(): "dark" | "light" {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === "dark" || saved === "light") return saved;
+  } catch { /* storage unavailable */ }
+  return "dark";
+}
+
+/** First point if the comparison has one, otherwise the first eligible trial; never an excluded one. */
+function initialSelection(result: ResearchResponse): Selection {
+  const point = result.comparison?.points[0];
+  if (point) return selectObservation(result, point.observation_id);
+  const trial = result.ranking.items[0];
+  return trial ? selectTrial(result, trial.trial_id) : EMPTY_SELECTION;
 }
 
 export default function App() {
+  const [theme, setTheme] = useState(initialTheme);
   const [health, setHealth] = useState<Health | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [question, setQuestion] = useState("¿Qué ensayos de la demostración permiten explorar el efecto del flujo?");
-  const [rankingJson, setRankingJson] = useState(JSON.stringify(demoRanking, null, 2));
-  const [result, setResult] = useState<ResearchResponse | null>(null);
-  const [evidence, setEvidence] = useState<Evidence | null>(null);
-  const [scenario, setScenario] = useState<ScenarioComparison | null>(null);
-  const [report, setReport] = useState("");
-  const [events, setEvents] = useState("");
-  const [runId, setRunId] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
+  const [labels, setLabels] = useState<Map<string, string>>(new Map());
+  const [suggestions, setSuggestions] = useState<Partial<Record<ConditionKey, string[]>>>({});
+  const [offline, setOffline] = useState<string | null>(null);
+  const [draft, setDraft] = useState<BriefDraft>(demoDraft);
+  const [run, setRun] = useState<Run>({ state: "idle" });
+  const [selection, setSelection] = useState<Selection>(EMPTY_SELECTION);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const nextId = useRef(1);
+  const latest = useRef(createLatest());
+  const root = useRef<HTMLDivElement>(null);
 
-  const refresh = async () => {
-    const [newHealth, newProfile] = await Promise.all([api.health(), api.profile()]);
-    setHealth(newHealth); setProfile(newProfile);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try { localStorage.setItem(THEME_KEY, theme); } catch { /* storage unavailable */ }
+  }, [theme]);
+
+  const connect = useCallback(async () => {
+    try {
+      const [newHealth, newProfile, trials] = await Promise.all([api.health(), api.profile(), api.trials()]);
+      setHealth(newHealth); setProfile(newProfile); setOffline(null);
+      setLabels(new Map(trials.map((trial) => [trial.id, tx(trial.label)])));
+      const values: Partial<Record<ConditionKey, Set<string>>> = {};
+      for (const trial of trials) {
+        for (const [key, condition] of Object.entries(trial.conditions)) {
+          if (condition.status === "known" && typeof condition.value === "string") {
+            (values[key as ConditionKey] ??= new Set()).add(condition.value);
+          }
+        }
+      }
+      setSuggestions(Object.fromEntries(Object.entries(values).map(([key, set]) => [key, [...set].sort()])));
+    } catch (error) {
+      setOffline(failure(error));
+    }
+  }, []);
+
+  useEffect(() => { void connect(); }, [connect]);
+
+  // Full reset: back to the first-load state (demo filters, no run, no selection, fresh Mission Lab).
+  const [labKey, setLabKey] = useState(0);
+  const resetAll = useCallback(() => {
+    latest.current.cancel();
+    setRun({ state: "idle" });
+    setSelection(EMPTY_SELECTION);
+    setDraft(demoDraft());
+    setLabKey((k) => k + 1);
+    setMessages([]);
+    root.current?.querySelectorAll(".col-brief, .col-work, .col-evidence").forEach((col) => col.scrollTo({ top: 0 }));
+  }, []);
+
+  const showRun = useCallback((result: ResearchResponse) => {
+    latest.current.cancel();
+    setRun({ state: "ready", result });
+    setSelection(initialSelection(result));
+  }, []);
+
+  /** Runs one investigation; returns the run, an error message, or null when a newer run superseded it. */
+  async function investigate(request: RankingRequest, question = draft.question.trim(), metric = draft.metric): Promise<ResearchResponse | string | null> {
+    const token = latest.current.begin();
+    setRun({ state: "loading" });
+    try {
+      const result = await api.research({ question, ranking: request, metric, include_hypotheses: true });
+      // A slower earlier request must never replace the current one.
+      if (!latest.current.isCurrent(token)) return null;
+      setRun({ state: "ready", result });
+      setSelection(initialSelection(result));
+      return result;
+    } catch (error) {
+      const message = failure(error);
+      if (latest.current.isCurrent(token)) setRun({ state: "error", message });
+      return message;
+    }
+  }
+
+  /** Chat question: same investigation, recorded as a conversation turn. */
+  async function ask(question: string, from: BriefDraft = draft) {
+    const request = buildRanking(from).request;
+    if (!request) return;
+    const userId = nextId.current++;
+    const pendingId = nextId.current++;
+    setDraft({ ...from, question });
+    setMessages((list) => [...list, { id: userId, role: "user", text: question }, { id: pendingId, role: "si", pending: true }]);
+    const outcome = await investigate(request, question, from.metric);
+    setMessages((list) => list.map((m) => m.id !== pendingId ? m
+      : outcome === null ? { id: pendingId, role: "si", error: "Superseded by a newer question." }
+      : typeof outcome === "string" ? { id: pendingId, role: "si", error: outcome }
+      : { id: pendingId, role: "si", run: outcome }));
+  }
+
+  const askPreset = (id: HabitatId) => {
+    const next = applyHabitat(draft, id);
+    void ask(next.question, next);
   };
 
-  useEffect(() => { refresh().catch((reason: unknown) => setError(failure(reason))); }, []);
+  const result = run.state === "ready" ? run.result : null;
+  // Brief values that drive the illustrative flame (display only, never sent anywhere).
+  const used = (key: "gravity_regime" | "oxygen_pct" | "flow_velocity_cm_s") => {
+    const c = draft.conditions[key];
+    return (c.role === "match" || c.role === "similar") && c.value.trim() ? c.value.trim() : null;
+  };
+  const asNumber = (v: string | null) => (v !== null && Number.isFinite(Number(v.replace(",", "."))) ? Number(v.replace(",", ".")) : null);
+  const currentRequest = useMemo(() => buildRanking(draft).request, [draft]);
+  const evidenceIds = useMemo(() => {
+    if (!result) return [];
+    const ids = evidenceFor(result, selection);
+    return selection.evidenceId && !ids.includes(selection.evidenceId) ? [selection.evidenceId, ...ids] : ids;
+  }, [result, selection]);
+  const context = selection.observationId ? shortId(selection.observationId) : selection.trialId ? (labels.get(selection.trialId) ?? shortId(selection.trialId)) : null;
 
-  async function perform(action: () => Promise<void>) {
-    setBusy(true); setError("");
-    try { await action(); } catch (reason) { setError(failure(reason)); }
-    finally { setBusy(false); }
-  }
+  const onCite = (evidenceId: string, trialId: string | null) => {
+    setSelection({ trialId, observationId: null, evidenceId });
+    document.getElementById("evidence")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
 
-  function ranking(): RankingRequest {
-    // The API, using the canonical Pydantic model, validates the editable JSON.
-    const value: unknown = JSON.parse(rankingJson);
-    if (!value || Array.isArray(value) || typeof value !== "object") throw new Error("Los filtros deben ser un objeto JSON.");
-    return value as RankingRequest;
-  }
+  // One authored entrance: bar drops in, columns wipe up left to right.
+  useGSAP(() => reveal((tl) => {
+    tl.from(".topbar", { yPercent: -100, opacity: 0, duration: 0.7 })
+      .from(".brand svg", { rotate: -180, scale: 0.4, duration: 0.9 }, 0.1)
+      .from(".nav-link", { y: -10, opacity: 0, stagger: 0.05, duration: 0.5 }, 0.2)
+      .from([".col-brief", ".col-work > *", ".col-evidence"], { clipPath: "inset(0 0 100% 0)", y: 18, stagger: 0.08, duration: 0.9, clearProps: "clipPath,transform" }, 0.25);
+  }), { scope: root });
 
-  function showRun(value: ResearchResponse) {
-    setResult(value); setRunId(value.id); setEvidence(null); setReport(""); setEvents(""); setScenario(null);
-  }
+  // Each new research record animates its own content: points pop, rows and claims cascade, numbers count.
+  useGSAP(() => {
+    if (!result) return;
+    const cleanup = reveal((tl) => {
+      tl.from(".run-id", { opacity: 0, x: -12, duration: 0.4 })
+        .from(".chart .pt-dot", { scale: 0, transformOrigin: "50% 50%", stagger: 0.04, duration: 0.6, ease: "back.out(2.2)" }, 0.1)
+        .from(".chart .axis line", { opacity: 0, stagger: 0.01, duration: 0.4 }, 0)
+        .from(".groups li, .canvas .warnings li", { opacity: 0, x: -10, stagger: 0.05, duration: 0.45 }, 0.25)
+        .from(".ranking tbody tr.row", { opacity: 0, y: 10, stagger: 0.05, duration: 0.5 }, 0.3)
+        .from(".ranking .cov-bar i", { scaleX: 0, stagger: 0.05, duration: 0.8, ease: "power3.out" }, 0.35)
+        .from(".claims li, .hypo, .events li", { opacity: 0, y: 8, stagger: 0.04, duration: 0.45 }, 0.45);
+    });
+    root.current?.querySelectorAll(".ranking td.big").forEach((cell, index) => {
+      const value = Number(cell.textContent);
+      if (Number.isFinite(value)) countUp(cell, value, 3, 0.3 + index * 0.05);
+    });
+    return cleanup;
+  }, { scope: root, dependencies: [result?.id], revertOnUpdate: true });
 
-  async function investigate() {
-    setResult(null); setEvidence(null); setReport(""); setEvents(""); setScenario(null);
-    showRun(await api.research({ question, ranking: ranking(), include_hypotheses: true }));
-  }
-
-  async function compareScenarios() {
-    const current = ranking();
-    setScenario(null);
-    setScenario(await api.scenarios({
-      name_a: "A · filtros actuales",
-      name_b: "B · gravedad lunar",
-      scenario_a: current,
-      scenario_b: {
-        ...current,
-        target: { ...current.target, gravity_regime: "lunar" },
-        required_match: [...new Set([...(current.required_match ?? []), "gravity_regime" as const])],
-        vary: (current.vary ?? []).filter((key) => key !== "gravity_regime")
-      }
-    }));
-  }
-
-  const selectEvidence = (id: string) => perform(async () => {
-    setEvidence(null);
-    // The endpoint reads the saved snapshot when research_id is provided.
-    setEvidence(await api.evidence(id, result?.id));
-  });
-  const source = sourceLink(evidence?.source_url);
-
-  return <main>
-    <header>
-      <p className="eyebrow">Los TTS · Base integrada 0.1</p>
-      <h1>FlameLab SI <span>Arnés técnico</span></h1>
-      <p>Conexiones de API, ciencia, evidencia y persistencia. El frontend de producto se construirá en la siguiente fase.</p>
-      <p className="notice">Los fixtures son sintéticos, no mediciones de NASA. El modo <code>demo</code> es un coordinador determinista sin llamadas a un modelo externo.</p>
-    </header>
-
-    <section aria-labelledby="status-title">
-      <h2 id="status-title">Estado de integración</h2>
-      {health ? <dl className="status-grid">
-        <div><dt>API</dt><dd>{health.status} · {health.version}</dd></div>
-        <div><dt>Datos</dt><dd>{health.data_mode}</dd></div>
-        <div><dt>Proveedor</dt><dd>{health.ai_provider}</dd></div>
-        <div><dt>Persistencia</dt><dd>{health.database}</dd></div>
-      </dl> : <p>Sin estado confirmado. Comprueba que la API esté iniciada.</p>}
-      {profile && <p>{profile.n_studies} estudios · {profile.n_trials} ensayos ({profile.synthetic_trials} sintéticos) · {profile.n_observations} observaciones · {profile.n_independent_units} unidades independientes.</p>}
-      <button disabled={busy} onClick={() => perform(refresh)}>Actualizar estado</button>{" "}
-      <a href="/docs" target="_blank" rel="noreferrer">Contrato HTTP</a>
-    </section>
-
-    <StudyCatalog api={api} />
-
-    <section aria-labelledby="query-title">
-      <h2 id="query-title">Consulta y filtros explícitos</h2>
-      <p>Los filtros mandan. La pregunta acompaña la síntesis; el modo demo no interpreta restricciones verbales adicionales.</p>
-      <label>Pregunta<textarea value={question} onChange={(event) => setQuestion(event.target.value)} maxLength={4000} rows={2} /></label>
-      <label>RankingRequest (JSON validado por la API)<textarea className="code-input" value={rankingJson} onChange={(event) => setRankingJson(event.target.value)} rows={12} spellCheck={false} /></label>
-      <div className="actions">
-        <button disabled={busy || question.trim().length < 3} onClick={() => perform(investigate)}>Investigar</button>
-        <button disabled={busy} onClick={() => perform(compareScenarios)}>Comparar A/B · cambiar gravedad</button>
-        <button disabled={busy} onClick={() => setRankingJson(JSON.stringify(demoRanking, null, 2))}>Restaurar filtros sintéticos</button>
+  return <div className="app" ref={root}>
+    <a className="skip" href="#brief">Skip to the form</a>
+    <TopBar health={health} offline={Boolean(offline)} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
+      sections={result ? ["brief", "canvas", "evidence", "synthesis", "lab"] : ["brief", "canvas", "evidence", "lab"]} onResetAll={resetAll}
+      chatOpen={chatOpen} onChat={() => setChatOpen((v) => !v)} />
+    <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} messages={messages} busy={run.state === "loading"}
+      filters={currentRequest ? describeRanking(currentRequest) : null} activeRunId={result?.id ?? null}
+      onAsk={(question) => void ask(question)} onPreset={askPreset} onShowRun={showRun}
+      onCite={(evidenceId, trialId) => { setChatOpen(false); onCite(evidenceId, trialId); }} />
+    <main className="shell">
+      <div className="col-brief">
+        <MissionBrief draft={draft} onChange={setDraft} onSubmit={(request) => void investigate(request)} onReset={() => setDraft(demoDraft())}
+          busy={run.state === "loading"} suggestions={suggestions} />
+        {profile && <p className="corpus num">{profile.n_studies} studies · {profile.n_trials} trials ({profile.synthetic_trials} synthetic) · {profile.n_observations} obs. · {profile.n_independent_units} indep. units</p>}
       </div>
-      <label>Recuperar investigación guardada<input value={runId} onChange={(event) => setRunId(event.target.value)} placeholder="Identificador devuelto por la API" /></label>
-      <button disabled={busy || !runId.trim()} onClick={() => perform(async () => showRun(await api.getResearch(runId.trim())))}>Recuperar expediente</button>
-    </section>
 
-    <div aria-live="polite">{busy && <p role="status">Esperando respuesta de la API…</p>}</div>
-    {error && <p className="error" role="alert">{error}</p>}
+      <div className="col-work">
+        {offline && <StateMessage kind="error" title="No connection to the API" action={<button type="button" className="btn" onClick={() => void connect()}>Retry connection</button>}>
+          <p>{offline}</p><p>Start the API with <code>scripts/dev-api.ps1</code> and try again.</p>
+        </StateMessage>}
 
-    {scenario && <section aria-labelledby="scenario-title">
-      <h2 id="scenario-title">Escenarios A/B · comparación de evidencia</h2>
-      <p>{scenario.label}. No es una simulación física.</p>
-      <p>{scenario.name_a}: {scenario.ranking_a.items.length} candidatos · {scenario.name_b}: {scenario.ranking_b.items.length} candidatos.</p>
-      <details><summary>Selección, cobertura y exclusiones de ambos escenarios</summary><pre>{JSON.stringify(scenario, null, 2)}</pre></details>
-    </section>}
+        {run.state === "idle" && <Panel id="canvas" title="Evidence Canvas">
+          <div className="panel-b">
+            <StateMessage kind="empty" title="Ask a question and press “Investigate”">
+              <p>Chart, ranking and linked evidence appear here.</p>
+            </StateMessage>
+          </div>
+        </Panel>}
+        {run.state === "loading" && <Panel id="canvas" title="Evidence Canvas">
+          <div className="panel-b"><StateMessage kind="loading" title="Investigating…" /></div>
+        </Panel>}
+        {run.state === "error" && <Panel id="canvas" title="Evidence Canvas">
+          <div className="panel-b"><StateMessage kind="error" title="The investigation did not complete"
+            action={currentRequest && <button type="button" className="btn" onClick={() => void investigate(currentRequest)}>Retry</button>}>
+            <p>{run.message}</p><p>Check the form values; the API validates ranges and combinations.</p>
+          </StateMessage></div>
+        </Panel>}
 
-    {result && <>
-      <section aria-labelledby="research-title">
-        <h2 id="research-title">Investigación guardada</h2>
-        <p><code>{result.id}</code> · {result.status} · proveedor {result.provider} · {result.created_at}</p>
-        <p>Pregunta guardada: {result.question}</p>
-        <p>{result.summary}</p>
-        <ul>{result.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
-        <div className="actions">
-          <button disabled={busy} onClick={() => perform(async () => setReport(await api.report(result.id)))}>Abrir informe persistido</button>
-          <button disabled={busy} onClick={() => perform(async () => setEvents(await api.events(result.id)))}>Reproducir eventos guardados</button>
-        </div>
-      </section>
-      <section aria-labelledby="ranking-title">
-        <h2 id="ranking-title">Ranking y cobertura</h2>
-        <p>{result.ranking.method}. La similitud no es probabilidad, confianza ni índice de peligrosidad.</p>
-        {result.ranking.items.length ? <div className="table-scroll"><table>
-          <thead><tr><th>Ensayo / procedencia</th><th>Similitud</th><th>Cobertura</th><th>Elegibilidad</th><th>Evidencia</th></tr></thead>
-          <tbody>{result.ranking.items.map((item) => <tr key={item.trial_id}>
-            <td><code>{item.trial_id}</code><br /><strong>{item.provenance}</strong></td>
-            <td>{item.similarity ?? "indeterminada"}</td><td>{item.coverage}</td><td>{item.eligibility}<br />{item.reasons.join("; ")}</td>
-            <td>{item.evidence_ids.map((id) => <button className="reference" key={id} disabled={busy} onClick={() => selectEvidence(id)}>{id}</button>)}</td>
-          </tr>)}</tbody>
-        </table></div> : <p>No hay candidatos elegibles para estos filtros.</p>}
-        <details><summary>Contribuciones, candidatos excluidos y advertencias</summary><pre>{JSON.stringify(result.ranking, null, 2)}</pre></details>
-      </section>
-      <section aria-labelledby="comparison-title">
-        <h2 id="comparison-title">Comparación científica</h2>
-        {result.comparison ? <>
-          <p>X: {result.comparison.x_condition} ({result.comparison.x_unit ?? "sin unidad"}) · Y: {result.comparison.metric} ({result.comparison.unit}).</p>
-          <ul>{result.comparison.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
-          <div className="table-scroll"><table>
-            <thead><tr><th>Observación</th><th>X</th><th>Y</th><th>Unidad independiente / grupo</th><th>Procedencia / evidencia</th></tr></thead>
-            <tbody>{result.comparison.points.map((point) => <tr key={point.observation_id}>
-              <td>{point.observation_id}<br />{point.trial_id}</td><td>{point.x ?? "no disponible"}</td><td>{point.y}</td><td>{point.independent_unit_status === "unresolved" ? "Independencia por verificar" : point.independent_unit_id}<br />{point.group_id}</td>
-              <td><strong>{point.provenance}</strong><br />{point.evidence_ids.map((id) => <button className="reference" key={id} disabled={busy} onClick={() => selectEvidence(id)}>{id}</button>)}</td>
-            </tr>)}</tbody>
-          </table></div>
-          {!result.comparison.points.length && <p>No hay observaciones comparables para esta métrica.</p>}
-          <details><summary>Grupos y tamaños muestrales</summary><pre>{JSON.stringify(result.comparison.groups, null, 2)}</pre></details>
-        </> : <p>Evidencia insuficiente para construir una comparación.</p>}
-      </section>
-      <section aria-labelledby="claims-title">
-        <h2 id="claims-title">Afirmaciones e hipótesis</h2>
-        {result.claims.map((claim, index) => <article key={index}><p><strong>{claim.kind}:</strong> {claim.text}</p>{claim.citations.map((citation, citationIndex) => <button className="reference" key={citationIndex} disabled={busy} onClick={() => selectEvidence(citation.evidence_id)}>{citation.evidence_id}</button>)}</article>)}
-        {result.hypotheses.map((hypothesis) => <article key={hypothesis.id}><h3>{hypothesis.label}</h3><p>{hypothesis.statement}</p><p>{hypothesis.rationale}</p><p>Alternativa: {hypothesis.alternative_explanation}</p><p>Siguiente medida: {hypothesis.next_measurement}</p><p>Refutación: {hypothesis.falsification}</p></article>)}
-      </section>
-    </>}
+        {result && <>
+          <p className="run-id num">{result.id} · {new Date(result.created_at).toLocaleString("en-GB")}</p>
+          <EvidenceCanvas result={result} labels={labels} selection={selection}
+            onSelectObservation={(id) => setSelection(selectObservation(result, id))}
+            onSelectTrial={(id) => setSelection(selectTrial(result, id))} />
+          <SynthesisPanel result={result} onCite={onCite} />
+        </>}
 
-    {evidence && <section aria-labelledby="evidence-title">
-      <h2 id="evidence-title">Evidencia seleccionada · {evidence.provenance}</h2>
-      <h3>{evidence.title}</h3><p><code>{evidence.id}</code> · {evidence.study_id} · revisión: {evidence.reviewed ? "marcada como revisada" : "pendiente"}</p>
-      <p>Localizador: {evidence.locator}{evidence.page != null ? ` · página PDF ${evidence.page}` : ""}</p>
-      <pre>{evidence.text}</pre>
-      {source ? <a href={source} target="_blank" rel="noreferrer">Abrir fuente</a> : <p>Sin enlace HTTP público. Consulta el localizador del archivo; una fixture sintética no se vincula a una medición NASA.</p>}
-    </section>}
-    {report && <section><h2>Informe persistido · Markdown sin ejecutar</h2><pre>{report}</pre></section>}
-    {events && <section><h2>Reproducción de eventos guardados · no streaming en vivo</h2><pre>{events}</pre></section>}
-    <footer>Dirección visual futura: docs/DESIGN_ANDURIL.md. Este arnés preserva los contratos y las fronteras de P5/P6.</footer>
-  </main>;
+        <InterimMissionTools key={labKey} api={api} research={result} request={currentRequest} onOpenRun={showRun} onOpenEvidence={onCite} />
+      </div>
+
+      <div className="col-evidence">
+        {!result && <section className="panel flame-panel" aria-label="Illustration">
+          <div className="panel-b">
+            <FlameIllustration gravityLabel={used("gravity_regime")} o2={asNumber(used("oxygen_pct"))} flow={asNumber(used("flow_velocity_cm_s"))} />
+          </div>
+        </section>}
+        <EvidenceViewer api={api} researchId={result?.id ?? null} ids={evidenceIds}
+          retrieved={result && selection.evidenceId ? isRetrieved(result, selection.evidenceId) : true} activeId={result ? selection.evidenceId : null}
+          context={context} onPick={(id) => setSelection(selectEvidence(selection, id))} />
+      </div>
+    </main>
+    <footer className="foot">
+      <span>FlameLab SI · Los TTS · NASA Space Apps 2026 “Flame in Freefall”</span>
+    </footer>
+  </div>;
 }
