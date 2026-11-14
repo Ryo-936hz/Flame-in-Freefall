@@ -289,6 +289,8 @@ kbd { font-family: var(--font-num); font-size: 10.5px; padding: 1px 6px; border:
   overflow-x: hidden; overscroll-behavior: contain; border-radius: var(--radius); scroll-padding-bottom: 72px;
 }
 .inv-results { display: grid; gap: 12px; min-width: 0; align-content: start; }
+/* Same width as in the view with the evidence inspector open (about 900px), so the canvas does not stretch with the window. */
+.inv-results .canvas { max-width: 900px; }
 .flame-panel .panel-b { padding: 12px 14px 14px; }
 .inv-results .flame-view { aspect-ratio: 16 / 7; }
 @container dash (max-width: 700px) {
@@ -356,6 +358,8 @@ details.interpreted[open] summary { margin-bottom: 6px; }
  * here the panel fills the view instead of floating over the evidence column.
  */
 /* The section is the chat: it fills the content area, the log scrolls, the composer stays at the bottom. */
+/* Its own display rule would override the views' `hidden` attribute, so Ask SI showed on every page. */
+.view.chat-view[hidden] { display: none; }
 .view.chat-view { display: flex; flex-direction: column; gap: 10px; height: calc(100dvh - var(--header-h) - 64px); min-height: 440px; max-width: 900px; width: 100%; margin-inline: auto; }
 .chat-head h1 { display: flex; align-items: center; gap: 10px; }
 .chat-face { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--signal); background: color-mix(in oklab, var(--signal) 14%, transparent); }
