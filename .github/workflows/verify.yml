@@ -31,8 +31,12 @@ jobs:
           cache: npm
       - run: uv sync --locked
       - run: npm ci --ignore-scripts
-      - run: uv run ruff check apps/api scripts
+      - run: uv run ruff check apps/api scripts evals
       - run: uv run pytest -q
+      - run: uv run python evals/science/run.py
+      - run: uv run python evals/science/segment_run.py
+      - run: uv run python evals/science/metric_availability_run.py
+      - run: uv run python evals/ai/run.py
       - run: uv run python scripts/export-openapi.py --check
       - run: npm run check:types
       - run: npm run typecheck

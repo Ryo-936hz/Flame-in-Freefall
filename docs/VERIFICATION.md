@@ -1,8 +1,83 @@
 # Registro de verificaciones
 
-14 de noviembre de 2026, zona Europe/Madrid. Las primeras secciones registran la
-construcción local Windows; la última registra la publicación y CI remota.
-Ninguna de estas verificaciones equivale a validación científica.
+Los resultados vigentes aparecen primero; el resto conserva el historial.
+Ninguna prueba de software equivale a validación científica.
+
+## Cierre conjunto P1/P3/P4 — 14 noviembre 2026
+
+Rama `raul`, conservando P3 `321cc0b`, `main`/P2 `04baeee` y P4 `12555c1`
+mediante merge. El commit de esta entrega se identifica en su PR y con
+`git log -1 --format=%H -- docs/INTEGRATION_P134.md`.
+Los resultados anteriores se conservan abajo como historial, no como pendientes actuales.
+
+### Puerta completa local Windows
+
+Entorno: Python 3.12.14 y Node 24.22.1, Windows.
+Ejecutado `scripts/check.ps1` con `FLAMELAB_AI_PROVIDER=demo` y ambos bundles
+reales locales opt-in. No se usaron claves ni llamadas externas de IA.
+
+| Comprobación ejecutada | Resultado |
+|---|---|
+| Ruff: API, scripts y evals | Aprobada. |
+| Suite Python, incluyendo integraciones BASS-II y NASA-24 | **342 aprobadas, 1 omitida**: PostgreSQL sin servidor local. Un aviso de deprecación Starlette/httpx. |
+| Evaluación científica heredada | 6/6 casos aprobados. |
+| Evaluación científica de segmentos | 6/6 casos aprobados. |
+| Diagnóstico de disponibilidad antes de top-k | Aprobado; salida 0. |
+| Evaluación IA determinista | 18/18 casos aprobados; incluye errores de proveedor esperados. |
+| Auditoría ejecutable de corpus real | 7/7 comprobaciones aprobadas. |
+| Deriva OpenAPI / TypeScript | Sin diferencias respecto al contrato canónico. |
+| Tipado, cliente y build | Correctos; 6/6 pruebas cliente. |
+| Smoke HTTP real, SQLite y reinicio | Correctos; 5 ensayos sintéticos, 4 puntos, plan persistido e informe idéntico tras reinicio. |
+| Tres ejemplos de catálogo por HTTP | Flujo: completed/4 puntos; Tierra: completed/1 punto; Luna: insufficient_evidence/0 puntos. Conflicto bloqueado sin análisis. |
+
+Los casos adversarios comprueban variable, unidad, valor, ensayo y referencia de
+cada afirmación numérica, además de fuentes con instrucciones o Markdown. Son
+pruebas deterministas, no una evaluación de calidad de un modelo real.
+
+Bundles sin modificar, fuera de Git:
+
+- BASS-II SHA-256: `a2779a6e3a2b335298408c2dc5184e4bef916ad29cf7821737e148c5e5920007`.
+- NASA-24 SHA-256: `7dc69717b4bc6151025df2993d9cf66622db3a8b7242798a1d7bfe8b8e335781`.
+
+La auditoría prueba contratos, trazabilidad y comportamiento; no aprueba la
+interpretación científica. Siguen `unverified` y `reviewed=false`. Ver
+[P2_INTEGRATION_REVIEW](../evals/science/P2_INTEGRATION_REVIEW.md).
+
+### Clon limpio y CI de esta entrega — aprobados
+
+Commit de código verificado: **`fd83a84aa24511e573a1b5f27cc859bcdddbf638`**, [PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2).
+Esta anotación posterior modifica únicamente documentación.
+
+Clon nuevo `git clone --no-hardlinks --branch raul` desde el repositorio local,
+sin `.venv`, `node_modules` ni `.env` iniciales. Se instalaron dependencias propias
+con `scripts/setup.ps1` y se ejecutó `scripts/check.ps1`: ambos terminaron con
+salida 0. Entorno de proceso sin variables FLAMELAB/PYTHONPATH heredadas.
+Se comprobó que ROOT y sys.prefix apuntaran al clon, con directorios normales
+sin junctions, SHA exacto y árbol Git limpio después.
+
+- **340 Python aprobadas, 3 omitidas**: dos bundles reales no distribuidos y
+  PostgreSQL sin servidor local. Un aviso Starlette/httpx.
+- Ciencia 6+6 y disponibilidad, IA 18, cliente 6, Ruff, deriva de contratos,
+  tipado/build y smoke HTTP/reinicio correctos; los tres escenarios esperados.
+- Python 3.12.14, Node 24.22.1, PowerShell 7.6.9 y Git 2.55.0.windows.5.
+- Fue el mismo Windows con runtimes y posibles cachés compartidas, no una máquina
+  recién instalada; `.venv` y `node_modules` se crearon para este clon.
+
+CI remoto [43614900736](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43614900736), estado `completed`, conclusión `success`,
+head `fd83a84aa24511e573a1b5f27cc859bcdddbf638`:
+
+| Trabajo | Resultado observado |
+|---|---|
+| Windows, Python 3.12.10 | 340 Python aprobadas, 3 omitidas; evaluaciones, 6 cliente, contratos, build y smoke/reinicio correctos. |
+| Linux, Python 3.12.16 | 340 Python aprobadas, 3 omitidas; las mismas puertas correctas. |
+| PostgreSQL 17, Python 3.12.16 | 1 integración aprobada sobre servidor real: migración, corpus/reemplazo, snapshots y recuperación histórica de plan/informe/fuentes. |
+
+Las tres omisiones de cada job general son esperadas: los dos bundles locales
+y PostgreSQL, que tiene su job específico aprobado. El contenedor incluye
+pgvector, pero no se afirma uso ni validación de búsquedas vectoriales.
+El corpus real sí se verificó localmente en la puerta de 342 pruebas anterior.
+
+## Historial de verificaciones anteriores
 
 ## Integration of `main` and `lujan`
 

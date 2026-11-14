@@ -1,0 +1,15 @@
+{
+  "planning_mode": "catalog",
+  "question": "Compara ensayos variando el flujo.",
+  "ranking": {
+    "target": {
+      "gravity_regime": "microgravity"
+    },
+    "required_match": [
+      "gravity_regime"
+    ],
+    "allow_synthetic": true
+  },
+  "metric": "flame_spread_rate_mm_s",
+  "include_hypotheses": true
+}

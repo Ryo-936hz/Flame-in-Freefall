@@ -53,7 +53,30 @@ def walkthrough(url):
         missing = client.get("/api/v1/evidence/missing:id")
         assert missing.status_code == 404 and missing.json()["request_id"]
         assert get(f"/research/{run['id']}").json() == run
-        return {"health": health, "profile": profile, "research_id": run["id"], "points": len(run["comparison"]["points"]), "report": report}
+        assert run["plan"]["planning_mode"] == "explicit"
+        catalog = {}
+        for name, expected_status, expected_points in (
+            ("flow", "completed", 4), ("earth", "completed", 1),
+            ("lunar", "insufficient_evidence", 0),
+        ):
+            request = json.loads((ROOT / f"docs/examples/demo_{name}_request.json").read_text(encoding="utf-8"))
+            plan = post("/research/plan", request)
+            assert plan["planning_mode"] == "catalog" and not plan["blocked"]
+            analyzed = post("/research", request)
+            assert analyzed["plan"] == plan and analyzed["status"] == expected_status
+            points = analyzed["comparison"]["points"] if analyzed["comparison"] else []
+            assert len(points) == expected_points
+            assert all(point["provenance"] == "synthetic" for point in points)
+            if name == "earth":
+                assert points[0]["y"] == 0  # A known zero is not missing evidence.
+            catalog[name] = {"status": analyzed["status"], "points": len(points)}
+        conflict = {"planning_mode": "catalog", "question": "Cambia el escenario a gravedad lunar.",
+                    "ranking": RANKING}
+        blocked = post("/research", conflict)
+        assert blocked["plan"]["blocked"] and not blocked["ranking"]["items"]
+        assert not blocked["comparison"] and not blocked["claims"]
+        assert not any(event["stage"] in {"retrieve", "analyze"} for event in blocked["events"])
+        return {"health": health, "profile": profile, "research_id": run["id"], "points": len(run["comparison"]["points"]), "report": report, "catalog": catalog}
 
 
 def main():
@@ -103,7 +126,7 @@ def main():
         result.pop("report")
         result["restart_persistence"] = "passed"
         (ROOT / "work/smoke-result.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(json.dumps({"health": result["health"], "n_trials": result["profile"]["n_trials"], "points": result["points"], "restart_persistence": result["restart_persistence"]}, ensure_ascii=False, indent=2))
+        print(json.dumps({"health": result["health"], "n_trials": result["profile"]["n_trials"], "points": result["points"], "restart_persistence": result["restart_persistence"], "catalog": result["catalog"]}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

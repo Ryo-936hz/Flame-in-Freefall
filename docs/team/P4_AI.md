@@ -51,3 +51,24 @@ Escoge un resultado de la lista que pueda integrarse completo: comportamiento, p
 ## Relevo
 
 Entrega rama, commit, archivos, comandos ejecutados, resultado y siguiente paso mediante [HANDOFF_TEMPLATE](../prompts/HANDOFF_TEMPLATE.md). Registra si trabajaste con fixtures, datos reales o un proveedor externo. No incluyas credenciales.
+
+## Incremento de planificador y revisión
+
+El coordinador reconoce un catálogo interno limitado: comparar variando flujo,
+cambiar el escenario entre gravedad lunar, microgravedad y terrestre, evaluar
+evidencia disponible y detener solicitudes ambiguas o fuera de capacidad. Los
+filtros públicos siguen siendo autoridad. Si una intención contradice un filtro
+explícito, el plan informa el conflicto y no ejecuta herramientas. No se cambió el
+contrato público.
+
+El resumen externo no se publica: el informe conserva una síntesis generada desde
+los resultados del programa. Las afirmaciones del proveedor requieren cita
+recuperada y enlace coherente; la revisión rechaza cifras/unidades que no aparecen
+en salidas calculadas, contradicciones de procedencia sintética y citas sin
+solapamiento léxico con su contexto. Ese solapamiento solo es un filtro de
+regresión; no valida que la fuente sostenga semánticamente la afirmación. La
+revisión humana y las consultas etiquetadas siguen pendientes.
+
+El informe diferencia fixtures sintéticos de documentos locales sin URL y conserva
+el localizador documental. La aceptación se comprueba con proveedores simulados y
+fixtures sintéticos; no acredita calidad de un proveedor real ni validez científica.

@@ -42,6 +42,7 @@ def _summary(response) -> dict:
     groups = sorted(comparison.groups, key=lambda group: tuple(sorted(group.trial_ids))) if comparison else []
     points = sorted(comparison.points, key=lambda point: point.observation_id) if comparison else []
     return {
+        "n_quantitative_pairs": sum(point.x is not None for point in points),
         "status": response.status,
         "provider": response.provider,
         "selected_trial_ids": [item.trial_id for item in response.ranking.items],
@@ -86,7 +87,7 @@ def evaluate(suite_path: Path, fixture_path: Path) -> dict:
         "n_studies", "n_trials", "n_observations", "n_independent_units", "synthetic_trials",
     )}
     profile_failures = _differences(suite["expected_profile"], profile_summary, "profile")
-    settings = Settings(ai_provider="demo", seed_demo=False)
+    settings = Settings(_env_file=None, ai_provider="demo", seed_demo=False)
     results = []
     for case in cases:
         request = ResearchRequest.model_validate(case["request"])

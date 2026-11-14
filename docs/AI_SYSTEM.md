@@ -1,67 +1,134 @@
-# Sistema de IA
+# Sistema de IA implementado
 
-La base local incluye un coordinador ejecutable y un modo demo determinista sin credenciales. También
-incluye un adaptador externo configurable, probado con transporte HTTP simulado: no se han realizado
-llamadas reales ni medido calidad, coste o latencia de un proveedor. Resultados en VERIFICATION.
+La demo ejecuta planificación, selección, comparación, revisión y explicación sin
+credenciales. El planificador es un catálogo determinista acotado. El proveedor
+externo es opcional: su protocolo y fallos se prueban con simulación; no se han
+realizado llamadas reales ni medido calidad, coste o latencia de un modelo real.
 
-## Qué controla la IA
+## Plan visible y precedencia de filtros
 
-En la base actual, el coordinador ejecuta un plan fijo: perfil, ranking sobre filtros explícitos, comparación,
-recuperación de evidencia, validación de referencias y respuesta. La pregunta participa en la síntesis;
-no se infieren automáticamente sus restricciones. Los cálculos científicos no los realiza ni modifica el modelo.
-El expediente conserva escenario, evidencia, candidatos, comparación, propuestas y límites.
+`ResearchRequest.planning_mode` tiene dos valores:
 
-Los roles investigador, analista, revisor y diseñador son responsabilidades lógicas. No requieren cuatro
-servicios ni cuatro modelos. LangGraph fue una propuesta; ADR 0007 acepta un flujo Python acotado sin
-esa dependencia para la base. Un director que interprete lenguaje natural y elija planes dinámicos permanece
-pendiente de implementación y evaluación.
+- `explicit` (predeterminado, compatible con clientes anteriores): se aplican
+  únicamente los filtros estructurados. La pregunta es una descripción y no
+  modifica restricciones. El plan y sus límites lo indican expresamente.
+- `catalog`: reconoce las frases del catálogo inferior. Una pregunta ambigua,
+  no admitida o contradictoria detiene el análisis antes de herramientas o modelo.
+  No se relaja un filtro para producir resultados.
 
-## Herramientas
+`POST /api/v1/research/plan` recibe el mismo `ResearchRequest` que la investigación
+y devuelve `ResearchPlan`, sin leer datos, guardar un expediente ni llamar a un
+proveedor. El plan incluye modo, intención, filtros efectivos, métrica, eje X,
+mensaje, `blocked` y límites. La investigación utiliza ese mismo planificador y
+conserva el resultado en `ResearchResponse.plan` y el informe persistido. Un plan
+no bloqueado todavía puede encontrar evidencia insuficiente al ejecutar ciencia.
+Expedientes antiguos pueden tener `plan=null`; no se inventa su interpretación.
 
-El catálogo implementado identifica `profile_dataset`, `rank_trials`, `compare_trials` y
-`retrieve_evidence`; la recuperación selecciona las fuentes enlazadas a ensayos, condiciones y observaciones.
-La API también consulta estudios/ensayos. Los paneles pertenecen a un catálogo cerrado. Nombres y argumentos
-se consultan en CONTRACTS y el contrato ejecutable; este documento no define una API paralela.
+La vista previa no reserva el corpus: el catálogo puede cambiar entre vista previa
+y ejecución. El expediente final contiene el plan realmente ejecutado y su snapshot.
+P5/P6 pueden mostrar el plan antes de investigar usando los tipos generados de P1;
+no necesitan analizar textos de eventos ni copiar contratos.
 
-Cada herramienta valida entradas y devuelve datos estructurados con procedencia y estado. El modelo no ejecuta SQL libre, shell, Python arbitrario ni JavaScript en el navegador. Las operaciones de cálculo son funciones controladas.
+## Catálogo de preguntas
 
-## Modo de demostración
+| Intención | Frases de ejemplo | Efecto comprobable |
+|---|---|---|
+| `compare_varying_flow` | «Compara ensayos variando el flujo.» / «Compare trials while varying flow velocity.» | Añade flujo a `vary`, lo usa como X y mantiene los demás filtros. |
+| `scenario_change` | «Cambia el escenario a gravedad lunar.» / «Change the scenario to lunar gravity.» | Añade gravedad como coincidencia obligatoria; admite también terrestre/earth y microgravedad/microgravity. |
+| `assess_evidence` | «Evalúa la evidencia disponible.» / «Assess evidence.» | Ejecuta los filtros explícitos y reconoce insuficiencia cuando faltan datos. |
+| `ambiguous` | «Compara ensayos.»; dos gravedades; cantidades o restricciones adicionales no interpretadas | Bloquea; solicita aclaración o uso del formulario explícito. |
+| `unsupported` | «Run CFD and predict fire risk.» | Bloquea; no simula una capacidad ausente. |
 
-El modo sin credenciales realiza un recorrido determinista identificable. Verifica conexiones y permite desarrollar el resto del sistema. No se describe como una llamada a un modelo externo. Si usa fixtures, toda la respuesta conserva esa condición.
+El catálogo no es un intérprete general: valores numéricos, rangos, exclusiones,
+negaciones, otros idiomas y condiciones adicionales deben declararse en el
+formulario explícito. No se ignoran silenciosamente. Por ejemplo, «compara flujo
+con oxígeno de 21%» queda bloqueado; el O₂ se especifica en `ranking.target` y
+`required_match` para ejecutar ese filtro. Los textos fuente no modifican el plan.
 
-## Proveedor externo
+Pedir variar flujo cuando un filtro lo exige fijo produce conflicto. Un flujo ya
+declarado en `vary` no se trata como objetivo fijo. Pedir otro escenario de gravedad
+cuando existe un objetivo distinto, o cuando gravedad está declarada variable,
+también produce conflicto. Los pesos, estudios, permiso de sintéticos, ámbito
+ensayo/segmento y límite se conservan.
 
-El adaptador externo utiliza configuración del servidor y salida estructurada. El nombre del modelo se configura explícitamente según disponibilidad de la cuenta. Nunca se deduce que una suscripción individual garantiza acceso a una API, un modelo o un presupuesto. El acceso y posibles créditos vinculados deben verificarse en la cuenta correspondiente.
+## Ejecución y evidencia
 
-La implementación realiza como máximo una petición de síntesis cuando existen datos suficientes, con
-`store=false`. Solo acepta resumen y afirmaciones tipadas; ranking, comparación, paneles e hipótesis preparadas
-se conservan bajo control del programa. La validación de citas detecta IDs inventados o enlaces entre ensayos
-incorrectos; no demuestra que el texto de una afirmación esté científicamente respaldado.
+Las herramientas reales son `profile_dataset`, `rank_trials`, `compare_trials`
+y recuperación de evidencia enlazada. P3 realiza cálculos y filtros verificables;
+el modelo no determina valores ni reordena resultados. `rank_trials` recibe la
+métrica solicitada: exige una observación conocida, unidad compatible y procedencia
+permitida antes del límite; en modo segmento exige asociación al propio segmento.
+Una medición de otro tramo o sin asignación no acredita disponibilidad en el elegido.
 
-No guardar una clave en el repositorio. No compartir la clave individual de una persona por chat de equipo. El modo externo no se activa silenciosamente por detectar una variable de entorno: debe existir una configuración clara.
+La recuperación reúne fuentes del ranking y de los puntos comparados. No vuelve
+a añadir indiscriminadamente todos los segmentos del ensayo. Una fuente recuperada
+es contexto, no respaldo automático de cualquier cifra: la revisión numérica usa
+las referencias del campo concreto. Se conservan identidad, unidades y ausencia.
+Sin candidatos o pares X/Y utilizables se devuelve `insufficient_evidence`, sin
+llamada externa ni hipótesis preparada. El estado no es una predicción física.
 
-## Contrato de respuesta y revisión
+## Proveedor opcional y catálogo de afirmaciones
 
-La respuesta estructurada expresa conclusiones, referencias, limitaciones y acciones visuales según el contrato. El backend comprueba que los identificadores citados pertenecen a la evidencia recuperada y que las acciones utilizan tipos permitidos. No aceptar un identificador inventado aunque tenga formato válido.
+El adaptador Responses usa configuración del servidor, salida estructurada,
+`store=false`, una petición como máximo, tamaño de contexto/salida acotado y
+deadline global. Timeout, rechazo, error HTTP, forma inválida o afirmación rechazada
+produce un error explícito: nunca se convierte silenciosamente en éxito demo.
+El campo `provider` identifica configuración, no demuestra por sí solo una llamada.
 
-Los datos recuperados son contenido no fiable: pueden contener texto que intente cambiar instrucciones. El sistema separa instrucciones y evidencia, delimita el corpus y no otorga autoridad a instrucciones dentro de documentos.
+El resumen externo siempre se sustituye por la síntesis del programa. Las
+afirmaciones del proveedor solo pueden usar el catálogo cuantitativo, por ejemplo:
 
-## Límites de ejecución
+```text
+The trial reports a flame spread rate of 0.05 mm/s.
+El ensayo reporta una tasa de propagación de 0,05 mm/s.
+The trial reports a flow velocity of 2 cm/s.
+```
 
-Se configuran tiempo máximo global y tamaño de contexto (`ai_timeout_seconds`, `ai_max_context_chars`).
-El transporte tiene además límites de lectura y la salida un tope de tamaño. Timeout, rechazo, respuesta
-incompleta, forma inválida y citas inválidas devuelven errores explícitos. No hay fallback que convierta
-silenciosamente un fallo externo en una respuesta demo. Si falta evidencia, no se llama al proveedor y se
-indica en los límites. El campo `provider` identifica la configuración, no acredita por sí solo una llamada.
+Cada afirmación representa una magnitud del eje o métrica activa y cita un único
+ensayo. Su valor se comprueba contra un punto seleccionado de ese ensayo. Para Y,
+las citas deben pertenecer a `Observation.evidence_ids`; para X, a la condición
+efectiva del segmento/ensayo. La unión de fuentes del punto no basta: citar una
+fuente de geometría no respalda la tasa. Tampoco se puede usar un valor de otro
+ensayo, otra métrica o el flujo como si fuera propagación, aunque comparta dimensión.
 
-## Hipótesis
+Se admiten conversiones explícitas de unidades del catálogo, incluidas s/min,
+mg/min, mg/s y K/°C. La tolerancia cubre únicamente redondeo numérico del software;
+cero y conteos se comprueban exactamente. Cifras sin unidad, comparativos, inferencias
+libres, causalidad, seguridad y prosa fuera de la gramática se rechazan. No se usa
+coincidencia léxica como prueba de respaldo semántico. Los límites pueden copiarse
+solo de `allowed_limitations`, generado por constantes y límites del plan: las
+notas `source_note` del corpus no autorizan afirmaciones. Si el proveedor devuelve
+cero afirmaciones, se conservan las afirmaciones deterministas del programa.
 
-Una hipótesis incluye evidencia que la motiva, objeciones, condiciones, variables por controlar y observación que la refutaría. No se etiqueta como descubrimiento validado. Las propuestas de diseño son investigación, no certificación de seguridad.
+Estas guardas acreditan correspondencia con campos estructurados, no verdad física,
+calidad de extracción ni interpretación científica de la fuente. El corpus real
+sigue `unverified` hasta su revisión científica. La evaluación del proveedor real
+requiere configuración y autorización de cuenta/presupuesto separadas.
 
-La base devuelve una propuesta preparada con `label=prepared_demo_hypothesis` cuando hay evidencia
-suficiente y el usuario lo solicita. No es descubrimiento autónomo ni una hipótesis nueva generada por el
-proveedor. Un eje solicitado completamente ausente produce `insufficient_evidence`, sin hipótesis preparada.
+## Informe e hipótesis
 
-## Evaluación
+El informe conserva pregunta, plan, filtros efectivos, resultados, citas con ensayo,
+procedencia, controles, recuentos de independencia, propuestas y límites. Texto
+fuente, títulos, localizadores, notas y contenido histórico se muestran como datos
+literales escapados o en fences más largos que cualquier secuencia del contenido.
+Una fuente no puede crear una sección Markdown de conclusión ni enlaces/HTML activos.
+Los originales no se borran ni se ejecutan.
 
-Medir citas válidas y pertinentes, respeto de filtros, uso correcto de herramientas, estados de evidencia insuficiente, latencia y coste observado. No usar exclusivamente un segundo LLM para certificar al primero. Detalles en [EVALUATION](EVALUATION.md).
+La hipótesis disponible está etiquetada `prepared_demo_hypothesis`. Incluye motivo,
+explicación alternativa, siguiente medición, refutación y fuentes. No es descubrimiento
+autónomo, diseño inverso ni resultado nuevo de un modelo. Los paneles proceden del
+catálogo tipado, sin código ejecutable libre. Los roles son responsabilidades del
+mismo flujo Python; no hay agentes autónomos ni dependencia de LangGraph.
+
+## Verificación reproducible
+
+```powershell
+.venv\Scripts\python.exe -m pytest apps/api/tests/test_provider.py apps/api/tests/test_planner.py apps/api/tests/test_ai_reports.py apps/api/tests/test_ai_evaluation.py apps/api/tests/test_ai_runner.py apps/api/tests/test_review.py -q
+.venv\Scripts\python.exe evals/ai/run.py
+```
+
+El runner ejecuta 18 casos con expectativas explícitas, datos sintéticos y proveedor
+simulado. Devuelve 0 si pasan, 1 ante discrepancia y 2 ante entrada inválida. Registra
+hashes de casos/fixture/runner. [README de evaluación](../evals/ai/README.md) y
+[relevo P4](handoffs/P4.md) detallan resultados y límites. No es un benchmark reservado
+de interpretación humana ni una evaluación de modelo real.

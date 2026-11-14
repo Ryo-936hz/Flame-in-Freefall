@@ -17,3 +17,5 @@ IMPLEMENTATION_STATUS y VERIFICATION.
 - [0008 Successive conditions and local BASS-II import](0008-successive-conditions-and-bass-import.md)
 
 Para una nueva decisión: siguiente número, fecha, estado, problema concreto, alternativas, decisión, consecuencias y rutas afectadas. Una preferencia de herramienta no necesita un ADR si no cambia una frontera o compromiso del sistema.
+
+- [0009 Plan visible, métricas y síntesis acotada](0009-visible-plans-and-metric-availability.md)
