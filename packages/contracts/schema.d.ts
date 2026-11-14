@@ -297,13 +297,13 @@ export interface components {
             /** Trial Ids */
             trial_ids: string[];
             /** Vary */
-            vary?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
+            vary?: ("oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
             /**
              * X Condition
              * @default flow_velocity_cm_s
              * @enum {string}
              */
-            x_condition?: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
+            x_condition?: "oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
         };
         /** ComparisonResponse */
         ComparisonResponse: {
@@ -325,12 +325,28 @@ export interface components {
              * @default flow_velocity_cm_s
              * @enum {string}
              */
-            x_condition?: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
+            x_condition?: "oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
             /**
              * X Unit
              * @default cm/s
              */
             x_unit?: string | null;
+        };
+        /**
+         * ConditionSegment
+         * @description Ordered, source-reported effective conditions within one trial.
+         */
+        ConditionSegment: {
+            /** Conditions */
+            conditions: {
+                [key: string]: components["schemas"]["ConditionValue"];
+            };
+            /** Evidence Ids */
+            evidence_ids: string[];
+            /** Id */
+            id: string;
+            /** Sequence */
+            sequence: number;
         };
         /** ConditionValue */
         ConditionValue: {
@@ -459,6 +475,8 @@ export interface components {
              * @enum {string}
              */
             provenance: "published" | "digitized" | "derived" | "synthetic";
+            /** Segment Id */
+            segment_id?: string | null;
             /** Trial Id */
             trial_id: string;
             /** X */
@@ -536,7 +554,7 @@ export interface components {
              * Variable
              * @enum {string}
              */
-            variable: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
+            variable: "oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
             /** Weight */
             weight: number;
         };
@@ -558,7 +576,7 @@ export interface components {
              */
             minimum_coverage?: number;
             /** Required Match */
-            required_match?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
+            required_match?: ("oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
             /** Study Ids */
             study_ids?: string[];
             /** Target */
@@ -566,7 +584,7 @@ export interface components {
                 [key: string]: number | string;
             };
             /** Vary */
-            vary?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
+            vary?: ("oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
             /** Weights */
             weights?: {
                 [key: string]: number;
@@ -733,6 +751,8 @@ export interface components {
             provenance: "published" | "digitized" | "derived" | "synthetic";
             /** Sample Id */
             sample_id: string;
+            /** Segments */
+            segments?: components["schemas"]["ConditionSegment"][];
             /** Study Id */
             study_id: string;
         };

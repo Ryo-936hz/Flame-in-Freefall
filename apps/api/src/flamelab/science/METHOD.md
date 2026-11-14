@@ -32,13 +32,14 @@ el umbral 1.0 aunque el float de salida redondee a 1; en ese caso se añade
 La cobertura por debajo del mínimo produce `indeterminate`, conservado en `excluded`.
 Solo los elegibles tienen similitud y aparecen en `items`; se ordenan por similitud,
 cobertura y finalmente ID para desempate estable.
-Cada resultado conserva la unión de referencias del ensayo, sus condiciones y sus
-observaciones. Así una cita de la medición puede validarse contra el ensayo seleccionado,
+Cada resultado conserva la unión de referencias del ensayo, sus condiciones, segmentos, condiciones de segmentos y sus
+observaciones (referencias deduplicadas y ordenadas). Así una cita de la medición puede validarse contra el ensayo seleccionado,
 aunque la fuente específica no estuviera repetida en la lista de evidencia del ensayo.
 
 | Condición | Escala v1 | Unidad |
 |---|---:|---|
 | oxygen_pct | 100 | % |
+| oxygen_initial_pct / oxygen_final_pct | 100 | % |
 | pressure_kpa | 200 | kPa |
 | flow_velocity_cm_s | 100 | cm/s |
 | thickness_mm | 100 | mm |
@@ -94,7 +95,8 @@ grupo para nuevas comparaciones; los snapshots históricos no se recalculan.
 Se conserva el contrato 1.0 de `x=null` cuando falta X o es categórico: esos registros
 no son pares cuantitativos válidos. La coordinación IA ya devuelve insuficiencia si
 no queda ningún X conocido. Retirar esos registros de la API requerirá acuerdo P1/P5;
-este incremento no cambia esa semántica ni inventa segmentos para BASS-II.
+el soporte 1.1 conserva esa semántica. La mediana describe Y disponible,
+no una relación X→Y cuando falta X; no se imputan coordenadas.
 
 La mediana describe las observaciones del grupo, sin ponderación inferencial. Se muestran
 por separado ensayos, observaciones y unidades independientes; pasos de una muestra no
@@ -113,3 +115,52 @@ Se incluyen los cinco estados, incluido `known`, para todas las claves de condic
 Una clave omitida cuenta como `not_reported`. Las unidades independientes se cuentan
 por `(study_id, independent_unit_id)`; múltiples observaciones no incrementan la cuenta.
 El perfil no certifica que una extracción haya sido revisada científicamente.
+
+## Condiciones sucesivas: contrato 1.1 integrado desde P1
+
+Base contractual: `94989a76438f530612107c482d539007d3a98534`. La autoridad y los
+generados son los de P1; P3 no introduce modelos alternativos ni modifica sus campos.
+La comparación resuelve el ámbito de condiciones **por observación**:
+
+- Con `segment_id`, utiliza solo `ConditionSegment.conditions`, sin completar
+  ausencias con condiciones del ensayo. Geometría y cara de combustión participan
+  como controles, salvo que se hayan declarado explícitamente en `vary`.
+- Sin `segment_id`, conserva las condiciones explícitas del ensayo, como el código
+  P1. Si el ensayo tiene segmentos, avisa `segment_unassigned`, identifica el
+  ámbito `trial_unassigned` y aísla esa observación; no adivina su segmento.
+- Los extremos O₂ inicial/final se conservan como contexto del ensayo, con
+  `<variable>_scope=trial`. Nunca sustituyen `oxygen_pct` ni sirven de X para una
+  observación asignada a un segmento. Un extremo indebidamente declarado dentro
+  de un segmento tampoco se utiliza como condición efectiva; P1 debe endurecer
+  esa validación de ámbito en el contrato.
+- Condiciones no resueltas aíslan por ensayo y segmento. Compartir una muestra no
+  demuestra que dos condiciones desconocidas sean compatibles. `not_applicable`
+  explícito conserva su significado y puede coincidir con el mismo estado.
+- Los controles nuevos opcionales ausentes de toda una selección legacy no cambian
+  su agrupación. Cuando alguno está informado, una contraparte ausente se marca
+  sin resolver. `combustion_face` se exige como control en selecciones con segmentos,
+  aunque solo se haya informado dentro de ellos o falte en todos.
+
+Los puntos se ordenan por ID de ensayo, `sequence` y ID de observación; los no
+asignados quedan al final del ensayo. Se permiten huecos en `sequence`: es orden de
+fuente, no tiempo, distancia, duración, condición comparable ni réplica independiente.
+El ID de segmento se conserva en cada punto. Dos observaciones del mismo segmento
+siguen siendo dos mediciones de la misma unidad, no dos réplicas.
+
+Cada grupo deduplica sus ensayos y sus unidades `(study_id, independent_unit_id)`.
+Un ensayo puede aparecer en varios grupos por controles o procedencia; sus cuentas
+no se suman para obtener el tamaño muestral global. La mediana permanece descriptiva
+por observación, con intervalo nulo. Las fuentes de cada punto incluyen medición,
+ensayo, segmento, condiciones explícitas y extremos del ensayo. No se modifica el
+bundle: conserva valores/unidades originales, localizadores y referencias.
+
+**Límite de selección:** ranking y perfil siguen siendo de ensayo. `required_match`,
+Gower y cobertura usan `Trial.conditions`; no sustituyen un valor por el mejor segmento
+ni seleccionan segmentos individualmente. El ranking recupera también las fuentes
+de los segmentos y emite `trial_level_ranking`; el perfil emite
+`trial_level_missingness`. Un filtro de ensayo no garantiza que cada segmento cumpla
+ese filtro. Una selección por segmentos requiere contrato P1 y coordinación P4/P5.
+
+Ver `test_condition_segments.py` y `evals/science/segment_run.py`: software sintético,
+sin datos NASA, llamadas externas, estimación física ni certificación de seguridad.
+La lectura de bundles 1.0 y las seis evaluaciones anteriores se conservan.

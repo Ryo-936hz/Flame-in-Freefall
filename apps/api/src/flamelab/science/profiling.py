@@ -18,6 +18,11 @@ def profile_dataset(bundle: DatasetBundle) -> ProfileResponse:
             status = value.status if value else "not_reported"
             counts[key][status] += 1
             by_study[trial.study_id][key][status] += 1
+    if any(trial.segments for trial in bundle.trials):
+        issues.append(
+            "trial_level_missingness: condition counts describe trials, not segments; "
+            "segments and observations do not create independent experimental units."
+        )
     synthetic = sum(trial.provenance == "synthetic" for trial in bundle.trials)
     if synthetic:
         issues.append("Synthetic fixtures present; they are not NASA observations.")

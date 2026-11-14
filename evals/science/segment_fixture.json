@@ -1,0 +1,1373 @@
+{
+  "schema_version": "1.1",
+  "dataset_id": "synthetic:segment-evaluation",
+  "description": "Explicit synthetic regression fixture only; no NASA measurements or physical validation.",
+  "studies": [
+    {
+      "id": "synthetic:segment-study",
+      "title": "Synthetic segment evaluation",
+      "family": "synthetic_example",
+      "dataset_status": "synthetic"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "synthetic:shared-controls",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: shared explicit controls",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:reference-trial-source",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: reference trial bounds",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:reference-segment-source-z",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: reference reported sequence 30 (not time)",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:reference-observation-source-z",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: reference observation z",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:reference-segment-source-m",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: reference reported sequence 50 (not time)",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:reference-observation-source-m",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: reference observation m",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:reference-segment-source-a",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: reference reported sequence 80 (not time)",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:reference-observation-source-a",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: reference observation a",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:changed-trial-source",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: changed trial bounds",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:changed-segment-source-z",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: changed reported sequence 2 (not time)",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:changed-observation-source-z",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: changed observation z",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:changed-segment-source-a",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: changed reported sequence 9 (not time)",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:changed-observation-source-a",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: changed observation a",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:missing-trial-source",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: missing trial bounds",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:missing-segment-source-z",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: missing reported sequence 4 (not time)",
+      "provenance": "synthetic",
+      "reviewed": false
+    },
+    {
+      "id": "synthetic:missing-observation-source-z",
+      "study_id": "synthetic:segment-study",
+      "title": "Synthetic software evaluation evidence",
+      "text": "Artificial values for a deterministic software regression. Not NASA measurements.",
+      "locator": "Synthetic fixture: missing observation z",
+      "provenance": "synthetic",
+      "reviewed": false
+    }
+  ],
+  "trials": [
+    {
+      "id": "synthetic:reference-trial",
+      "study_id": "synthetic:segment-study",
+      "sample_id": "synthetic:reference-sample",
+      "independent_unit_id": "synthetic:reference-unit",
+      "label": "Synthetic reference trial",
+      "material_grade": "synthetic-grade-A",
+      "conditions": {
+        "oxygen_pct": {
+          "status": "known",
+          "value": 20,
+          "unit": "%",
+          "original_value": "20",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "pressure_kpa": {
+          "status": "known",
+          "value": 101,
+          "unit": "kPa",
+          "original_value": "101",
+          "original_unit": "kPa",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "flow_velocity_cm_s": {
+          "status": "known",
+          "value": 99,
+          "unit": "cm/s",
+          "original_value": "99",
+          "original_unit": "cm/s",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "material": {
+          "status": "known",
+          "value": "demo_polymer",
+          "unit": null,
+          "original_value": "demo_polymer",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "geometry": {
+          "status": "known",
+          "value": "sheet",
+          "unit": null,
+          "original_value": "sheet",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "combustion_face": {
+          "status": "known",
+          "value": "face_a",
+          "unit": null,
+          "original_value": "face_a",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "thickness_mm": {
+          "status": "known",
+          "value": 1,
+          "unit": "mm",
+          "original_value": "1",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "sample_width_mm": {
+          "status": "known",
+          "value": 10,
+          "unit": "mm",
+          "original_value": "10",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "flow_direction": {
+          "status": "known",
+          "value": "opposed",
+          "unit": null,
+          "original_value": "opposed",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "gravity_regime": {
+          "status": "known",
+          "value": "microgravity",
+          "unit": null,
+          "original_value": "microgravity",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "diameter_mm": {
+          "status": "not_applicable",
+          "value": null,
+          "unit": "mm",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "oxygen_initial_pct": {
+          "status": "known",
+          "value": 21,
+          "unit": "%",
+          "original_value": "21",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:reference-trial-source"
+          ]
+        },
+        "oxygen_final_pct": {
+          "status": "known",
+          "value": 18,
+          "unit": "%",
+          "original_value": "18",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:reference-trial-source"
+          ]
+        }
+      },
+      "evidence_ids": [
+        "synthetic:reference-trial-source"
+      ],
+      "provenance": "synthetic",
+      "segments": [
+        {
+          "id": "synthetic:reference-segment-a",
+          "sequence": 80,
+          "conditions": {
+            "oxygen_pct": {
+              "status": "known",
+              "value": 20,
+              "unit": "%",
+              "original_value": "20",
+              "original_unit": "%",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "pressure_kpa": {
+              "status": "known",
+              "value": 101,
+              "unit": "kPa",
+              "original_value": "101",
+              "original_unit": "kPa",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_velocity_cm_s": {
+              "status": "known",
+              "value": 10,
+              "unit": "cm/s",
+              "original_value": "10",
+              "original_unit": "cm/s",
+              "evidence_ids": [
+                "synthetic:reference-segment-source-a"
+              ]
+            },
+            "material": {
+              "status": "known",
+              "value": "demo_polymer",
+              "unit": null,
+              "original_value": "demo_polymer",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "geometry": {
+              "status": "known",
+              "value": "sheet",
+              "unit": null,
+              "original_value": "sheet",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "combustion_face": {
+              "status": "known",
+              "value": "face_a",
+              "unit": null,
+              "original_value": "face_a",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "thickness_mm": {
+              "status": "known",
+              "value": 1,
+              "unit": "mm",
+              "original_value": "1",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "sample_width_mm": {
+              "status": "known",
+              "value": 10,
+              "unit": "mm",
+              "original_value": "10",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_direction": {
+              "status": "known",
+              "value": "opposed",
+              "unit": null,
+              "original_value": "opposed",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "gravity_regime": {
+              "status": "known",
+              "value": "microgravity",
+              "unit": null,
+              "original_value": "microgravity",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "diameter_mm": {
+              "status": "not_applicable",
+              "value": null,
+              "unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            }
+          },
+          "evidence_ids": [
+            "synthetic:reference-segment-source-a"
+          ]
+        },
+        {
+          "id": "synthetic:reference-segment-m",
+          "sequence": 50,
+          "conditions": {
+            "oxygen_pct": {
+              "status": "known",
+              "value": 20,
+              "unit": "%",
+              "original_value": "20",
+              "original_unit": "%",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "pressure_kpa": {
+              "status": "known",
+              "value": 101,
+              "unit": "kPa",
+              "original_value": "101",
+              "original_unit": "kPa",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_velocity_cm_s": {
+              "status": "known",
+              "value": 5,
+              "unit": "cm/s",
+              "original_value": "5",
+              "original_unit": "cm/s",
+              "evidence_ids": [
+                "synthetic:reference-segment-source-m"
+              ]
+            },
+            "material": {
+              "status": "known",
+              "value": "demo_polymer",
+              "unit": null,
+              "original_value": "demo_polymer",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "geometry": {
+              "status": "known",
+              "value": "sheet",
+              "unit": null,
+              "original_value": "sheet",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "combustion_face": {
+              "status": "known",
+              "value": "face_a",
+              "unit": null,
+              "original_value": "face_a",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "thickness_mm": {
+              "status": "known",
+              "value": 1,
+              "unit": "mm",
+              "original_value": "1",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "sample_width_mm": {
+              "status": "known",
+              "value": 10,
+              "unit": "mm",
+              "original_value": "10",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_direction": {
+              "status": "known",
+              "value": "opposed",
+              "unit": null,
+              "original_value": "opposed",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "gravity_regime": {
+              "status": "known",
+              "value": "microgravity",
+              "unit": null,
+              "original_value": "microgravity",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "diameter_mm": {
+              "status": "not_applicable",
+              "value": null,
+              "unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            }
+          },
+          "evidence_ids": [
+            "synthetic:reference-segment-source-m"
+          ]
+        },
+        {
+          "id": "synthetic:reference-segment-z",
+          "sequence": 30,
+          "conditions": {
+            "oxygen_pct": {
+              "status": "known",
+              "value": 20,
+              "unit": "%",
+              "original_value": "20",
+              "original_unit": "%",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "pressure_kpa": {
+              "status": "known",
+              "value": 101,
+              "unit": "kPa",
+              "original_value": "101",
+              "original_unit": "kPa",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_velocity_cm_s": {
+              "status": "known",
+              "value": 0,
+              "unit": "cm/s",
+              "original_value": "0",
+              "original_unit": "cm/s",
+              "evidence_ids": [
+                "synthetic:reference-segment-source-z"
+              ]
+            },
+            "material": {
+              "status": "known",
+              "value": "demo_polymer",
+              "unit": null,
+              "original_value": "demo_polymer",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "geometry": {
+              "status": "known",
+              "value": "sheet",
+              "unit": null,
+              "original_value": "sheet",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "combustion_face": {
+              "status": "known",
+              "value": "face_a",
+              "unit": null,
+              "original_value": "face_a",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "thickness_mm": {
+              "status": "known",
+              "value": 1,
+              "unit": "mm",
+              "original_value": "1",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "sample_width_mm": {
+              "status": "known",
+              "value": 10,
+              "unit": "mm",
+              "original_value": "10",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_direction": {
+              "status": "known",
+              "value": "opposed",
+              "unit": null,
+              "original_value": "opposed",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "gravity_regime": {
+              "status": "known",
+              "value": "microgravity",
+              "unit": null,
+              "original_value": "microgravity",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "diameter_mm": {
+              "status": "not_applicable",
+              "value": null,
+              "unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            }
+          },
+          "evidence_ids": [
+            "synthetic:reference-segment-source-z"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "synthetic:changed-trial",
+      "study_id": "synthetic:segment-study",
+      "sample_id": "synthetic:changed-sample",
+      "independent_unit_id": "synthetic:changed-unit",
+      "label": "Synthetic changed trial",
+      "material_grade": "synthetic-grade-A",
+      "conditions": {
+        "oxygen_pct": {
+          "status": "known",
+          "value": 20,
+          "unit": "%",
+          "original_value": "20",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "pressure_kpa": {
+          "status": "known",
+          "value": 101,
+          "unit": "kPa",
+          "original_value": "101",
+          "original_unit": "kPa",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "flow_velocity_cm_s": {
+          "status": "known",
+          "value": 99,
+          "unit": "cm/s",
+          "original_value": "99",
+          "original_unit": "cm/s",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "material": {
+          "status": "known",
+          "value": "demo_polymer",
+          "unit": null,
+          "original_value": "demo_polymer",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "geometry": {
+          "status": "known",
+          "value": "sheet",
+          "unit": null,
+          "original_value": "sheet",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "combustion_face": {
+          "status": "known",
+          "value": "face_a",
+          "unit": null,
+          "original_value": "face_a",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "thickness_mm": {
+          "status": "known",
+          "value": 1,
+          "unit": "mm",
+          "original_value": "1",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "sample_width_mm": {
+          "status": "known",
+          "value": 10,
+          "unit": "mm",
+          "original_value": "10",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "flow_direction": {
+          "status": "known",
+          "value": "opposed",
+          "unit": null,
+          "original_value": "opposed",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "gravity_regime": {
+          "status": "known",
+          "value": "microgravity",
+          "unit": null,
+          "original_value": "microgravity",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "diameter_mm": {
+          "status": "not_applicable",
+          "value": null,
+          "unit": "mm",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "oxygen_initial_pct": {
+          "status": "known",
+          "value": 22,
+          "unit": "%",
+          "original_value": "22",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:changed-trial-source"
+          ]
+        },
+        "oxygen_final_pct": {
+          "status": "known",
+          "value": 18,
+          "unit": "%",
+          "original_value": "18",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:changed-trial-source"
+          ]
+        }
+      },
+      "evidence_ids": [
+        "synthetic:changed-trial-source"
+      ],
+      "provenance": "synthetic",
+      "segments": [
+        {
+          "id": "synthetic:changed-segment-a",
+          "sequence": 9,
+          "conditions": {
+            "oxygen_pct": {
+              "status": "known",
+              "value": 20,
+              "unit": "%",
+              "original_value": "20",
+              "original_unit": "%",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "pressure_kpa": {
+              "status": "known",
+              "value": 101,
+              "unit": "kPa",
+              "original_value": "101",
+              "original_unit": "kPa",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_velocity_cm_s": {
+              "status": "known",
+              "value": 10,
+              "unit": "cm/s",
+              "original_value": "10",
+              "original_unit": "cm/s",
+              "evidence_ids": [
+                "synthetic:changed-segment-source-a"
+              ]
+            },
+            "material": {
+              "status": "known",
+              "value": "demo_polymer",
+              "unit": null,
+              "original_value": "demo_polymer",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "geometry": {
+              "status": "known",
+              "value": "cylinder",
+              "unit": null,
+              "original_value": "cylinder",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "combustion_face": {
+              "status": "known",
+              "value": "face_b",
+              "unit": null,
+              "original_value": "face_b",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "thickness_mm": {
+              "status": "known",
+              "value": 1,
+              "unit": "mm",
+              "original_value": "1",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "sample_width_mm": {
+              "status": "known",
+              "value": 10,
+              "unit": "mm",
+              "original_value": "10",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_direction": {
+              "status": "known",
+              "value": "opposed",
+              "unit": null,
+              "original_value": "opposed",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "gravity_regime": {
+              "status": "known",
+              "value": "microgravity",
+              "unit": null,
+              "original_value": "microgravity",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "diameter_mm": {
+              "status": "not_applicable",
+              "value": null,
+              "unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            }
+          },
+          "evidence_ids": [
+            "synthetic:changed-segment-source-a"
+          ]
+        },
+        {
+          "id": "synthetic:changed-segment-z",
+          "sequence": 2,
+          "conditions": {
+            "oxygen_pct": {
+              "status": "known",
+              "value": 20,
+              "unit": "%",
+              "original_value": "20",
+              "original_unit": "%",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "pressure_kpa": {
+              "status": "known",
+              "value": 101,
+              "unit": "kPa",
+              "original_value": "101",
+              "original_unit": "kPa",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_velocity_cm_s": {
+              "status": "known",
+              "value": 5,
+              "unit": "cm/s",
+              "original_value": "5",
+              "original_unit": "cm/s",
+              "evidence_ids": [
+                "synthetic:changed-segment-source-z"
+              ]
+            },
+            "material": {
+              "status": "known",
+              "value": "demo_polymer",
+              "unit": null,
+              "original_value": "demo_polymer",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "geometry": {
+              "status": "known",
+              "value": "sheet",
+              "unit": null,
+              "original_value": "sheet",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "combustion_face": {
+              "status": "known",
+              "value": "face_a",
+              "unit": null,
+              "original_value": "face_a",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "thickness_mm": {
+              "status": "known",
+              "value": 1,
+              "unit": "mm",
+              "original_value": "1",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "sample_width_mm": {
+              "status": "known",
+              "value": 10,
+              "unit": "mm",
+              "original_value": "10",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_direction": {
+              "status": "known",
+              "value": "opposed",
+              "unit": null,
+              "original_value": "opposed",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "gravity_regime": {
+              "status": "known",
+              "value": "microgravity",
+              "unit": null,
+              "original_value": "microgravity",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "diameter_mm": {
+              "status": "not_applicable",
+              "value": null,
+              "unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            }
+          },
+          "evidence_ids": [
+            "synthetic:changed-segment-source-z"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "synthetic:missing-trial",
+      "study_id": "synthetic:segment-study",
+      "sample_id": "synthetic:missing-sample",
+      "independent_unit_id": "synthetic:missing-unit",
+      "label": "Synthetic missing trial",
+      "material_grade": "synthetic-grade-A",
+      "conditions": {
+        "oxygen_pct": {
+          "status": "known",
+          "value": 20,
+          "unit": "%",
+          "original_value": "20",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "pressure_kpa": {
+          "status": "known",
+          "value": 101,
+          "unit": "kPa",
+          "original_value": "101",
+          "original_unit": "kPa",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "flow_velocity_cm_s": {
+          "status": "known",
+          "value": 99,
+          "unit": "cm/s",
+          "original_value": "99",
+          "original_unit": "cm/s",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "material": {
+          "status": "known",
+          "value": "demo_polymer",
+          "unit": null,
+          "original_value": "demo_polymer",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "geometry": {
+          "status": "known",
+          "value": "sheet",
+          "unit": null,
+          "original_value": "sheet",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "combustion_face": {
+          "status": "known",
+          "value": "face_a",
+          "unit": null,
+          "original_value": "face_a",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "thickness_mm": {
+          "status": "known",
+          "value": 1,
+          "unit": "mm",
+          "original_value": "1",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "sample_width_mm": {
+          "status": "known",
+          "value": 10,
+          "unit": "mm",
+          "original_value": "10",
+          "original_unit": "mm",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "flow_direction": {
+          "status": "known",
+          "value": "opposed",
+          "unit": null,
+          "original_value": "opposed",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "gravity_regime": {
+          "status": "known",
+          "value": "microgravity",
+          "unit": null,
+          "original_value": "microgravity",
+          "original_unit": null,
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "diameter_mm": {
+          "status": "not_applicable",
+          "value": null,
+          "unit": "mm",
+          "evidence_ids": [
+            "synthetic:shared-controls"
+          ]
+        },
+        "oxygen_initial_pct": {
+          "status": "known",
+          "value": 23,
+          "unit": "%",
+          "original_value": "23",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:missing-trial-source"
+          ]
+        },
+        "oxygen_final_pct": {
+          "status": "known",
+          "value": 18,
+          "unit": "%",
+          "original_value": "18",
+          "original_unit": "%",
+          "evidence_ids": [
+            "synthetic:missing-trial-source"
+          ]
+        }
+      },
+      "evidence_ids": [
+        "synthetic:missing-trial-source"
+      ],
+      "provenance": "synthetic",
+      "segments": [
+        {
+          "id": "synthetic:missing-segment-z",
+          "sequence": 4,
+          "conditions": {
+            "oxygen_pct": {
+              "status": "known",
+              "value": 20,
+              "unit": "%",
+              "original_value": "20",
+              "original_unit": "%",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "pressure_kpa": {
+              "status": "known",
+              "value": 101,
+              "unit": "kPa",
+              "original_value": "101",
+              "original_unit": "kPa",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_velocity_cm_s": {
+              "status": "not_measured",
+              "value": null,
+              "unit": "cm/s",
+              "evidence_ids": [
+                "synthetic:missing-segment-source-z"
+              ]
+            },
+            "material": {
+              "status": "known",
+              "value": "demo_polymer",
+              "unit": null,
+              "original_value": "demo_polymer",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "geometry": {
+              "status": "known",
+              "value": "sheet",
+              "unit": null,
+              "original_value": "sheet",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "combustion_face": {
+              "status": "known",
+              "value": "face_a",
+              "unit": null,
+              "original_value": "face_a",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "thickness_mm": {
+              "status": "known",
+              "value": 1,
+              "unit": "mm",
+              "original_value": "1",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "sample_width_mm": {
+              "status": "known",
+              "value": 10,
+              "unit": "mm",
+              "original_value": "10",
+              "original_unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "flow_direction": {
+              "status": "known",
+              "value": "opposed",
+              "unit": null,
+              "original_value": "opposed",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "gravity_regime": {
+              "status": "known",
+              "value": "microgravity",
+              "unit": null,
+              "original_value": "microgravity",
+              "original_unit": null,
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            },
+            "diameter_mm": {
+              "status": "not_applicable",
+              "value": null,
+              "unit": "mm",
+              "evidence_ids": [
+                "synthetic:shared-controls"
+              ]
+            }
+          },
+          "evidence_ids": [
+            "synthetic:missing-segment-source-z"
+          ]
+        }
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "id": "synthetic:missing-observation-z",
+      "trial_id": "synthetic:missing-trial",
+      "segment_id": "synthetic:missing-segment-z",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 7,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:missing-observation-source-z"
+      ],
+      "provenance": "synthetic"
+    },
+    {
+      "id": "synthetic:changed-observation-a",
+      "trial_id": "synthetic:changed-trial",
+      "segment_id": "synthetic:changed-segment-a",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 8,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:changed-observation-source-a"
+      ],
+      "provenance": "synthetic"
+    },
+    {
+      "id": "synthetic:changed-observation-z",
+      "trial_id": "synthetic:changed-trial",
+      "segment_id": "synthetic:changed-segment-z",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 4,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:changed-observation-source-z"
+      ],
+      "provenance": "synthetic"
+    },
+    {
+      "id": "synthetic:reference-observation-a",
+      "trial_id": "synthetic:reference-trial",
+      "segment_id": "synthetic:reference-segment-a",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 3,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:reference-observation-source-a"
+      ],
+      "provenance": "synthetic"
+    },
+    {
+      "id": "synthetic:reference-observation-m",
+      "trial_id": "synthetic:reference-trial",
+      "segment_id": "synthetic:reference-segment-m",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 2,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:reference-observation-source-m"
+      ],
+      "provenance": "synthetic"
+    },
+    {
+      "id": "synthetic:reference-observation-z",
+      "trial_id": "synthetic:reference-trial",
+      "segment_id": "synthetic:reference-segment-z",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 1,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": [
+        "synthetic:reference-observation-source-z"
+      ],
+      "provenance": "synthetic"
+    }
+  ]
+}

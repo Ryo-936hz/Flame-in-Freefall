@@ -65,26 +65,51 @@ comando ejecutado. Las pruebas comprueban que esos cambios de bytes alteran las
 huellas manteniendo las mismas respuestas semánticas. No se escriben datos ni
 informes automáticamente: redirigir la salida a `work/` si se quiere conservarla.
 
-## Criterios de condiciones sucesivas pendientes de P1/P2/P3
+## Condiciones sucesivas: evaluación del contrato 1.1
 
-La rama P1 `aeeb331d826169655dee10149828839b54eb4db7` añade comprobación PostgreSQL;
-no implementa segmentos. El contrato efectivo 1.0 conserva condiciones por ensayo.
-No introducimos tipos provisionales ni campos falsos para simular soporte.
+P1 publicó `94989a7` con segmentos y tipos generados. Esta evaluación usa ese
+contrato y la comparación adaptada por P3; no duplica tipos ni datos reales.
+El caso antiguo de ausencia de segmentos se conserva en los seis casos anteriores.
 
-Antes de ampliar los casos a datos reales se necesita acordar e implementar:
+```powershell
+.venv\Scripts\python.exe evals/science/segment_run.py
+```
 
-1. Un ensayo con varias condiciones conserva su `trial_id` y unidad experimental;
-   cada observación apunta a su condición efectiva sin duplicar el ensayo.
-2. El orden de reporte de condiciones no inventa tiempos ni independencia.
-3. Caras, geometría y formulación participan como controles de comparabilidad;
-   un control esencial ausente produce aislamiento/indeterminación explícita.
-4. Oxígeno inicial/final describe extremos del ensayo y no se aplica como valor
-   medido a cada condición; cualquier estimación conserva procedencia derivada.
-5. Hay localizadores y originales/unidades para cada medición; el estado de una
-   ausencia se acuerda con P2/P3 a partir de lo que realmente afirma la fuente.
-6. Conteos de ensayos, observaciones y unidades independientes se mantienen
-   separados y la evaluación impide pseudorreplicación.
+`segment_fixture.json` contiene tres ensayos, seis observaciones y tres unidades
+independientes, todos explícitamente sintéticos. Cada segmento enumera sus
+condiciones efectivas, sin heredar del ensayo. `segment_cases.json` fija expectativas
+manuales; el runner usa perfil, ranking, coordinador demo y comparación del producto.
+No requiere claves, no llama a proveedores externos y no escribe en SQLite.
+Devuelve 0 si coinciden todas las expectativas, 1 ante discrepancia y 2 ante entrada
+inválida. `--cases` y `--fixture` permiten rutas explícitas. Los hashes identifican
+los bytes exactos parseados de ambas entradas; un corpus no sintético se rechaza.
 
-P1 mantiene el contrato y sus generados; P2 aporta la serie y trazabilidad; P3
-adapta las herramientas y revisa las expectativas científicas una vez integrado
-el contrato. Esta lista es una solicitud de aceptación futura, no capacidad actual.
+| Caso | Expectativa | Qué comprueba |
+|---|---|---|
+| `reference` | Flujos 0, 5 y 10 cm/s; tasas 1, 2 y 3 mm/s; mediana 2; un ensayo, tres observaciones y una unidad | El cero es conocido. Tres segmentos no crean tres réplicas. |
+| `changed` | Dos grupos: lámina/cara A y cilindro/cara B; tasas 4 y 8 mm/s | Los controles efectivos separan incluso observaciones del mismo ensayo. La unidad global sigue siendo una y las cuentas de los grupos no se suman. |
+| `missing` | Y=7 mm/s conservada con X nula; `insufficient_evidence` | El flujo 99 cm/s del ensayo no rellena el flujo `not_measured` del segmento. No se crea un par cuantitativo válido. |
+
+Los ensayos se seleccionan mediante el material y el O₂ inicial explícito del
+ensayo (21, 22 o 23 %). Es una selección entre registros sintéticos, no una
+simulación de cambios físicos. El O₂ final es 18 % y ambos extremos siguen siendo
+contexto del ensayo; no se convierten en O₂ medido dentro de cada segmento.
+Los segmentos declaran su propio O₂ de 20 % únicamente como dato artificial.
+
+Se comprueban identidad y orden de los puntos, unidades, fuentes de medición y
+condición, geometría/cara, extremos del ensayo, medianas y conteos separados.
+Las secuencias tienen huecos (30, 50, 80) y los IDs y listas van en orden contrario:
+el resultado debe seguir el orden reportado; esos números no son tiempos.
+Los IDs de grupo se omiten deliberadamente de las expectativas porque son detalles
+internos; los controles y los miembros de cada grupo sí se comprueban.
+
+Ranking y cobertura continúan evaluando condiciones de ensayo, y el perfil cuenta
+su ausencia por ensayo. No se selecciona el mejor segmento ni se incrementa el
+número de candidatos o unidades. La comparación sí usa las condiciones explícitas
+de cada segmento asociado. Los avisos de ámbito impiden presentar el ranking como
+filtrado por condiciones de todas sus observaciones. Extender ese contrato exige
+coordinación P1/P4, no introducir campos provisionales desde una evaluación.
+
+La serie real de P2, sus originales/unidades, licencia, asignaciones no resueltas y
+comparabilidad científica siguen requiriendo revisión conjunta P2/P3. Pasar estas
+regresiones de software no valida mediciones NASA ni transferencia BASS-II/Saffire.

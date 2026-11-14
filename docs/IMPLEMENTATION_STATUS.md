@@ -66,3 +66,7 @@ documental original sigue intacto fuera del clon; no había código ajeno en des
 ### Puerta de integración PostgreSQL
 
 P1 añadió a CI una comprobación con PostgreSQL 17 para migraciones y recuperación. No se pudo ejecutar localmente en este entorno. PostgreSQL sigue sin verificar hasta que pase el nuevo job; pgvector continúa sin verificar.
+
+### Contrato de condiciones sucesivas
+
+P1 implemento el contrato 1.1 compatible con bundles 1.0: segmentos ordenados dentro del ensayo, enlace opcional de observaciones, condiciones O2 inicial/final a nivel de ensayo y control de cara de combustion. OpenAPI y TypeScript se regeneraron desde el modelo canonico. P3 debe adaptar comparacion/evaluacion antes de considerar completo el incremento integrado.

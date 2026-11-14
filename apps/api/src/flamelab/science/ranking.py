@@ -16,6 +16,11 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest) -> RankingRespon
         "Gower v1 uses fixed software scales; similarity is not confidence, hazard or physical validity.",
         "Eligibility checks the explicit required_match filters; it does not prove physical comparability.",
     ]
+    if any(trial.segments for trial in bundle.trials):
+        warnings.append(
+            "trial_level_ranking: filters and Gower use explicit trial conditions; "
+            "segment conditions are not substituted or ranked independently."
+        )
     active = {
         key: Fraction(request.weights.get(key, 1.0))
         for key in request.target
@@ -103,9 +108,12 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest) -> RankingRespon
         result = RankedTrial(
             trial_id=trial.id, similarity=similarity, coverage=coverage,
             eligibility=eligibility, reasons=reasons, contributions=contributions,
-            evidence_ids=list(dict.fromkeys(
+            evidence_ids=sorted(set(
                 trial.evidence_ids
                 + [ref for condition in trial.conditions.values() for ref in condition.evidence_ids]
+                + [ref for segment in trial.segments for ref in segment.evidence_ids]
+                + [ref for segment in trial.segments for condition in segment.conditions.values()
+                   for ref in condition.evidence_ids]
                 + observation_refs.get(trial.id, [])
             )), provenance=trial.provenance,
         )
