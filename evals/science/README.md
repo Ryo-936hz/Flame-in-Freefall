@@ -67,8 +67,9 @@ informes automáticamente: redirigir la salida a `work/` si se quiere conservarl
 
 ## Condiciones sucesivas: evaluación del contrato 1.1
 
-P1 publicó `94989a7` con segmentos y tipos generados. Esta evaluación usa ese
-contrato y la comparación adaptada por P3; no duplica tipos ni datos reales.
+P1 publicó `94989a7` con segmentos y tipos generados; la integración P2 en
+`main` (`04baeee`) añade selección explícita por segmento. Esta evaluación usa
+el contrato existente y la comparación de P3; no duplica tipos ni datos reales.
 El caso antiguo de ausencia de segmentos se conserva en los seis casos anteriores.
 
 ```powershell
@@ -89,8 +90,11 @@ los bytes exactos parseados de ambas entradas; un corpus no sintético se rechaz
 | `reference` | Flujos 0, 5 y 10 cm/s; tasas 1, 2 y 3 mm/s; mediana 2; un ensayo, tres observaciones y una unidad | El cero es conocido. Tres segmentos no crean tres réplicas. |
 | `changed` | Dos grupos: lámina/cara A y cilindro/cara B; tasas 4 y 8 mm/s | Los controles efectivos separan incluso observaciones del mismo ensayo. La unidad global sigue siendo una y las cuentas de los grupos no se suman. |
 | `missing` | Y=7 mm/s conservada con X nula; `insufficient_evidence` | El flujo 99 cm/s del ensayo no rellena el flujo `not_measured` del segmento. No se crea un par cuantitativo válido. |
+| `segment_effective_geometry_and_face` | Solo el segmento cilindro/cara B del ensayo `changed`; Y=8 mm/s | El modo segmento utiliza controles efectivos aunque el ensayo declare lámina/cara A. La comparación recibe solo su ID elegible. |
+| `segment_order_and_trial_identity` | Seis segmentos, tres candidatos y tres unidades; desempate por la primera secuencia | `scored_segment_id` y `eligible_segment_ids` conservan identidad y orden; un segmento adicional no crea un ensayo ni una réplica. |
+| `segment_required_flow_not_inherited` | Ningún candidato; `insufficient_evidence` | Requerir flujo 99 cm/s en segmento no hereda ese valor de los ensayos; un flujo no medido no coincide. |
 
-Los ensayos se seleccionan mediante el material y el O₂ inicial explícito del
+Los tres casos originales seleccionan ensayos mediante el material y el O₂ inicial explícito del
 ensayo (21, 22 o 23 %). Es una selección entre registros sintéticos, no una
 simulación de cambios físicos. El O₂ final es 18 % y ambos extremos siguen siendo
 contexto del ensayo; no se convierten en O₂ medido dentro de cada segmento.
@@ -103,13 +107,59 @@ el resultado debe seguir el orden reportado; esos números no son tiempos.
 Los IDs de grupo se omiten deliberadamente de las expectativas porque son detalles
 internos; los controles y los miembros de cada grupo sí se comprueban.
 
-Ranking y cobertura continúan evaluando condiciones de ensayo, y el perfil cuenta
-su ausencia por ensayo. No se selecciona el mejor segmento ni se incrementa el
-número de candidatos o unidades. La comparación sí usa las condiciones explícitas
-de cada segmento asociado. Los avisos de ámbito impiden presentar el ranking como
-filtrado por condiciones de todas sus observaciones. Extender ese contrato exige
-coordinación P1/P4, no introducir campos provisionales desde una evaluación.
+El ranking mantiene `condition_scope=trial` como valor predeterminado. Los tres
+casos nuevos usan `condition_scope=segment`: cada ensayo obtiene la puntuación
+de su mejor segmento elegible, con empate por orden reportado, y la comparación
+recibe `eligible_segment_ids`. No se incrementa el número de ensayos o unidades.
+El perfil distingue ausencias por ensayo y segmento. El resumen comprueba seis
+segmentos, tres unidades identificadas y cero ensayos con independencia no
+resuelta; los grupos también exponen ambos conteos por separado.
+
+Las pruebas del runner alteran intencionalmente el segmento puntuado y la lista
+elegible esperados: ambas discrepancias deben fallar. Las expectativas de los
+seis casos se especifican desde el fixture y no se regeneran desde los resultados.
+Este control del evaluador no constituye una validación científica independiente.
 
 La serie real de P2, sus originales/unidades, licencia, asignaciones no resueltas y
 comparabilidad científica siguen requiriendo revisión conjunta P2/P3. Pasar estas
 regresiones de software no valida mediciones NASA ni transferencia BASS-II/Saffire.
+
+
+## Revisión opt-in de la integración real P2
+
+`corpus_run.py` ejecuta siete comprobaciones de software sobre el bundle local
+`psi:nasa-local-corpus-v1` 1.1, sin importar en SQLite ni llamar a proveedores:
+
+```powershell
+.venv\Scripts\python.exe evals/science/corpus_run.py --bundle 'C:\ruta\corpus\bundle.json'
+```
+
+Comprueba los recuentos revisados, BASS (20 ensayos, 43 segmentos, 39 tasas conocidas),
+selección de sus cuatro segmentos a 6 cm/s, insuficiencia de O₂ efectivo/lunar,
+aislamiento de FLEX por campaña e independencia no resuelta, originales, unidades
+y referencias. Las expectativas se fijan explícitamente; no se regeneran desde
+el resultado. La salida incluye hashes del bundle y del evaluador, sin texto
+de las fuentes ni valores brutos de observaciones.
+
+Devuelve 0 si pasan las siete comprobaciones, 1 ante discrepancias y 2 ante entrada
+inválida. Se verificó que eliminar una observación en una copia local produce 1,
+y un corpus sintético o ajeno produce 2. Las fuentes originales quedaron intactas.
+Los IDs no autentican el corpus: el hash identifica los bytes concretos revisados.
+Los detalles de extracción y las dudas científicas están en
+[P2_INTEGRATION_REVIEW.md](P2_INTEGRATION_REVIEW.md). Todas las evidencias siguen
+sin revisión científica aprobada; pasar estos checks no acredita comparabilidad.
+
+## Diagnóstico pendiente de integración P1/P4
+
+```powershell
+.venv\Scripts\python.exe evals/science/metric_availability_run.py
+```
+
+Usa únicamente datos sintéticos y el coordinador demo. Comprueba que el límite
+no descarte el único ensayo que tiene la métrica en su segmento elegible. En esta
+entrega **devuelve 1**: el coordinador aún no pasa `metric=request.metric` al
+ranking P3, aunque la función científica y sus pruebas ya están corregidas.
+El informe muestra `limit=1` insuficiente y `limit=2` con evidencia. Tras conectar
+la llamada debe devolver 0 y conservar el ensayo respaldado con ambos límites.
+La suite verde de 6+6 casos y los siete checks reales no cubren ni ocultan ese
+pendiente. Detalles y aceptación en [relevo P3](../../docs/handoffs/P3.md).

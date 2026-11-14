@@ -14,10 +14,17 @@ compartida se publica en [GitHub](https://github.com/Ryo-936hz/Flame-in-Freefall
 `main` integra cambios; `codex/team-start-v1` conserva el punto de partida común.
 Cada persona crea su propia rama desde esa referencia, aunque `main` avance.
 
-El recorrido numérico utiliza **datos sintéticos**, no mediciones NASA. El ZIP real
-se inventarió: 24 investigaciones, 22 CSV y 27 PDF, sin vídeos. El catálogo real se
-importa como `metadata_only`, sin observaciones numéricas. La serie BASS-II candidata
-y los problemas de Saffire están en [inspección](docs/DATA_INSPECTION.md).
+The default numerical demo uses **synthetic data**, not NASA measurements. The
+separate metadata catalog contains 24 studies. P2 now provides an explicit local
+BASS-II Table 5.1 extraction/import path, retaining physical trials, successive
+conditions, source cells and missing values. Its scientific review status remains
+`unverified`; Saffire stays documentary context. See the English
+[P2 delivery and commands](docs/P2_DELIVERY.md) and
+[source audit](docs/P2_SOURCE_AUDIT.md).
+
+The [24-study corpus](docs/P2_NASA_24.md) extends this path with browsable documentary
+evidence for every study and campaign-specific numeric or configuration fields for the
+first seven candidates. Its commands generate the local bundle and initialize a separate database.
 
 ## Arrancar en Windows
 

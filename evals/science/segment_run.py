@@ -29,6 +29,8 @@ def _summary(response, bundle) -> dict:
         )},
         "n_trials": group.n_trials, "n_observations": group.n_observations,
         "n_independent_units": group.n_independent_units,
+        "n_segments": group.n_segments,
+        "n_trials_with_unresolved_independence": group.n_trials_with_unresolved_independence,
         "median": group.median, "interval": group.interval,
     } for group in groups]
     group_summaries.sort(key=lambda group: (
@@ -37,6 +39,10 @@ def _summary(response, bundle) -> dict:
     return {
         "status": response.status, "provider": response.provider,
         "selected_trial_ids": [item.trial_id for item in response.ranking.items],
+        "selected_segments": [{
+            "trial_id": item.trial_id, "scored_segment_id": item.scored_segment_id,
+            "eligible_segment_ids": item.eligible_segment_ids,
+        } for item in response.ranking.items],
         "similarities": [item.similarity for item in response.ranking.items],
         "coverages": [item.coverage for item in response.ranking.items],
         "comparison_units": {"x": comparison.x_unit, "y": comparison.unit} if comparison else None,
@@ -53,6 +59,7 @@ def _summary(response, bundle) -> dict:
         "groups": group_summaries,
         "observed_independent_units": len({
             (studies_by_trial[point.trial_id], point.independent_unit_id) for point in points
+            if point.independent_unit_status == "identified"
         }),
         "retrieved_evidence_ids": sorted(item.id for item in response.evidence),
         "missing_x_reported": bool(comparison and any(
@@ -81,6 +88,7 @@ def evaluate(suite_path: Path, fixture_path: Path) -> dict:
     profile = profile_dataset(bundle)
     profile_summary = {key: getattr(profile, key) for key in (
         "n_studies", "n_trials", "n_observations", "n_independent_units", "synthetic_trials",
+        "n_segments", "n_trials_with_unresolved_independence",
     )}
     profile_failures = _differences(suite["expected_profile"], profile_summary, "profile")
     settings = Settings(ai_provider="demo", seed_demo=False)
@@ -102,7 +110,8 @@ def evaluate(suite_path: Path, fixture_path: Path) -> dict:
         "profile_failures": profile_failures, "cases": results,
         "limits": [
             "No NASA measurements, physical prediction or real-data review are validated.",
-            "Ranking and profile missingness remain trial-level; comparison uses explicit segment controls.",
+            "Ranking defaults to trial scope; explicit segment scope scores each trial once without inheritance.",
+            "Profile missingness distinguishes trials from segments; comparison uses explicit controls.",
             "Reported sequence is not elapsed time; repeated observations are not independent units.",
             "x=null observations remain visible but are not quantitative pairs.",
             "Expected answers are fixed synthetic regressions, not an independent scientific benchmark.",

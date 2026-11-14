@@ -1,6 +1,6 @@
 # Contrato local implementado
 
-El contrato `1.1` está implementado (con lectura compatible de bundles `1.0`) en `apps/api/src/flamelab/domain/contracts.py`, autoridad ejecutable.
+El contrato de corpus `1.1` está implementado en `apps/api/src/flamelab/domain/contracts.py`, autoridad ejecutable.
 OpenAPI y tipos TypeScript se generan desde la API en `packages/contracts/`. La API es local, no un
 servicio publicado. [CONTRACT_MODELS](CONTRACT_MODELS.md) conserva las tablas y explica los ajustes
 respecto de la propuesta documental. P1 coordina cambios y regeneración con productores/consumidores.
@@ -48,7 +48,48 @@ Las fuentes NASA de catálogo no se utilizan como citas de cifras sintéticas.
 Los intervalos de bootstrap requieren unidades independientes; no están implícitos por tener muchas observaciones.
 Los paneles son una lista cerrada con `data_ref`; nunca HTML o JavaScript generado por IA.
 
+## Successive conditions
+
+`Trial` represents one physical test. Its `segments` each have a source `sequence`,
+evidence IDs and an explicit effective condition map. An observation with `segment_id`
+uses that segment's conditions. Trial-level values do not fill missing segment fields.
+Initial and final oxygen describe the trial. `burning_faces` is a count and
+`combustion_face` identifies a specific face when the source reports one. Sample and
+independent unit IDs stay on the physical trial. See the exact P1
+[sequential example](examples/sequential_conditions.json).
+
+Known oxygen values and ranking targets must be between 0 and 100 inclusive.
+Segments reject the initial and final oxygen keys even when explicitly missing.
+Sequences may have gaps. An observation can leave `segment_id` null when its
+segment assignment lacks evidence.
+
+Ranking uses explicit trial conditions by default. An explicit
+`condition_scope: "segment"` evaluates segment conditions and ranks each physical
+trial once using the best eligible segment. Research forwards `eligible_segment_ids`
+to comparison. Direct comparison accepts `segment_ids`; each point retains its
+`segment_id`, original value, original unit and sources. Comparison separates the
+observation's provenance and isolates unresolved controls by segment. Profiles and
+comparison summaries count segments separately from physical units.
+
+Canonical bundles with version `1.0` remain readable. Newly generated scientific
+bundles use `1.1`. Previously saved P2 snapshots have a storage-only reader for
+the old field names. Historical reports keep their saved calculations and flag their
+previous scientific rules when they contain segments.
+
 ## Autoridad de la pregunta
+
+The extended NASA corpus exposes paginated study evidence and observations at
+`GET /api/v1/studies/{study_id}/evidence` and
+`GET /api/v1/studies/{study_id}/observations`. Both accept zero-based `offset` and
+`limit` (1–200). Observations also accept a `metric` filter. The response includes
+the total number of matching entries, the offset, and the page items.
+
+Campaign-specific metrics declare their source study and canonical unit. Bundle
+validation rejects outcomes assigned to another campaign. Comparison excludes
+records outside the metric's campaign, and research ranks available observations
+for the requested metric. A trial with `independent_unit_status=unresolved` is
+counted separately from identified experimental units. Old snapshots load with
+the existing identified default. See [P2_NASA_24](P2_NASA_24.md) for coverage.
 
 En el esqueleto los filtros explícitos de ResearchRequest mandan. La pregunta se usa en la síntesis;
 el planificador de lenguaje natural será una ampliación del propietario P4. No afirmar que el modo demo
@@ -81,12 +122,5 @@ Elegir la variable X de forma explícita y mantener el mismo significado en herr
 Tipos estrictos, números finitos, IDs con namespace y sin `/`, condiciones conocidas con referencias,
 fuentes HTTP(S), separación de estudios sintéticos y científicos, `uncertainty=null` e `interval=null`
 se validan en el dominio. Cada resultado de ranking incluye la unión de fuentes del ensayo, condiciones
-y observaciones, para validar citas legítimas a mediciones. Los perfiles incluyen `known` y todos los
-estados de ausencia. Las decisiones y los límites de series reales se registran en ADR 0007; no se ha
-forzado la tabla BASS-II dentro de una granularidad incorrecta para simular ingesta científica.
-
-## Contrato 1.1: condiciones sucesivas
-
-`DatasetBundle.schema_version` acepta 1.0 y 1.1; al escribir, el default es 1.1. Los bundles 1.0 siguen siendo legibles. Un `Trial` conserva la unidad experimental y puede contener `segments` ordenados por `sequence` (orden reportado, no tiempo medido). Cada segmento contiene condiciones efectivas explicitas y evidencia; no hereda condiciones implicitamente del ensayo. `Observation.segment_id` es opcional y solo puede referir a un segmento del mismo ensayo. Si la asignacion no esta respaldada, se deja nulo.
-
-`oxygen_initial_pct` y `oxygen_final_pct` son condiciones separadas del ensayo; no se propagan a segmentos. `combustion_face` es una condicion categorica de control y `geometry` conserva su significado previo. `ConditionValue` conserva valor y unidad originales y referencias. Los segmentos no son replicas ni unidades experimentales nuevas.
+y observaciones elegibles, para validar citas a mediciones. Los perfiles incluyen `known` y todos los
+estados de ausencia. ADR 0007 registra las decisiones y límites de la base inicial.

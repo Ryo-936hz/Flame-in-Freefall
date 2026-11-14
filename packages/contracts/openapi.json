@@ -146,8 +146,18 @@
             "title": "N Observations",
             "type": "integer"
           },
+          "n_segments": {
+            "default": 0,
+            "title": "N Segments",
+            "type": "integer"
+          },
           "n_trials": {
             "title": "N Trials",
+            "type": "integer"
+          },
+          "n_trials_with_unresolved_independence": {
+            "default": 0,
+            "title": "N Trials With Unresolved Independence",
             "type": "integer"
           },
           "trial_ids": {
@@ -195,10 +205,30 @@
               "flame_spread_rate_mm_s",
               "extinction_oxygen_pct",
               "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
               "other"
             ],
             "title": "Metric",
             "type": "string"
+          },
+          "segment_ids": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "title": "Segment Ids",
+            "type": "array"
           },
           "trial_ids": {
             "items": {
@@ -227,7 +257,14 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ],
               "type": "string"
             },
@@ -249,7 +286,14 @@
               "diameter_mm",
               "sample_width_mm",
               "flow_direction",
-              "gravity_regime"
+              "gravity_regime",
+              "burning_faces",
+              "burn_duration_s",
+              "test_end",
+              "test_configuration",
+              "aging_duration_s",
+              "ignition_power_w",
+              "ignition_duration_s"
             ],
             "title": "X Condition",
             "type": "string"
@@ -276,6 +320,16 @@
               "flame_spread_rate_mm_s",
               "extinction_oxygen_pct",
               "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
               "other"
             ],
             "title": "Metric",
@@ -314,7 +368,14 @@
               "diameter_mm",
               "sample_width_mm",
               "flow_direction",
-              "gravity_regime"
+              "gravity_regime",
+              "burning_faces",
+              "burn_duration_s",
+              "test_end",
+              "test_configuration",
+              "aging_duration_s",
+              "ignition_power_w",
+              "ignition_duration_s"
             ],
             "title": "X Condition",
             "type": "string"
@@ -344,7 +405,7 @@
       },
       "ConditionSegment": {
         "additionalProperties": false,
-        "description": "Ordered, source-reported effective conditions within one trial.",
+        "description": "Source-reported effective conditions within one physical trial.",
         "properties": {
           "conditions": {
             "additionalProperties": {
@@ -364,7 +425,14 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ]
             },
             "title": "Conditions",
@@ -696,6 +764,146 @@
         "title": "Hypothesis",
         "type": "object"
       },
+      "Observation": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_ids": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "id": {
+            "maxLength": 240,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "metric": {
+            "enum": [
+              "flame_spread_rate_mm_s",
+              "extinction_oxygen_pct",
+              "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
+              "other"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "original_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Unit"
+          },
+          "original_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Value"
+          },
+          "provenance": {
+            "enum": [
+              "published",
+              "digitized",
+              "derived",
+              "synthetic"
+            ],
+            "title": "Provenance",
+            "type": "string"
+          },
+          "segment_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segment Id"
+          },
+          "status": {
+            "default": "known",
+            "enum": [
+              "known",
+              "not_measured",
+              "not_reported",
+              "not_extracted",
+              "not_applicable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "trial_id": {
+            "maxLength": 240,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+            "title": "Trial Id",
+            "type": "string"
+          },
+          "uncertainty": {
+            "title": "Uncertainty",
+            "type": "null"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "id",
+          "trial_id",
+          "metric",
+          "unit",
+          "evidence_ids",
+          "provenance"
+        ],
+        "title": "Observation",
+        "type": "object"
+      },
       "Panel": {
         "additionalProperties": false,
         "properties": {
@@ -763,12 +971,43 @@
             "title": "Independent Unit Id",
             "type": "string"
           },
+          "independent_unit_status": {
+            "default": "identified",
+            "enum": [
+              "identified",
+              "unresolved"
+            ],
+            "title": "Independent Unit Status",
+            "type": "string"
+          },
           "observation_id": {
             "maxLength": 240,
             "minLength": 3,
             "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
             "title": "Observation Id",
             "type": "string"
+          },
+          "original_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Unit"
+          },
+          "original_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Value"
           },
           "provenance": {
             "enum": [
@@ -867,6 +1106,16 @@
             "title": "Missing By Condition",
             "type": "object"
           },
+          "missing_by_segment_condition": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "title": "Missing By Segment Condition",
+            "type": "object"
+          },
           "missing_by_study": {
             "additionalProperties": {
               "additionalProperties": {
@@ -888,12 +1137,22 @@
             "title": "N Observations",
             "type": "integer"
           },
+          "n_segments": {
+            "default": 0,
+            "title": "N Segments",
+            "type": "integer"
+          },
           "n_studies": {
             "title": "N Studies",
             "type": "integer"
           },
           "n_trials": {
             "title": "N Trials",
+            "type": "integer"
+          },
+          "n_trials_with_unresolved_independence": {
+            "default": 0,
+            "title": "N Trials With Unresolved Independence",
             "type": "integer"
           },
           "synthetic_trials": {
@@ -939,6 +1198,16 @@
             "title": "Eligibility",
             "type": "string"
           },
+          "eligible_segment_ids": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "title": "Eligible Segment Ids",
+            "type": "array"
+          },
           "evidence_ids": {
             "items": {
               "maxLength": 240,
@@ -965,6 +1234,20 @@
             },
             "title": "Reasons",
             "type": "array"
+          },
+          "scored_segment_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scored Segment Id"
           },
           "similarity": {
             "anyOf": [
@@ -1067,7 +1350,14 @@
               "diameter_mm",
               "sample_width_mm",
               "flow_direction",
-              "gravity_regime"
+              "gravity_regime",
+              "burning_faces",
+              "burn_duration_s",
+              "test_end",
+              "test_configuration",
+              "aging_duration_s",
+              "ignition_power_w",
+              "ignition_duration_s"
             ],
             "title": "Variable",
             "type": "string"
@@ -1102,6 +1392,15 @@
             "title": "Allow Synthetic",
             "type": "boolean"
           },
+          "condition_scope": {
+            "default": "trial",
+            "enum": [
+              "trial",
+              "segment"
+            ],
+            "title": "Condition Scope",
+            "type": "string"
+          },
           "limit": {
             "default": 3,
             "maximum": 50.0,
@@ -1131,7 +1430,14 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ],
               "type": "string"
             },
@@ -1176,7 +1482,14 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ]
             },
             "title": "Target",
@@ -1197,7 +1510,14 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ],
               "type": "string"
             },
@@ -1230,7 +1550,14 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ]
             },
             "title": "Weights",
@@ -1306,6 +1633,16 @@
               "flame_spread_rate_mm_s",
               "extinction_oxygen_pct",
               "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
               "other"
             ],
             "title": "Metric",
@@ -1565,6 +1902,64 @@
         "title": "Study",
         "type": "object"
       },
+      "StudyEvidencePage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "offset",
+          "items"
+        ],
+        "title": "StudyEvidencePage",
+        "type": "object"
+      },
+      "StudyObservationPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Observation"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "offset",
+          "items"
+        ],
+        "title": "StudyObservationPage",
+        "type": "object"
+      },
       "Trial": {
         "additionalProperties": false,
         "properties": {
@@ -1586,7 +1981,14 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ]
             },
             "title": "Conditions",
@@ -1615,6 +2017,15 @@
             "minLength": 3,
             "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
             "title": "Independent Unit Id",
+            "type": "string"
+          },
+          "independent_unit_status": {
+            "default": "identified",
+            "enum": [
+              "identified",
+              "unresolved"
+            ],
+            "title": "Independent Unit Status",
             "type": "string"
           },
           "label": {
@@ -2547,6 +2958,242 @@
           }
         },
         "summary": "Studies"
+      }
+    },
+    "/api/v1/studies/{study_id}/evidence": {
+      "get": {
+        "operationId": "study_evidence_api_v1_studies__study_id__evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "study_id",
+            "required": true,
+            "schema": {
+              "title": "Study Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyEvidencePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Study Evidence"
+      }
+    },
+    "/api/v1/studies/{study_id}/observations": {
+      "get": {
+        "operationId": "study_observations_api_v1_studies__study_id__observations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "study_id",
+            "required": true,
+            "schema": {
+              "title": "Study Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "metric",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "flame_spread_rate_mm_s",
+                    "extinction_oxygen_pct",
+                    "heat_release_w",
+                    "flex_burn_duration_s",
+                    "flex_visible_flame_extinction_diameter_mm",
+                    "same_reported_mass_loss_rate_mg_min",
+                    "samer_run_duration_s",
+                    "samer_net_aging_time_s",
+                    "samer_primary_aging_time_s",
+                    "samer_primary_mixing_time_s",
+                    "saffire_reported_burn_duration_s",
+                    "peak_burner_temperature_k",
+                    "cfig_reported_run_duration_s",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Metric"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyObservationPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Study Observations"
       }
     },
     "/api/v1/trials": {

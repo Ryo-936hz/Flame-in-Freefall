@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from flamelab.ai.provider import ProviderFailure, synthesize
 from flamelab.config import Settings
 from flamelab.domain.contracts import (
-    ActivityEvent, Citation, Claim, ComparisonRequest, DatasetBundle, Hypothesis,
+    CONDITION_UNITS, METRIC_STUDIES, ActivityEvent, Citation, Claim, ComparisonRequest, DatasetBundle, Hypothesis,
     Panel, ResearchRequest, ResearchResponse,
 )
 from flamelab.science.comparison import compare_trials
@@ -22,22 +22,21 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
         events.append(ActivityEvent(sequence=len(events) + 1, stage=stage, message=message, evidence_ids=ids or []))
     event("plan", "Flujo determinista: perfil, filtros explícitos, ranking, comparación y revisión de referencias.")
     profile = profile_dataset(bundle)
-    ranking = rank_trials(bundle, request.ranking)
+    metric_trial_ids = None
+    if request.metric in METRIC_STUDIES:
+        metric_trial_ids = {item.trial_id for item in bundle.observations
+                            if item.metric == request.metric and item.status == "known"}
+    ranking = rank_trials(bundle, request.ranking, metric_trial_ids=metric_trial_ids)
     selected = {item.trial_id for item in ranking.items}
     refs = {ref for item in ranking.items for ref in item.evidence_ids}
-    for trial in bundle.trials:
-        if trial.id in selected:
-            refs.update(ref for value in trial.conditions.values() for ref in value.evidence_ids)
-    for observation in bundle.observations:
-        if observation.trial_id in selected:
-            refs.update(observation.evidence_ids)
     evidence = [item for item in bundle.evidence if item.id in refs]
     event("retrieve", f"Perfil: {profile.n_trials} ensayos; {len(selected)} candidatos elegibles; {len(evidence)} evidencias recuperadas.", sorted(refs))
     comparison = None
     if selected:
-        numeric_vary = [key for key in request.ranking.vary if key in ("oxygen_pct", "pressure_kpa", "flow_velocity_cm_s", "thickness_mm", "diameter_mm", "sample_width_mm")]
+        numeric_vary = [key for key in request.ranking.vary if key in CONDITION_UNITS]
         comparison = compare_trials(bundle, ComparisonRequest(
             trial_ids=[item.trial_id for item in ranking.items], metric=request.metric,
+            segment_ids=[segment_id for item in ranking.items for segment_id in item.eligible_segment_ids],
             x_condition=numeric_vary[0] if numeric_vary else "flow_velocity_cm_s",
             vary=request.ranking.vary, allow_synthetic=request.ranking.allow_synthetic,
         ))
@@ -69,7 +68,7 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
     elif settings.ai_provider == "openai":
         warnings.append("No se llamó al proveedor externo: las herramientas devolvieron evidencia insuficiente.")
     hypotheses = []
-    if enough and request.include_hypotheses:
+    if enough and request.include_hypotheses and request.metric == "flame_spread_rate_mm_s":
         hypotheses.append(Hypothesis(
             id="demo:hypothesis-controlled-series", label="prepared_demo_hypothesis",
             statement="Propuesta preparada: estudiar el efecto de la ventilación con muestras independientes y condiciones controladas.",

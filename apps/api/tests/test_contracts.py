@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from flamelab.config import ROOT, Settings
 from flamelab.data.loader import load_bundle
 from flamelab.domain.contracts import ConditionValue, DatasetBundle, Observation, RankingRequest, Study
-from flamelab.domain.contracts import ComparisonRequest
+from flamelab.domain.contracts import ComparisonRequest, ConditionSegment, Trial
 from flamelab.science.comparison import compare_trials
 
 
@@ -100,3 +100,77 @@ def test_invalid_configuration_does_not_print_server_secret():
     with pytest.raises(ValidationError) as caught:
         Settings(_env_file=None, ai_provider="openai", openai_api_key="sensitive-sentinel", openai_model=None)
     assert "sensitive-sentinel" not in str(caught.value)
+
+
+@pytest.mark.parametrize("key", ["oxygen_pct", "oxygen_initial_pct", "oxygen_final_pct"])
+@pytest.mark.parametrize("value", [0, 100])
+def test_oxygen_bounds_are_accepted_in_trials_and_targets(key, value):
+    trial = load_bundle(ROOT / "docs/examples/sequential_conditions.json").trials[0]
+    data = trial.model_dump()
+    data["conditions"][key] = {
+        "value": value, "status": "known", "unit": "%",
+        "original_value": str(value), "original_unit": "%",
+        "evidence_ids": trial.evidence_ids,
+    }
+    assert Trial.model_validate(data).conditions[key].value == value
+    assert RankingRequest(target={key: value}).target[key] == value
+
+
+@pytest.mark.parametrize("key", ["oxygen_pct", "oxygen_initial_pct", "oxygen_final_pct"])
+@pytest.mark.parametrize("value", [-1, 100.1, 150])
+def test_oxygen_outside_bounds_is_rejected_in_trials_and_targets(key, value):
+    trial = load_bundle(ROOT / "docs/examples/sequential_conditions.json").trials[0]
+    data = trial.model_dump()
+    data["conditions"][key] = {
+        "value": value, "status": "known", "unit": "%",
+        "evidence_ids": trial.evidence_ids,
+    }
+    with pytest.raises(ValidationError, match="admissible range"):
+        Trial.model_validate(data)
+    with pytest.raises(ValidationError, match="admissible range"):
+        RankingRequest(target={key: value})
+
+
+@pytest.mark.parametrize("key", ["oxygen_initial_pct", "oxygen_final_pct"])
+@pytest.mark.parametrize("status,value", [("known", 21), ("not_reported", None)])
+def test_trial_oxygen_endpoints_cannot_be_declared_in_segments(key, status, value):
+    segment = load_bundle(ROOT / "docs/examples/sequential_conditions.json").trials[0].segments[0]
+    data = segment.model_dump()
+    data["conditions"][key] = {
+        "value": value, "status": status, "unit": "%",
+        "evidence_ids": segment.evidence_ids,
+    }
+    with pytest.raises(ValidationError):
+        ConditionSegment.model_validate(data)
+
+
+@pytest.mark.parametrize("value", [0, 100])
+def test_effective_oxygen_is_allowed_in_segments(value):
+    segment = load_bundle(ROOT / "docs/examples/sequential_conditions.json").trials[0].segments[0]
+    data = segment.model_dump()
+    data["conditions"]["oxygen_pct"]["value"] = value
+    assert ConditionSegment.model_validate(data).conditions["oxygen_pct"].value == value
+
+
+def test_legacy_bundle_remains_readable_without_segment_fields():
+    data = load_bundle(ROOT / "data/fixtures/demo.json").model_dump()
+    data["schema_version"] = "1.0"
+    for trial in data["trials"]:
+        trial.pop("segments")
+    for observation in data["observations"]:
+        observation.pop("segment_id")
+    bundle = DatasetBundle.model_validate(data)
+    assert bundle.schema_version == "1.0"
+    assert all(not trial.segments for trial in bundle.trials)
+    assert all(observation.segment_id is None for observation in bundle.observations)
+
+
+def test_reported_sequence_can_have_gaps_and_observation_can_remain_unassigned():
+    data = load_bundle(ROOT / "docs/examples/sequential_conditions.json").model_dump()
+    data["trials"][0]["segments"][0]["sequence"] = 3
+    data["trials"][0]["segments"][1]["sequence"] = 8
+    data["observations"][0]["segment_id"] = None
+    bundle = DatasetBundle.model_validate(data)
+    assert [segment.sequence for segment in bundle.trials[0].segments] == [3, 8]
+    assert bundle.observations[0].segment_id is None
+    assert bundle.observations[1].segment_id == bundle.trials[0].segments[1].id

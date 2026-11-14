@@ -70,6 +70,36 @@ def _compare(bundle, **kwargs):
     return compare_trials(bundle, ComparisonRequest(**kwargs))
 
 
+def test_opt_in_segment_ranking_only_selects_explicit_matches(science_bundle):
+    data = science_bundle.model_dump()
+    trial = data["trials"][0]
+    trial["segments"] = [
+        {"id": "synthetic:explicit", "sequence": 1, "evidence_ids": trial["evidence_ids"],
+         "conditions": {"flow_velocity_cm_s": trial["conditions"]["flow_velocity_cm_s"]}},
+        {"id": "synthetic:unknown", "sequence": 2, "evidence_ids": trial["evidence_ids"],
+         "conditions": {}},
+    ]
+    first = data["observations"][0]
+    first["segment_id"] = "synthetic:explicit"
+    data["observations"].append({**first, "id": "synthetic:unknown-observation",
+                                 "segment_id": "synthetic:unknown"})
+    bundle = DatasetBundle.model_validate(data)
+    trial_ranking = _rank(bundle, required_match=["flow_velocity_cm_s"])
+    assert len(trial_ranking.items) == 1
+    assert trial_ranking.items[0].eligible_segment_ids == []
+    ranking = _rank(bundle, condition_scope="segment", required_match=["flow_velocity_cm_s"])
+    assert len(ranking.items) == 1
+    assert ranking.items[0].scored_segment_id == "synthetic:explicit"
+    assert ranking.items[0].eligible_segment_ids == ["synthetic:explicit"]
+    all_points = _compare(bundle).points
+    assert [(point.segment_id, point.x) for point in all_points] == [
+        ("synthetic:explicit", 5), ("synthetic:unknown", None),
+    ]
+    filtered = _compare(bundle, segment_ids=ranking.items[0].eligible_segment_ids)
+    assert [point.segment_id for point in filtered.points] == ["synthetic:explicit"]
+    assert filtered.groups[0].n_segments == 1
+
+
 def test_zero_is_known_and_not_imputed(science_bundle):
     result = _compare(science_bundle)
     assert result.points[0].y == 0

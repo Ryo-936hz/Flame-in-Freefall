@@ -4,10 +4,16 @@
 
 El ZIP no fue accesible durante la preparación documental, pero ya se inspeccionó
 en la fase local. [DATA_INSPECTION](DATA_INSPECTION.md) registra contenido, hashes,
-variables y límites. Hay 24 estudios metadata_only y una serie BASS-II candidata
-pendiente de normalizar; no se han importado observaciones científicas.
-El CLI `python -m flamelab.data.cli inventory|validate|import` está implementado;
-comandos completos en README y SETUP_WINDOWS. La demo usa fixtures sintéticos.
+variables y límites. The standalone catalog still has 24 metadata-only studies.
+The P2 extractor now creates a separate canonical bundle containing the catalog
+and the real BASS-II Table 5.1 series, with BASS-II marked `unverified` pending P3
+scientific review. The default demo remains synthetic.
+
+Use `python -m flamelab.data.cli extract-bass-table51` to prepare the local bundle
+and quality report, then the existing `validate` and `import` commands. See
+[P2_DELIVERY](P2_DELIVERY.md) for reproducible commands, source handling, review
+limits, and the opt-in real-source integration test. `inventory` remains available
+for archive inspection without extraction.
 
 ## Flujo de incorporación
 

@@ -37,6 +37,12 @@ export function createApi(baseUrl = "", fetcher: typeof fetch = fetch) {
   return {
     health: async () => unwrap(await client.GET("/api/v1/health")),
     studies: async () => unwrap(await client.GET("/api/v1/studies")),
+    studyEvidence: async (id: string, offset: number, limit: number) => unwrap(await client.GET(
+      "/api/v1/studies/{study_id}/evidence", { params: { path: { study_id: id }, query: { offset, limit } } }
+    )),
+    studyObservations: async (id: string, offset: number, limit: number) => unwrap(await client.GET(
+      "/api/v1/studies/{study_id}/observations", { params: { path: { study_id: id }, query: { offset, limit } } }
+    )),
     trials: async (studyId?: string) => unwrap(await client.GET("/api/v1/trials", { params: { query: { study_id: studyId } } })),
     profile: async () => unwrap(await client.GET("/api/v1/datasets/profile")),
     evidence: async (id: string, researchId?: string) => unwrap(await client.GET("/api/v1/evidence/{evidence_id}", { params: { path: { evidence_id: id }, query: { research_id: researchId } } })),
