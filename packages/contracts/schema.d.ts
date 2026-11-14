@@ -270,6 +270,11 @@ export interface components {
             interval?: null;
             /** Median */
             median: number | null;
+            /**
+             * N Condition Stages
+             * @default 0
+             */
+            n_condition_stages?: number;
             /** N Independent Units */
             n_independent_units: number;
             /** N Observations */
@@ -288,6 +293,8 @@ export interface components {
              * @default false
              */
             allow_synthetic?: boolean;
+            /** Condition Ids */
+            condition_ids?: string[];
             /**
              * Metric
              * @default flame_spread_rate_mm_s
@@ -297,13 +304,13 @@ export interface components {
             /** Trial Ids */
             trial_ids: string[];
             /** Vary */
-            vary?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
+            vary?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "oxygen_initial_pct" | "oxygen_final_pct" | "burning_faces" | "burn_duration_s")[];
             /**
              * X Condition
              * @default flow_velocity_cm_s
              * @enum {string}
              */
-            x_condition?: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
+            x_condition?: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "oxygen_initial_pct" | "oxygen_final_pct" | "burning_faces" | "burn_duration_s";
         };
         /** ComparisonResponse */
         ComparisonResponse: {
@@ -325,12 +332,23 @@ export interface components {
              * @default flow_velocity_cm_s
              * @enum {string}
              */
-            x_condition?: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
+            x_condition?: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "oxygen_initial_pct" | "oxygen_final_pct" | "burning_faces" | "burn_duration_s";
             /**
              * X Unit
              * @default cm/s
              */
             x_unit?: string | null;
+        };
+        /** ConditionStage */
+        ConditionStage: {
+            /** Conditions */
+            conditions: {
+                [key: string]: components["schemas"]["ConditionValue"];
+            };
+            /** Id */
+            id: string;
+            /** Order */
+            order: number;
         };
         /** ConditionValue */
         ConditionValue: {
@@ -446,6 +464,8 @@ export interface components {
         };
         /** PlotPoint */
         PlotPoint: {
+            /** Condition Id */
+            condition_id?: string | null;
             /** Evidence Ids */
             evidence_ids: string[];
             /** Group Id */
@@ -454,6 +474,10 @@ export interface components {
             independent_unit_id: string;
             /** Observation Id */
             observation_id: string;
+            /** Original Unit */
+            original_unit?: string | null;
+            /** Original Value */
+            original_value?: string | null;
             /**
              * Provenance
              * @enum {string}
@@ -478,6 +502,12 @@ export interface components {
                     [key: string]: number;
                 };
             };
+            /** Missing By Stage Condition */
+            missing_by_stage_condition?: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
             /** Missing By Study */
             missing_by_study?: {
                 [key: string]: {
@@ -486,6 +516,11 @@ export interface components {
                     };
                 };
             };
+            /**
+             * N Condition Stages
+             * @default 0
+             */
+            n_condition_stages?: number;
             /** N Independent Units */
             n_independent_units: number;
             /** N Observations */
@@ -508,6 +543,8 @@ export interface components {
              * @enum {string}
              */
             eligibility: "eligible" | "excluded" | "indeterminate";
+            /** Eligible Condition Ids */
+            eligible_condition_ids?: string[];
             /** Evidence Ids */
             evidence_ids: string[];
             /**
@@ -517,6 +554,8 @@ export interface components {
             provenance: "published" | "digitized" | "derived" | "synthetic";
             /** Reasons */
             reasons: string[];
+            /** Scored Condition Id */
+            scored_condition_id?: string | null;
             /** Similarity */
             similarity?: number | null;
             /** Trial Id */
@@ -536,7 +575,7 @@ export interface components {
              * Variable
              * @enum {string}
              */
-            variable: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
+            variable: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "oxygen_initial_pct" | "oxygen_final_pct" | "burning_faces" | "burn_duration_s";
             /** Weight */
             weight: number;
         };
@@ -558,7 +597,7 @@ export interface components {
              */
             minimum_coverage?: number;
             /** Required Match */
-            required_match?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
+            required_match?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "oxygen_initial_pct" | "oxygen_final_pct" | "burning_faces" | "burn_duration_s")[];
             /** Study Ids */
             study_ids?: string[];
             /** Target */
@@ -566,7 +605,7 @@ export interface components {
                 [key: string]: number | string;
             };
             /** Vary */
-            vary?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
+            vary?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "oxygen_initial_pct" | "oxygen_final_pct" | "burning_faces" | "burn_duration_s")[];
             /** Weights */
             weights?: {
                 [key: string]: number;
@@ -710,6 +749,8 @@ export interface components {
         };
         /** Trial */
         Trial: {
+            /** Condition Stages */
+            condition_stages?: components["schemas"]["ConditionStage"][];
             /** Conditions */
             conditions: {
                 [key: string]: components["schemas"]["ConditionValue"];

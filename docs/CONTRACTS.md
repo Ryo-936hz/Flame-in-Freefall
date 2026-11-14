@@ -48,6 +48,21 @@ Las fuentes NASA de catálogo no se utilizan como citas de cifras sintéticas.
 Los intervalos de bootstrap requieren unidades independientes; no están implícitos por tener muchas observaciones.
 Los paneles son una lista cerrada con `data_ref`; nunca HTML o JavaScript generado por IA.
 
+## Successive conditions
+
+`Trial` represents one physical test. Its ordered `condition_stages` may override the
+test's shared conditions, including with an explicit missing value. An observation
+under a staged trial must identify its own stage. `sample_id` and
+`independent_unit_id` stay on the physical trial. Legacy trials and observations
+load with empty stages and a null stage reference.
+
+Ranking evaluates each stage separately and ranks the physical trial once, using
+its best eligible stage. `eligible_condition_ids` lists the stages that passed.
+Research forwards those IDs to comparison. A direct comparison accepts an optional
+`condition_ids` selection for staged trials. A point exposes its stage ID, original
+observation value and unit when available, and links to its X and Y sources.
+Profiles and comparison summaries count stages separately from independent units.
+
 ## Autoridad de la pregunta
 
 En el esqueleto los filtros explícitos de ResearchRequest mandan. La pregunta se usa en la síntesis;
@@ -81,6 +96,5 @@ Elegir la variable X de forma explícita y mantener el mismo significado en herr
 Tipos estrictos, números finitos, IDs con namespace y sin `/`, condiciones conocidas con referencias,
 fuentes HTTP(S), separación de estudios sintéticos y científicos, `uncertainty=null` e `interval=null`
 se validan en el dominio. Cada resultado de ranking incluye la unión de fuentes del ensayo, condiciones
-y observaciones, para validar citas legítimas a mediciones. Los perfiles incluyen `known` y todos los
-estados de ausencia. Las decisiones y los límites de series reales se registran en ADR 0007; no se ha
-forzado la tabla BASS-II dentro de una granularidad incorrecta para simular ingesta científica.
+y observaciones elegibles, para validar citas a mediciones. Los perfiles incluyen `known` y todos los
+estados de ausencia. ADR 0007 registra las decisiones y límites de la base inicial.

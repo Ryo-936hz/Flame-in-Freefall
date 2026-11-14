@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from flamelab.ai.provider import ProviderFailure, synthesize
 from flamelab.config import Settings
 from flamelab.domain.contracts import (
-    ActivityEvent, Citation, Claim, ComparisonRequest, DatasetBundle, Hypothesis,
+    CONDITION_UNITS, ActivityEvent, Citation, Claim, ComparisonRequest, DatasetBundle, Hypothesis,
     Panel, ResearchRequest, ResearchResponse,
 )
 from flamelab.science.comparison import compare_trials
@@ -25,19 +25,14 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
     ranking = rank_trials(bundle, request.ranking)
     selected = {item.trial_id for item in ranking.items}
     refs = {ref for item in ranking.items for ref in item.evidence_ids}
-    for trial in bundle.trials:
-        if trial.id in selected:
-            refs.update(ref for value in trial.conditions.values() for ref in value.evidence_ids)
-    for observation in bundle.observations:
-        if observation.trial_id in selected:
-            refs.update(observation.evidence_ids)
     evidence = [item for item in bundle.evidence if item.id in refs]
     event("retrieve", f"Perfil: {profile.n_trials} ensayos; {len(selected)} candidatos elegibles; {len(evidence)} evidencias recuperadas.", sorted(refs))
     comparison = None
     if selected:
-        numeric_vary = [key for key in request.ranking.vary if key in ("oxygen_pct", "pressure_kpa", "flow_velocity_cm_s", "thickness_mm", "diameter_mm", "sample_width_mm")]
+        numeric_vary = [key for key in request.ranking.vary if key in CONDITION_UNITS]
         comparison = compare_trials(bundle, ComparisonRequest(
             trial_ids=[item.trial_id for item in ranking.items], metric=request.metric,
+            condition_ids=[stage_id for item in ranking.items for stage_id in item.eligible_condition_ids],
             x_condition=numeric_vary[0] if numeric_vary else "flow_velocity_cm_s",
             vary=request.ranking.vary, allow_synthetic=request.ranking.allow_synthetic,
         ))

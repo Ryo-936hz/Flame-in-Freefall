@@ -30,8 +30,11 @@ class Repository:
         bundle = DatasetBundle.model_validate_json(bundle.model_dump_json())
         digest = bundle_digest(bundle)
         active = self.session.get(ActiveDataset, 1)
-        if active and active.digest == digest:
-            return False
+        if active:
+            # Older snapshots omit later additive fields. Compare their validated current
+            # representation before requiring explicit replacement of the same corpus.
+            if active.digest == digest or bundle_digest(self.get_bundle()) == digest:
+                return False
         if active and not allow_replace:
             raise ValueError("a different corpus is active; use explicit --replace")
         self._snapshot(bundle)

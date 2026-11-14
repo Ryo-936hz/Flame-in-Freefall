@@ -1,6 +1,7 @@
 """Persistence tests across migrations, replacement and connection restart."""
 
 import asyncio
+import hashlib
 import json
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from flamelab.data.cli import main
 from flamelab.data.loader import load_bundle
 from flamelab.domain.contracts import RankingRequest, ResearchRequest
 from flamelab.storage.database import create_engine_and_session, migrate
+from flamelab.storage.models import ActiveDataset, DatasetSnapshot
 from flamelab.storage.repository import Repository, bundle_digest
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -76,6 +78,34 @@ def test_repository_revalidates_mutated_models_before_replacement(tmp_path):
             with pytest.raises(ValueError):
                 repository.replace_bundle(invalid, allow_replace=True)
             assert bundle_digest(repository.get_bundle()) == bundle_digest(original)
+    finally:
+        engine.dispose()
+
+
+def test_legacy_snapshot_reimport_does_not_replace_identical_corpus(tmp_path):
+    settings = Settings(database_url="sqlite:///" + (tmp_path / "legacy.db").as_posix())
+    migrate(settings)
+    engine, sessions = create_engine_and_session(settings)
+    original = load_bundle(DEMO)
+    previous = original.model_dump(mode="json")
+    for trial in previous["trials"]:
+        del trial["condition_stages"]
+    for observation in previous["observations"]:
+        for field in ("condition_id", "original_value", "original_unit"):
+            del observation[field]
+    payload = json.dumps(previous, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+    assert digest != bundle_digest(original)
+    try:
+        with sessions() as session:
+            session.add(DatasetSnapshot(digest=digest, dataset_id=original.dataset_id, payload=payload))
+            session.flush()
+            session.add(ActiveDataset(id=1, digest=digest))
+            session.commit()
+            repository = Repository(session)
+            assert repository.get_bundle() == original
+            assert repository.replace_bundle(original) is False
+            assert session.get(ActiveDataset, 1).digest == digest
     finally:
         engine.dispose()
 

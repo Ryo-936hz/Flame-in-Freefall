@@ -33,6 +33,10 @@ aunque la fuente específica no estuviera repetida en la lista de evidencia del 
 | thickness_mm | 100 | mm |
 | diameter_mm | 1000 | mm |
 | sample_width_mm | 1000 | mm |
+| oxygen_initial_pct | 100 | % |
+| oxygen_final_pct | 100 | % |
+| burning_faces | 2 | count |
+| burn_duration_s | 600 | s |
 
 Son decisiones de normalización del esqueleto aprobadas por P1, no rangos medidos,
 límites físicos ni validación de relevancia científica. No dependen del corpus,
@@ -62,3 +66,20 @@ Se incluyen los cinco estados, incluido `known`, para todas las claves de condic
 Una clave omitida cuenta como `not_reported`. Las unidades independientes se cuentan
 por `(study_id, independent_unit_id)`; múltiples observaciones no incrementan la cuenta.
 El perfil no certifica que una extracción haya sido revisada científicamente.
+
+## Successive conditions
+
+For staged trials, ranking evaluates required matches and coverage separately
+against each stage's effective conditions. It orders the physical trial using the
+best eligible stage by similarity, then coverage, then source order. Research
+compares only eligible stages. Ranking and comparison keep stage provenance and
+report when selected data awaits scientific review.
+
+Comparison uses each observation's own stage to obtain its X value and determine
+its stratum. Stratification includes burning faces when reported and isolates staged
+tests with incomplete controls. Initial and final oxygen and overall burn duration
+are test summaries excluded from control matching. The descriptive group medians
+use the reported observations. Trial, stage and independent-unit counts describe
+the selected group, including entries with missing outcomes. The observation count
+describes the known values that contribute to the median. The profile reports
+trial-level and stage-level missingness separately.

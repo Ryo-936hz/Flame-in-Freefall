@@ -12,6 +12,7 @@ Scalar = Number | StrictStr
 ConditionKey = Literal[
     "oxygen_pct", "pressure_kpa", "flow_velocity_cm_s", "material", "geometry",
     "thickness_mm", "diameter_mm", "sample_width_mm", "flow_direction", "gravity_regime",
+    "oxygen_initial_pct", "oxygen_final_pct", "burning_faces", "burn_duration_s",
 ]
 Metric = Literal["flame_spread_rate_mm_s", "extinction_oxygen_pct", "heat_release_w", "other"]
 MissingStatus = Literal["known", "not_measured", "not_reported", "not_extracted", "not_applicable"]
@@ -21,7 +22,12 @@ CONDITION_KEYS = get_args(ConditionKey)
 CONDITION_UNITS = {
     "oxygen_pct": "%", "pressure_kpa": "kPa", "flow_velocity_cm_s": "cm/s",
     "thickness_mm": "mm", "diameter_mm": "mm", "sample_width_mm": "mm",
+    "oxygen_initial_pct": "%", "oxygen_final_pct": "%", "burning_faces": "count",
+    "burn_duration_s": "s",
 }
+TRIAL_ONLY_CONDITIONS = frozenset({
+    "oxygen_initial_pct", "oxygen_final_pct", "burning_faces", "burn_duration_s",
+})
 METRIC_UNITS = {
     "flame_spread_rate_mm_s": "mm/s", "extinction_oxygen_pct": "%", "heat_release_w": "W",
 }
@@ -35,8 +41,10 @@ def validate_scalar(key: str, value: Scalar) -> None:
     if key in CONDITION_UNITS:
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError(f"{key} requires a number")
-        if value < 0 or (key == "oxygen_pct" and value > 100):
+        if value < 0 or (key in {"oxygen_pct", "oxygen_initial_pct", "oxygen_final_pct"} and value > 100):
             raise ValueError(f"{key} is outside the admissible range")
+        if key == "burning_faces" and (not isinstance(value, int) or value == 0):
+            raise ValueError("burning_faces requires a positive integer")
     elif not isinstance(value, str) or not value.strip():
         raise ValueError(f"{key} requires nonempty text")
 
@@ -93,6 +101,29 @@ class Evidence(Contract):
         return self
 
 
+def validate_conditions(conditions: dict[ConditionKey, ConditionValue]) -> None:
+    for key, condition in conditions.items():
+        if condition.status == "known":
+            validate_scalar(key, condition.value)
+            if condition.unit != CONDITION_UNITS.get(key):
+                raise ValueError(f"{key} must use canonical unit {CONDITION_UNITS.get(key)}")
+            if not condition.evidence_ids:
+                raise ValueError("known conditions require evidence")
+
+
+class ConditionStage(Contract):
+    id: Identifier
+    order: int = Field(ge=1)
+    conditions: dict[ConditionKey, ConditionValue]
+
+    @model_validator(mode="after")
+    def typed_conditions(self) -> Self:
+        if TRIAL_ONLY_CONDITIONS.intersection(self.conditions):
+            raise ValueError("trial-only conditions cannot appear in condition stages")
+        validate_conditions(self.conditions)
+        return self
+
+
 class Trial(Contract):
     id: Identifier
     study_id: Identifier
@@ -100,6 +131,7 @@ class Trial(Contract):
     independent_unit_id: Identifier
     label: str
     conditions: dict[ConditionKey, ConditionValue]
+    condition_stages: list[ConditionStage] = Field(default_factory=list)
     evidence_ids: list[Identifier] = Field(min_length=1)
     provenance: Provenance
     material_grade: str | None = None
@@ -107,22 +139,23 @@ class Trial(Contract):
 
     @model_validator(mode="after")
     def typed_conditions(self) -> Self:
-        for key, condition in self.conditions.items():
-            if condition.status == "known":
-                validate_scalar(key, condition.value)
-                if condition.unit != CONDITION_UNITS.get(key):
-                    raise ValueError(f"{key} must use canonical unit {CONDITION_UNITS.get(key)}")
-                if not condition.evidence_ids:
-                    raise ValueError("known conditions require evidence")
+        validate_conditions(self.conditions)
+        if [stage.order for stage in self.condition_stages] != list(range(1, len(self.condition_stages) + 1)):
+            raise ValueError("condition stages must be in contiguous order starting at one")
+        if len({stage.id for stage in self.condition_stages}) != len(self.condition_stages):
+            raise ValueError("duplicate condition stage identifier")
         return self
 
 
 class Observation(Contract):
     id: Identifier
     trial_id: Identifier
+    condition_id: Identifier | None = None
     metric: Metric
     value: Number | None = None
     unit: str
+    original_value: str | None = None
+    original_unit: str | None = None
     status: MissingStatus = "known"
     evidence_ids: list[Identifier] = Field(min_length=1)
     provenance: Provenance
@@ -156,6 +189,7 @@ class DatasetBundle(Contract):
         studies = {x.id: x for x in self.studies}
         evidence = {x.id: x for x in self.evidence}
         trials = {x.id: x for x in self.trials}
+        stage_trials = {}
         for item in self.evidence:
             if item.study_id not in studies:
                 raise ValueError("evidence references unknown study")
@@ -175,12 +209,23 @@ class DatasetBundle(Contract):
             if (trial.provenance == "synthetic") != (studies[trial.study_id].dataset_status == "synthetic"):
                 raise ValueError("trial/study synthetic provenance mismatch")
             check_refs(trial.evidence_ids, trial.study_id, trial.provenance == "synthetic")
-            for condition in trial.conditions.values():
-                check_refs(condition.evidence_ids, trial.study_id, trial.provenance == "synthetic")
+            condition_maps = [trial.conditions]
+            for stage in trial.condition_stages:
+                if stage.id in stage_trials:
+                    raise ValueError("duplicate condition stage identifier")
+                stage_trials[stage.id] = trial.id
+                condition_maps.append(stage.conditions)
+            for conditions in condition_maps:
+                for condition in conditions.values():
+                    check_refs(condition.evidence_ids, trial.study_id, trial.provenance == "synthetic")
         for observation in self.observations:
             if observation.trial_id not in trials:
                 raise ValueError("observation references unknown trial")
             trial = trials[observation.trial_id]
+            if observation.condition_id is None and trial.condition_stages:
+                raise ValueError("observations of a staged trial require a condition stage")
+            if observation.condition_id is not None and stage_trials.get(observation.condition_id) != trial.id:
+                raise ValueError("observation condition stage must belong to its trial")
             if (observation.provenance == "synthetic") != (trial.provenance == "synthetic"):
                 raise ValueError("observation/trial provenance mismatch")
             check_refs(observation.evidence_ids, trial.study_id, observation.provenance == "synthetic")
@@ -221,6 +266,8 @@ class RankingContribution(Contract):
 
 class RankedTrial(Contract):
     trial_id: Identifier
+    scored_condition_id: Identifier | None = None
+    eligible_condition_ids: list[Identifier] = Field(default_factory=list)
     similarity: float | None = Field(default=None, ge=0, le=1)
     coverage: float = Field(ge=0, le=1)
     eligibility: Literal["eligible", "excluded", "indeterminate"]
@@ -241,6 +288,7 @@ class RankingResponse(Contract):
 
 class ComparisonRequest(Contract):
     trial_ids: list[Identifier] = Field(min_length=1, max_length=50)
+    condition_ids: list[Identifier] = Field(default_factory=list)
     metric: Metric = "flame_spread_rate_mm_s"
     x_condition: ConditionKey = "flow_velocity_cm_s"
     vary: list[ConditionKey] = Field(default_factory=list)
@@ -250,9 +298,12 @@ class ComparisonRequest(Contract):
 class PlotPoint(Contract):
     trial_id: Identifier
     observation_id: Identifier
+    condition_id: Identifier | None = None
     independent_unit_id: Identifier
     x: Number | None
     y: Number
+    original_value: str | None = None
+    original_unit: str | None = None
     group_id: str
     evidence_ids: list[Identifier]
     provenance: Provenance
@@ -263,6 +314,7 @@ class ComparisonGroup(Contract):
     conditions: dict[str, str]
     trial_ids: list[Identifier]
     n_trials: int
+    n_condition_stages: int = 0
     n_observations: int
     n_independent_units: int
     median: Number | None
@@ -284,9 +336,11 @@ class ProfileResponse(Contract):
     dataset_id: Identifier
     n_studies: int
     n_trials: int
+    n_condition_stages: int = 0
     n_observations: int
     n_independent_units: int
     missing_by_condition: dict[str, dict[str, int]]
+    missing_by_stage_condition: dict[str, dict[str, int]] = Field(default_factory=dict)
     missing_by_study: dict[str, dict[str, dict[str, int]]] = Field(default_factory=dict)
     issues: list[str]
     synthetic_trials: int

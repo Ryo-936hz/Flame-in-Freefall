@@ -138,6 +138,11 @@
             ],
             "title": "Median"
           },
+          "n_condition_stages": {
+            "default": 0,
+            "title": "N Condition Stages",
+            "type": "integer"
+          },
           "n_independent_units": {
             "title": "N Independent Units",
             "type": "integer"
@@ -189,6 +194,16 @@
             "title": "Allow Synthetic",
             "type": "boolean"
           },
+          "condition_ids": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "title": "Condition Ids",
+            "type": "array"
+          },
           "metric": {
             "default": "flame_spread_rate_mm_s",
             "enum": [
@@ -224,7 +239,11 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
+                "burning_faces",
+                "burn_duration_s"
               ],
               "type": "string"
             },
@@ -243,7 +262,11 @@
               "diameter_mm",
               "sample_width_mm",
               "flow_direction",
-              "gravity_regime"
+              "gravity_regime",
+              "oxygen_initial_pct",
+              "oxygen_final_pct",
+              "burning_faces",
+              "burn_duration_s"
             ],
             "title": "X Condition",
             "type": "string"
@@ -305,7 +328,11 @@
               "diameter_mm",
               "sample_width_mm",
               "flow_direction",
-              "gravity_regime"
+              "gravity_regime",
+              "oxygen_initial_pct",
+              "oxygen_final_pct",
+              "burning_faces",
+              "burn_duration_s"
             ],
             "title": "X Condition",
             "type": "string"
@@ -331,6 +358,55 @@
           "warnings"
         ],
         "title": "ComparisonResponse",
+        "type": "object"
+      },
+      "ConditionStage": {
+        "additionalProperties": false,
+        "properties": {
+          "conditions": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ConditionValue"
+            },
+            "propertyNames": {
+              "enum": [
+                "oxygen_pct",
+                "pressure_kpa",
+                "flow_velocity_cm_s",
+                "material",
+                "geometry",
+                "thickness_mm",
+                "diameter_mm",
+                "sample_width_mm",
+                "flow_direction",
+                "gravity_regime",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
+                "burning_faces",
+                "burn_duration_s"
+              ]
+            },
+            "title": "Conditions",
+            "type": "object"
+          },
+          "id": {
+            "maxLength": 240,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "order": {
+            "minimum": 1.0,
+            "title": "Order",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "order",
+          "conditions"
+        ],
+        "title": "ConditionStage",
         "type": "object"
       },
       "ConditionValue": {
@@ -672,6 +748,20 @@
       "PlotPoint": {
         "additionalProperties": false,
         "properties": {
+          "condition_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition Id"
+          },
           "evidence_ids": {
             "items": {
               "maxLength": 240,
@@ -699,6 +789,28 @@
             "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
             "title": "Observation Id",
             "type": "string"
+          },
+          "original_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Unit"
+          },
+          "original_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Value"
           },
           "provenance": {
             "enum": [
@@ -783,6 +895,16 @@
             "title": "Missing By Condition",
             "type": "object"
           },
+          "missing_by_stage_condition": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "title": "Missing By Stage Condition",
+            "type": "object"
+          },
           "missing_by_study": {
             "additionalProperties": {
               "additionalProperties": {
@@ -795,6 +917,11 @@
             },
             "title": "Missing By Study",
             "type": "object"
+          },
+          "n_condition_stages": {
+            "default": 0,
+            "title": "N Condition Stages",
+            "type": "integer"
           },
           "n_independent_units": {
             "title": "N Independent Units",
@@ -855,6 +982,16 @@
             "title": "Eligibility",
             "type": "string"
           },
+          "eligible_condition_ids": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "title": "Eligible Condition Ids",
+            "type": "array"
+          },
           "evidence_ids": {
             "items": {
               "maxLength": 240,
@@ -881,6 +1018,20 @@
             },
             "title": "Reasons",
             "type": "array"
+          },
+          "scored_condition_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scored Condition Id"
           },
           "similarity": {
             "anyOf": [
@@ -980,7 +1131,11 @@
               "diameter_mm",
               "sample_width_mm",
               "flow_direction",
-              "gravity_regime"
+              "gravity_regime",
+              "oxygen_initial_pct",
+              "oxygen_final_pct",
+              "burning_faces",
+              "burn_duration_s"
             ],
             "title": "Variable",
             "type": "string"
@@ -1041,7 +1196,11 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
+                "burning_faces",
+                "burn_duration_s"
               ],
               "type": "string"
             },
@@ -1083,7 +1242,11 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
+                "burning_faces",
+                "burn_duration_s"
               ]
             },
             "title": "Target",
@@ -1101,7 +1264,11 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
+                "burning_faces",
+                "burn_duration_s"
               ],
               "type": "string"
             },
@@ -1131,7 +1298,11 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
+                "burning_faces",
+                "burn_duration_s"
               ]
             },
             "title": "Weights",
@@ -1469,6 +1640,13 @@
       "Trial": {
         "additionalProperties": false,
         "properties": {
+          "condition_stages": {
+            "items": {
+              "$ref": "#/components/schemas/ConditionStage"
+            },
+            "title": "Condition Stages",
+            "type": "array"
+          },
           "conditions": {
             "additionalProperties": {
               "$ref": "#/components/schemas/ConditionValue"
@@ -1484,7 +1662,11 @@
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
+                "burning_faces",
+                "burn_duration_s"
               ]
             },
             "title": "Conditions",

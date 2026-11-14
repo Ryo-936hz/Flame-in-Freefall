@@ -16,6 +16,12 @@ def main(argv: list[str] | None = None) -> int:
     inventory = commands.add_parser("inventory", help="inspect a ZIP without extraction")
     inventory.add_argument("path", type=Path)
     inventory.add_argument("--output", type=Path)
+    bass = commands.add_parser(
+        "extract-bass-table51", help="build a local BASS-II bundle and quality report",
+    )
+    bass.add_argument("datasets", type=Path, help="directory containing the extracted PSI-25 sources")
+    bass.add_argument("--catalog", type=Path, default=Path("data/catalog/psi_metadata.json"))
+    bass.add_argument("--output-dir", type=Path, required=True, help="new output directory")
     validate = commands.add_parser("validate", help="validate a canonical JSON bundle")
     validate.add_argument("path", type=Path)
     importer = commands.add_parser("import", help="validate before explicit local import")
@@ -24,6 +30,18 @@ def main(argv: list[str] | None = None) -> int:
                           help="explicitly replace a different existing corpus")
     importer.add_argument("--database-url", help="override server database configuration")
     args = parser.parse_args(argv)
+    if args.command == "extract-bass-table51":
+        import csv
+
+        from flamelab.data.bass_table51 import extract
+
+        try:
+            counts = extract(args.datasets, args.catalog, args.output_dir)
+        except (OSError, ValueError, csv.Error) as error:
+            print(f"BASS-II extraction failed: {error}", file=sys.stderr)
+            return 1
+        print(json.dumps(counts, ensure_ascii=False))
+        return 0
     try:
         if args.command == "inventory":
             if args.output and args.output.resolve() == args.path.resolve():

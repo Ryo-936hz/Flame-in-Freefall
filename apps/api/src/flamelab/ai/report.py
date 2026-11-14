@@ -14,7 +14,8 @@ def render_report(run: ResearchResponse) -> str:
     if run.comparison:
         lines += ["", "## Comparación calculada", "", f"Y: {run.comparison.metric} ({run.comparison.unit}); X: {run.comparison.x_condition} ({run.comparison.x_unit}).", ""]
         for group in run.comparison.groups:
-            lines += [f"- {group.id}: {group.n_trials} ensayos; {group.n_observations} observaciones; {group.n_independent_units} unidades independientes; mediana={group.median}; sin intervalo."]
+            stages = f"{group.n_condition_stages} condition stages; " if group.n_condition_stages else ""
+            lines += [f"- {group.id}: {group.n_trials} ensayos; {stages}{group.n_observations} observaciones; {group.n_independent_units} unidades independientes; mediana={group.median}; sin intervalo."]
     lines += ["", "## Evidencia", ""]
     for item in run.evidence:
         lines += [f"- {item.id} [{item.provenance}, reviewed={item.reviewed}]: {item.title}. {item.locator}. Fuente: {item.source_url or 'fixture local; sin fuente NASA'}. Texto: {item.text}"]

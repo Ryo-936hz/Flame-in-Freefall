@@ -1,9 +1,14 @@
-"""Behavior tests use synthetic fixtures exclusively; no NASA validation is claimed."""
+"""Behavior tests use synthetic fixtures exclusively."""
+
+import asyncio
 
 import pytest
+from pydantic import ValidationError
 
+from flamelab.ai.engine import run_research
+from flamelab.config import Settings
 from flamelab.domain.contracts import (
-    CONDITION_UNITS, ComparisonRequest, DatasetBundle, RankingRequest,
+    CONDITION_UNITS, ComparisonRequest, DatasetBundle, RankingRequest, ResearchRequest,
 )
 from flamelab.science.comparison import compare_trials
 from flamelab.science.profiling import profile_dataset
@@ -249,3 +254,114 @@ def test_empty_bundle_profile_and_ranking_are_explicit():
     ranking = rank_trials(bundle, RankingRequest())
     assert profile.n_trials == profile.n_observations == profile.n_independent_units == 0
     assert not ranking.items and ranking.warnings
+
+
+@pytest.fixture
+def staged_data(science_bundle):
+    data = science_bundle.model_dump()
+    trial = data["trials"][0]
+    evidence = data["evidence"][0]
+    trial["condition_stages"] = []
+    for order, flow in enumerate((0, 12), 1):
+        stage_id = f"synthetic:stage-{order}"
+        source = f"synthetic:stage-source-{order}"
+        data["evidence"].append(dict(evidence, id=source))
+        trial["condition_stages"].append({
+            "id": stage_id, "order": order,
+            "conditions": {
+                "flow_velocity_cm_s": {"value": flow, "status": "known", "unit": "cm/s",
+                                       "evidence_ids": [source]},
+                "oxygen_pct": {"status": "not_measured"},
+            },
+        })
+        obs = dict(
+            data["observations"][0], id=f"synthetic:observation-{order}", condition_id=stage_id,
+            value=order / 2, original_value=f"{order / 2:.2f}", original_unit="mm/s",
+            evidence_ids=[source],
+        )
+        if order == 1:
+            data["observations"][0] = obs
+        else:
+            data["observations"].append(obs)
+    trial["conditions"]["oxygen_initial_pct"] = {
+        "value": 23, "unit": "%", "status": "known", "evidence_ids": [evidence["id"]],
+    }
+    return data
+
+
+@pytest.mark.parametrize("violation,error", [
+    ("stage_order", "contiguous order"),
+    ("duplicate_stage", "duplicate condition stage"),
+    ("foreign_stage", "must belong to its trial"),
+    ("missing_stage", "require a condition stage"),
+    ("wrong_source", "evidence reference is missing"),
+    ("oxygen_endpoint_at_stage", "trial-only conditions"),
+])
+def test_staged_bundle_rejects_ambiguous_conditions(staged_data, violation, error):
+    trial = staged_data["trials"][0]
+    stage = trial["condition_stages"][0]
+    if violation == "stage_order":
+        stage["order"] = 3
+    elif violation == "duplicate_stage":
+        trial["condition_stages"][1]["id"] = stage["id"]
+    elif violation == "foreign_stage":
+        staged_data["trials"].append(dict(
+            trial, id="synthetic:foreign-trial",
+            condition_stages=[dict(stage, id="synthetic:foreign-stage")],
+        ))
+        staged_data["observations"][0]["condition_id"] = "synthetic:foreign-stage"
+    elif violation == "missing_stage":
+        staged_data["observations"][0]["condition_id"] = None
+    elif violation == "wrong_source":
+        stage["conditions"]["flow_velocity_cm_s"]["evidence_ids"] = ["synthetic:unknown"]
+    else:
+        stage["conditions"]["oxygen_initial_pct"] = trial["conditions"]["oxygen_initial_pct"]
+    with pytest.raises(ValidationError, match=error):
+        DatasetBundle.model_validate(staged_data)
+
+
+def test_comparison_joins_each_observation_to_its_stage(staged_data):
+    bundle = DatasetBundle.model_validate(staged_data)
+    result = _compare(bundle)
+    assert [(point.condition_id, point.x, point.y) for point in result.points] == [
+        ("synthetic:stage-1", 0, 0.5), ("synthetic:stage-2", 12, 1),
+    ]
+    group, = result.groups
+    assert (group.n_trials, group.n_condition_stages, group.n_observations, group.n_independent_units) == (1, 2, 2, 1)
+    assert "synthetic:stage-source-1" in result.points[0].evidence_ids
+    assert "synthetic:stage-source-2" not in result.points[0].evidence_ids
+    assert result.points[0].original_value == "0.50"
+    assert result.points[0].original_unit == "mm/s"
+    assert len(_compare(bundle, vary=[]).groups) == 2
+    oxygen = _compare(bundle, x_condition="oxygen_pct", vary=["oxygen_pct"])
+    assert all(point.x is None for point in oxygen.points)
+    assert any("x_unavailable:synthetic:stage-1:oxygen_pct" in item for item in oxygen.warnings)
+    profile = profile_dataset(bundle)
+    assert (profile.n_trials, profile.n_condition_stages, profile.n_independent_units) == (1, 2, 1)
+    assert profile.missing_by_stage_condition["oxygen_pct"]["not_measured"] == 2
+
+
+def test_rank_and_research_only_use_matching_stages(staged_data):
+    bundle = DatasetBundle.model_validate(staged_data)
+    ranking = RankingRequest(
+        target={"flow_velocity_cm_s": 12}, required_match=["flow_velocity_cm_s"], allow_synthetic=True,
+    )
+    request = ResearchRequest(question="Which evidence matches the required flow?", ranking=ranking)
+    response = asyncio.run(run_research(request, bundle, Settings(_env_file=None, ai_provider="demo")))
+    trial, = response.ranking.items
+    assert trial.scored_condition_id == "synthetic:stage-2"
+    assert trial.eligible_condition_ids == ["synthetic:stage-2"]
+    assert "condition_stage_rejected:synthetic:stage-1:required_condition_mismatch:flow_velocity_cm_s" in trial.reasons
+    assert [point.x for point in response.comparison.points] == [12]
+    assert {evidence.id for evidence in response.evidence} == {
+        "synthetic:evidence", "synthetic:stage-source-2",
+    }
+    oxygen = _rank(bundle, target={"oxygen_pct": 23}, required_match=["oxygen_pct"])
+    assert oxygen.excluded[0].eligibility == "indeterminate"
+    assert oxygen.excluded[0].coverage == 0
+
+
+def test_comparison_rejects_stage_outside_selected_trials(staged_data):
+    bundle = DatasetBundle.model_validate(staged_data)
+    with pytest.raises(KeyError, match="unknown-stage"):
+        _compare(bundle, condition_ids=["synthetic:unknown-stage"])
