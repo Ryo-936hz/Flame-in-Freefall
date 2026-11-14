@@ -1,6 +1,7 @@
 """Explicit local inventory, validation and transactional import commands."""
 
 import argparse
+import csv
 import json
 import sys
 import zipfile
@@ -22,6 +23,12 @@ def main(argv: list[str] | None = None) -> int:
     bass.add_argument("datasets", type=Path, help="directory containing the extracted PSI-25 sources")
     bass.add_argument("--catalog", type=Path, default=Path("data/catalog/psi_metadata.json"))
     bass.add_argument("--output-dir", type=Path, required=True, help="new output directory")
+    nasa = commands.add_parser("extract-nasa", help="build the local 24-study NASA bundle")
+    nasa.add_argument("datasets", type=Path, help="directory containing the extracted PSI sources")
+    nasa.add_argument("--catalog", type=Path, default=Path("data/catalog/psi_metadata.json"))
+    nasa.add_argument("--inventory", type=Path, default=Path("data/catalog/zip_inventory.json"))
+    nasa.add_argument("--profiles", type=Path, default=Path("data/catalog/nasa_study_profiles.json"))
+    nasa.add_argument("--output-dir", type=Path, required=True, help="new output directory")
     validate = commands.add_parser("validate", help="validate a canonical JSON bundle")
     validate.add_argument("path", type=Path)
     importer = commands.add_parser("import", help="validate before explicit local import")
@@ -31,14 +38,22 @@ def main(argv: list[str] | None = None) -> int:
     importer.add_argument("--database-url", help="override server database configuration")
     args = parser.parse_args(argv)
     if args.command == "extract-bass-table51":
-        import csv
-
         from flamelab.data.bass_table51 import extract
 
         try:
             counts = extract(args.datasets, args.catalog, args.output_dir)
         except (OSError, ValueError, csv.Error) as error:
             print(f"BASS-II extraction failed: {error}", file=sys.stderr)
+            return 1
+        print(json.dumps(counts, ensure_ascii=False))
+        return 0
+    if args.command == "extract-nasa":
+        from flamelab.data.nasa_corpus import extract
+
+        try:
+            counts = extract(args.datasets, args.catalog, args.inventory, args.profiles, args.output_dir)
+        except (OSError, ValueError, csv.Error) as error:
+            print(f"NASA extraction failed: {error}", file=sys.stderr)
             return 1
         print(json.dumps(counts, ensure_ascii=False))
         return 0

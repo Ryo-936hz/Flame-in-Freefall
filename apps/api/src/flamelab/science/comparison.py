@@ -5,6 +5,7 @@ import json
 from statistics import median
 
 from flamelab.domain.contracts import (
+    METRIC_STUDIES,
     ComparisonGroup, ComparisonRequest, ComparisonResponse, DatasetBundle, PlotPoint,
     TRIAL_ONLY_CONDITIONS,
 )
@@ -12,6 +13,13 @@ from flamelab.science.common import CONDITION_KEYS, CONDITION_UNITS, METRIC_UNIT
 
 
 RUN_SUMMARY_FIELDS = {"oxygen_initial_pct", "oxygen_final_pct", "burn_duration_s"}
+CAMPAIGN_CONTROL_FIELDS = {
+    "test_end": {"psi:PSI-69", "psi:PSI-159"},
+    "test_configuration": {"psi:PSI-10", "psi:PSI-159"},
+    "aging_duration_s": {"psi:PSI-102"},
+    "ignition_power_w": {"psi:PSI-98"},
+    "ignition_duration_s": {"psi:PSI-98"},
+}
 
 
 def _stratum(trial, stage, effective, vary):
@@ -22,6 +30,8 @@ def _stratum(trial, stage, effective, vary):
     unknown = trial.material_grade is None
     for key in CONDITION_KEYS:
         if key in vary or key in RUN_SUMMARY_FIELDS:
+            continue
+        if key in CAMPAIGN_CONTROL_FIELDS and key not in effective and trial.study_id not in CAMPAIGN_CONTROL_FIELDS[key]:
             continue
         if stage is None and key in TRIAL_ONLY_CONDITIONS and key not in effective:
             continue
@@ -85,6 +95,9 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
             observations_by_trial.setdefault(key, []).append(observation)
     for trial_id in selected_ids:
         trial = trials_by_id[trial_id]
+        if request.metric in METRIC_STUDIES and trial.study_id not in METRIC_STUDIES[request.metric]:
+            warnings.append(f"metric_outside_campaign:{trial_id}:{request.metric}")
+            continue
         if trial.provenance == "synthetic" and not request.allow_synthetic:
             warnings.append(f"synthetic_not_allowed:{trial_id}")
             continue
@@ -97,12 +110,16 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
             group_id, conditions, unknown = _stratum(trial, stage, effective, request.vary)
             group = group_data.setdefault(group_id, {
                 "conditions": conditions, "trials": {}, "stages": set(), "units": set(),
-                "values": [], "warnings": [],
+                "unresolved": set(), "values": [], "warnings": [],
             })
             group["trials"][trial.id] = None
             if stage_id is not None:
                 group["stages"].add(stage_id)
-            group["units"].add(trial.independent_unit_id)
+            if trial.independent_unit_status == "identified":
+                group["units"].add(trial.independent_unit_id)
+            else:
+                group["unresolved"].add(trial.id)
+                group["warnings"].append("Some records have unresolved experimental independence.")
             if unknown and not group["warnings"]:
                 group["warnings"].append("Incomplete control conditions; this trial is isolated, not pooled.")
                 if stage:
@@ -127,7 +144,8 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
                 ))
                 points.append(PlotPoint(
                     trial_id=trial.id, observation_id=observation.id, condition_id=stage_id,
-                    independent_unit_id=trial.independent_unit_id, x=x, y=observation.value,
+                    independent_unit_id=trial.independent_unit_id,
+                    independent_unit_status=trial.independent_unit_status, x=x, y=observation.value,
                     original_value=observation.original_value, original_unit=observation.original_unit,
                     group_id=group_id, evidence_ids=evidence_ids, provenance=observation.provenance,
                 ))
@@ -139,6 +157,7 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
             n_trials=len(group["trials"]), n_observations=len(group["values"]),
             n_condition_stages=len(group["stages"]),
             n_independent_units=len(group["units"]),
+            n_trials_with_unresolved_independence=len(group["unresolved"]),
             median=median(group["values"]) if group["values"] else None,
             interval=None, warnings=list(dict.fromkeys(group["warnings"])),
         ))

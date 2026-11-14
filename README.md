@@ -22,6 +22,10 @@ conditions, source cells and missing values. Its scientific review status remain
 [P2 delivery and commands](docs/P2_DELIVERY.md) and
 [source audit](docs/P2_SOURCE_AUDIT.md).
 
+The [24-study corpus](docs/P2_NASA_24.md) extends this path with browsable documentary
+evidence for every study and campaign-specific numeric or configuration fields for the
+first seven candidates. Its commands generate the local bundle and initialize a separate database.
+
 ## Arrancar en Windows
 
 Requisitos: Git, Python 3.12, Node 24 con npm, PowerShell 7 y red

@@ -4,6 +4,25 @@
 construcción local Windows; la última registra la publicación y CI remota.
 Ninguna de estas verificaciones equivale a validación científica.
 
+## Extended NASA corpus on `lujan`
+
+- Built the 24-study corpus from `datasets/` in WSL using `extract-nasa` and the
+  isolated PyMuPDF 2.1 tool. Verified the 123 inventoried source files, parsed all
+  22 CSVs, and compared two runs of `bundle.json` and `quality.json` byte-for-byte.
+- `validate` passed. Import into `sqlite:///work/nasa-24.db` returned `changed: true`
+  and `changed: false` on consecutive runs. The bundle has 2,265 evidence entries,
+  1,058 mapped records and 1,673 outcome entries, including 1,283 known values.
+- `FLAMELAB_NASA_BUNDLE=data/processed/nasa-24/bundle.json FLAMELAB_BASS_BUNDLE=data/processed/bass-table51/bundle.json uv run --locked pytest -q`
+  passed **142 tests**, with the existing Starlette/httpx deprecation warning.
+  The real-corpus test verifies study evidence, pagination, provenance, campaign
+  restrictions, unresolved units and a saved FLEX research response.
+- Ruff, OpenAPI and TypeScript drift checks, typecheck, **6 client tests**, and
+  Vite production build passed. `uv run --locked python scripts/smoke.py` passed
+  using SQLite and the synthetic fixture. API verification used TestClient and
+  the smoke test used real HTTP. The new catalog UI was verified by typecheck/build.
+- Details about the quantities and pending source interpretation are in
+  [P2_NASA_24](P2_NASA_24.md).
+
 ## P2 branch verification — 14 November 2026
 
 Branch `lujan`, starting/unchanged HEAD `f981bdd4df55ca8339bfb7c92f21bc50802bfcca`.

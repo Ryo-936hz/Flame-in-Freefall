@@ -35,11 +35,16 @@ def profile_dataset(bundle: DatasetBundle) -> ProfileResponse:
         issues.append(f"{unavailable} observations have an explicit missingness status.")
     if any(not evidence.reviewed for evidence in bundle.evidence):
         issues.append("Unreviewed evidence exists; identity validation is not scientific verification.")
+    unresolved = sum(trial.independent_unit_status == "unresolved" for trial in bundle.trials)
+    if unresolved:
+        issues.append(f"{unresolved} trial records have unresolved experimental independence.")
     return ProfileResponse(
         dataset_id=bundle.dataset_id, n_studies=len(bundle.studies), n_trials=len(bundle.trials),
         n_condition_stages=sum(len(trial.condition_stages) for trial in bundle.trials),
         n_observations=len(bundle.observations),
-        n_independent_units=len({(trial.study_id, trial.independent_unit_id) for trial in bundle.trials}),
+        n_independent_units=len({(trial.study_id, trial.independent_unit_id) for trial in bundle.trials
+                                 if trial.independent_unit_status == "identified"}),
+        n_trials_with_unresolved_independence=unresolved,
         missing_by_condition=counts, missing_by_stage_condition=stage_counts, missing_by_study=by_study,
         issues=issues, synthetic_trials=synthetic,
     )

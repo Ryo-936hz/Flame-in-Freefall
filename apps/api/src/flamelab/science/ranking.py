@@ -69,7 +69,8 @@ def _score(conditions, request, total_weight, exclusions):
     return eligibility, similarity, coverage, reasons, contributions
 
 
-def rank_trials(bundle: DatasetBundle, request: RankingRequest) -> RankingResponse:
+def rank_trials(bundle: DatasetBundle, request: RankingRequest,
+                metric_trial_ids: set[str] | None = None) -> RankingResponse:
     """Rank physical trials using their best eligible condition without mixing stages."""
     eligible = []
     excluded = []
@@ -89,6 +90,8 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest) -> RankingRespon
         exclusions = []
         if request.study_ids and trial.study_id not in request.study_ids:
             exclusions.append("study_not_selected")
+        if metric_trial_ids is not None and trial.id not in metric_trial_ids:
+            exclusions.append("requested_metric_unavailable")
         if trial.provenance == "synthetic" and not request.allow_synthetic:
             exclusions.append("synthetic_not_allowed")
         scores = []

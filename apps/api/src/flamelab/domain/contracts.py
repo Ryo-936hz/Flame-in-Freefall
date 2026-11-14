@@ -13,8 +13,17 @@ ConditionKey = Literal[
     "oxygen_pct", "pressure_kpa", "flow_velocity_cm_s", "material", "geometry",
     "thickness_mm", "diameter_mm", "sample_width_mm", "flow_direction", "gravity_regime",
     "oxygen_initial_pct", "oxygen_final_pct", "burning_faces", "burn_duration_s",
+    "test_end", "test_configuration", "aging_duration_s", "ignition_power_w",
+    "ignition_duration_s",
 ]
-Metric = Literal["flame_spread_rate_mm_s", "extinction_oxygen_pct", "heat_release_w", "other"]
+Metric = Literal[
+    "flame_spread_rate_mm_s", "extinction_oxygen_pct", "heat_release_w",
+    "flex_burn_duration_s", "flex_visible_flame_extinction_diameter_mm",
+    "same_reported_mass_loss_rate_mg_min", "samer_run_duration_s", "samer_net_aging_time_s",
+    "samer_primary_aging_time_s", "samer_primary_mixing_time_s",
+    "saffire_reported_burn_duration_s", "peak_burner_temperature_k",
+    "cfig_reported_run_duration_s", "other",
+]
 MissingStatus = Literal["known", "not_measured", "not_reported", "not_extracted", "not_applicable"]
 Provenance = Literal["published", "digitized", "derived", "synthetic"]
 Identifier = Annotated[str, Field(min_length=3, max_length=240, pattern=r"^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$")]
@@ -24,12 +33,31 @@ CONDITION_UNITS = {
     "thickness_mm": "mm", "diameter_mm": "mm", "sample_width_mm": "mm",
     "oxygen_initial_pct": "%", "oxygen_final_pct": "%", "burning_faces": "count",
     "burn_duration_s": "s",
+    "aging_duration_s": "s", "ignition_power_w": "W", "ignition_duration_s": "s",
 }
 TRIAL_ONLY_CONDITIONS = frozenset({
     "oxygen_initial_pct", "oxygen_final_pct", "burning_faces", "burn_duration_s",
 })
 METRIC_UNITS = {
     "flame_spread_rate_mm_s": "mm/s", "extinction_oxygen_pct": "%", "heat_release_w": "W",
+    "flex_burn_duration_s": "s", "flex_visible_flame_extinction_diameter_mm": "mm",
+    "same_reported_mass_loss_rate_mg_min": "mg/min", "samer_run_duration_s": "s",
+    "samer_net_aging_time_s": "s", "samer_primary_aging_time_s": "s",
+    "samer_primary_mixing_time_s": "s",
+    "saffire_reported_burn_duration_s": "s", "peak_burner_temperature_k": "K",
+    "cfig_reported_run_duration_s": "s",
+}
+METRIC_STUDIES = {
+    "flex_burn_duration_s": {"psi:PSI-69"},
+    "flex_visible_flame_extinction_diameter_mm": {"psi:PSI-69"},
+    "same_reported_mass_loss_rate_mg_min": {"psi:PSI-102"},
+    "samer_run_duration_s": {"psi:PSI-101"},
+    "samer_net_aging_time_s": {"psi:PSI-101"},
+    "samer_primary_aging_time_s": {"psi:PSI-101"},
+    "samer_primary_mixing_time_s": {"psi:PSI-101"},
+    "saffire_reported_burn_duration_s": {"psi:PSI-98"},
+    "peak_burner_temperature_k": {"psi:PSI-159"},
+    "cfig_reported_run_duration_s": {"psi:PSI-159"},
 }
 
 
@@ -129,6 +157,7 @@ class Trial(Contract):
     study_id: Identifier
     sample_id: Identifier
     independent_unit_id: Identifier
+    independent_unit_status: Literal["identified", "unresolved"] = "identified"
     label: str
     conditions: dict[ConditionKey, ConditionValue]
     condition_stages: list[ConditionStage] = Field(default_factory=list)
@@ -170,6 +199,18 @@ class Observation(Contract):
         if self.value is not None and (self.value < 0 or (self.metric == "extinction_oxygen_pct" and self.value > 100)):
             raise ValueError("metric value outside admissible range")
         return self
+
+
+class StudyEvidencePage(Contract):
+    total: int = Field(ge=0)
+    offset: int = Field(ge=0)
+    items: list[Evidence]
+
+
+class StudyObservationPage(Contract):
+    total: int = Field(ge=0)
+    offset: int = Field(ge=0)
+    items: list[Observation]
 
 
 class DatasetBundle(Contract):
@@ -228,6 +269,9 @@ class DatasetBundle(Contract):
                 raise ValueError("observation condition stage must belong to its trial")
             if (observation.provenance == "synthetic") != (trial.provenance == "synthetic"):
                 raise ValueError("observation/trial provenance mismatch")
+            allowed_studies = METRIC_STUDIES.get(observation.metric)
+            if allowed_studies and trial.study_id not in allowed_studies:
+                raise ValueError("campaign-specific metric belongs to a different study")
             check_refs(observation.evidence_ids, trial.study_id, observation.provenance == "synthetic")
         return self
 
@@ -300,6 +344,7 @@ class PlotPoint(Contract):
     observation_id: Identifier
     condition_id: Identifier | None = None
     independent_unit_id: Identifier
+    independent_unit_status: Literal["identified", "unresolved"] = "identified"
     x: Number | None
     y: Number
     original_value: str | None = None
@@ -317,6 +362,7 @@ class ComparisonGroup(Contract):
     n_condition_stages: int = 0
     n_observations: int
     n_independent_units: int
+    n_trials_with_unresolved_independence: int = 0
     median: Number | None
     interval: None = None
     warnings: list[str]
@@ -339,6 +385,7 @@ class ProfileResponse(Contract):
     n_condition_stages: int = 0
     n_observations: int
     n_independent_units: int
+    n_trials_with_unresolved_independence: int = 0
     missing_by_condition: dict[str, dict[str, int]]
     missing_by_stage_condition: dict[str, dict[str, int]] = Field(default_factory=dict)
     missing_by_study: dict[str, dict[str, dict[str, int]]] = Field(default_factory=dict)

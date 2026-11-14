@@ -327,16 +327,19 @@ def _read_pdf(contents: bytes) -> list[list[str]]:
         ]
 
 
-def extract(datasets: Path, catalog_path: Path, output_dir: Path) -> dict:
-    """Verify both inputs and write the canonical bundle and quality report locally."""
+def load_table51(datasets: Path, catalog: DatasetBundle) -> tuple[DatasetBundle, dict]:
+    """Verify both known source versions and build the BASS-II records in memory."""
     from io import StringIO
 
     pdf = _checked_bytes(datasets / PDF_MEMBER, 48_972_416, PDF_HASH)
     csv_text = _checked_bytes(datasets / CSV_MEMBER, 16_590, CSV_HASH).decode("utf-8-sig")
     with StringIO(csv_text, newline="") as source:
-        bundle, quality = build_bundle(
-            _read_pdf(pdf), csv.DictReader(source, strict=True), load_bundle(catalog_path),
-        )
+        return build_bundle(_read_pdf(pdf), csv.DictReader(source, strict=True), catalog)
+
+
+def extract(datasets: Path, catalog_path: Path, output_dir: Path) -> dict:
+    """Verify both inputs and write the canonical bundle and quality report locally."""
+    bundle, quality = load_table51(datasets, load_bundle(catalog_path))
     files = {
         "bundle.json": bundle.model_dump_json(indent=2) + "\n",
         "quality.json": json.dumps(quality, ensure_ascii=False, indent=2) + "\n",

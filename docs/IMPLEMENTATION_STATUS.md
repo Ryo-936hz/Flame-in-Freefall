@@ -10,7 +10,12 @@ Ver [TEAM_START](TEAM_START.md). El historial local anterior y el tag
 
 P2 branch update, 14 November 2026: [P2_DELIVERY](P2_DELIVERY.md) describes the local
 BASS-II increment, provisional shared contract choices, source review boundaries,
-and reproduction commands. This work is on `lujan`, not yet committed or published.
+and reproduction commands. The first BASS-II increment was published on `lujan` at `bb7ac4f`.
+
+The subsequent [24-study corpus increment](P2_NASA_24.md) verifies the original inventory,
+stores searchable evidence by study, and extends the first seven candidates with independently
+scoped numeric or configuration mappings. It includes catalog browsing in the technical harness.
+Scientific review remains pending for imported observations and unresolved sample identities.
 
 | Área | Capacidad real | Evidencia de ejecución |
 |---|---|---|

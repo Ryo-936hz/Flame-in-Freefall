@@ -16,6 +16,9 @@ GOWER_SCALES_V1 = {
     "oxygen_final_pct": 100.0,
     "burning_faces": 2.0,
     "burn_duration_s": 600.0,
+    "aging_duration_s": 3600.0,
+    "ignition_power_w": 100.0,
+    "ignition_duration_s": 600.0,
 }
 
 MISSING_STATUSES = ("known", "not_measured", "not_reported", "not_extracted", "not_applicable")

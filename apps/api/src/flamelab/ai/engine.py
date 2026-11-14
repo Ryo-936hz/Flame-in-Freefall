@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from flamelab.ai.provider import ProviderFailure, synthesize
 from flamelab.config import Settings
 from flamelab.domain.contracts import (
-    CONDITION_UNITS, ActivityEvent, Citation, Claim, ComparisonRequest, DatasetBundle, Hypothesis,
+    CONDITION_UNITS, METRIC_UNITS, ActivityEvent, Citation, Claim, ComparisonRequest, DatasetBundle, Hypothesis,
     Panel, ResearchRequest, ResearchResponse,
 )
 from flamelab.science.comparison import compare_trials
@@ -22,7 +22,11 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
         events.append(ActivityEvent(sequence=len(events) + 1, stage=stage, message=message, evidence_ids=ids or []))
     event("plan", "Flujo determinista: perfil, filtros explícitos, ranking, comparación y revisión de referencias.")
     profile = profile_dataset(bundle)
-    ranking = rank_trials(bundle, request.ranking)
+    metric_trial_ids = None
+    if request.metric in METRIC_UNITS:
+        metric_trial_ids = {item.trial_id for item in bundle.observations
+                            if item.metric == request.metric and item.status == "known"}
+    ranking = rank_trials(bundle, request.ranking, metric_trial_ids=metric_trial_ids)
     selected = {item.trial_id for item in ranking.items}
     refs = {ref for item in ranking.items for ref in item.evidence_ids}
     evidence = [item for item in bundle.evidence if item.id in refs]
@@ -64,7 +68,7 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
     elif settings.ai_provider == "openai":
         warnings.append("No se llamó al proveedor externo: las herramientas devolvieron evidencia insuficiente.")
     hypotheses = []
-    if enough and request.include_hypotheses:
+    if enough and request.include_hypotheses and request.metric == "flame_spread_rate_mm_s":
         hypotheses.append(Hypothesis(
             id="demo:hypothesis-controlled-series", label="prepared_demo_hypothesis",
             statement="Propuesta preparada: estudiar el efecto de la ventilación con muestras independientes y condiciones controladas.",

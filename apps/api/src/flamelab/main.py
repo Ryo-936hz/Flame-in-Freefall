@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
@@ -18,8 +18,9 @@ from flamelab.config import Settings
 from flamelab.data.loader import load_bundle
 from flamelab.domain.contracts import (
     ComparisonRequest, ComparisonResponse, ErrorResponse, Evidence, HealthResponse,
-    ProfileResponse, RankingRequest, RankingResponse, ResearchRequest, ResearchResponse,
-    ScenarioComparisonRequest, ScenarioComparisonResponse, Study, Trial,
+    Metric, ProfileResponse, RankingRequest, RankingResponse, ResearchRequest, ResearchResponse,
+    ScenarioComparisonRequest, ScenarioComparisonResponse, Study, StudyEvidencePage,
+    StudyObservationPage, Trial,
 )
 from flamelab.science.comparison import compare_trials
 from flamelab.science.profiling import profile_dataset
@@ -109,6 +110,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/v1/studies", response_model=list[Study])
     def studies():
         return bundle().studies
+
+    @app.get("/api/v1/studies/{study_id}/evidence", response_model=StudyEvidencePage)
+    def study_evidence(study_id: str, offset: int = Query(0, ge=0),
+                       limit: int = Query(50, ge=1, le=200)):
+        data = bundle()
+        if not any(study.id == study_id for study in data.studies):
+            raise KeyError(study_id)
+        items = [entry for entry in data.evidence if entry.study_id == study_id]
+        return StudyEvidencePage(total=len(items), offset=offset, items=items[offset:offset + limit])
+
+    @app.get("/api/v1/studies/{study_id}/observations", response_model=StudyObservationPage)
+    def study_observations(study_id: str, offset: int = Query(0, ge=0),
+                           limit: int = Query(50, ge=1, le=200), metric: Metric | None = None):
+        data = bundle()
+        if not any(study.id == study_id for study in data.studies):
+            raise KeyError(study_id)
+        trial_ids = {entry.id for entry in data.trials if entry.study_id == study_id}
+        items = [entry for entry in data.observations
+                 if entry.trial_id in trial_ids and (metric is None or entry.metric == metric)]
+        return StudyObservationPage(total=len(items), offset=offset, items=items[offset:offset + limit])
 
     @app.get("/api/v1/trials", response_model=list[Trial])
     def trials(study_id: str | None = None):

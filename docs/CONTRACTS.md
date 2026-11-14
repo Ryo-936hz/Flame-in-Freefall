@@ -65,6 +65,19 @@ Profiles and comparison summaries count stages separately from independent units
 
 ## Autoridad de la pregunta
 
+The extended NASA corpus exposes paginated study evidence and observations at
+`GET /api/v1/studies/{study_id}/evidence` and
+`GET /api/v1/studies/{study_id}/observations`. Both accept zero-based `offset` and
+`limit` (1–200). Observations also accept a `metric` filter. The response includes
+the total number of matching entries, the offset, and the page items.
+
+Campaign-specific metrics declare their source study and canonical unit. Bundle
+validation rejects outcomes assigned to another campaign. Comparison excludes
+records outside the metric's campaign, and research ranks available observations
+for the requested metric. A trial with `independent_unit_status=unresolved` is
+counted separately from identified experimental units. Old snapshots load with
+the existing identified default. See [P2_NASA_24](P2_NASA_24.md) for coverage.
+
 En el esqueleto los filtros explícitos de ResearchRequest mandan. La pregunta se usa en la síntesis;
 el planificador de lenguaje natural será una ampliación del propietario P4. No afirmar que el modo demo
 entiende cualquier restricción verbal. Una variable de `vary` no puede estar en `required_match`.
