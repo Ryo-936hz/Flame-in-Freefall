@@ -11,6 +11,8 @@ __pycache__/
 *.db-*
 data/raw/
 data/processed/
+/datasets/
+*:Zone.Identifier
 *.zip
 *.pdf
 *.docx
