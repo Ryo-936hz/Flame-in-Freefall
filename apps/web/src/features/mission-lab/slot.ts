@@ -1,8 +1,9 @@
 // Frontera de montaje P5 ↔ P6 (propuesta P6 sobre MissionSlotProps de P5).
 // P5 monta MissionLabPanel y ReportPanel en su App.tsx y mantiene el estado compartido.
-import type { createApi, RankingRequest, ResearchResponse } from "../../lib/client";
+import type { createApi, RankingRequest, ResearchRequest, ResearchResponse } from "../../lib/client";
 
 export type Api = ReturnType<typeof createApi>;
+export type MissionMetric = NonNullable<ResearchRequest["metric"]>;
 
 /** De dónde debe leer el visor común una evidencia. */
 export type EvidenceSource =
@@ -20,10 +21,14 @@ export interface MissionSlotProps {
   research: ResearchResponse | null;
   /** Filtros actuales del formulario, ya validados por el host; null si el formulario no es válido. */
   request: RankingRequest | null;
+  /** Métrica actual del formulario; se envía por igual a A/B y a la consulta. */
+  metric: MissionMetric;
   /** Estado de carga/error de la investigación activa en el host (opcional; por defecto deducido de research). */
   researchState?: ResearchState;
   /** Muestra en el host un expediente recuperado o recién creado por P6. */
   onOpenRun: (run: ResearchResponse) => void;
+  /** Inicia recuperación en el host; la guarda devuelta impide reemplazar una intención posterior. */
+  beginResearchIntent?: () => () => boolean;
   /** Abre una evidencia en el visor común. source por defecto "record". */
   onOpenEvidence: (evidenceId: string, trialId: string | null, source?: EvidenceSource) => void;
 }

@@ -58,9 +58,12 @@ export function loadRecentRuns(storage?: Pick<Storage, "getItem">): string[] {
   }
 }
 
-export function rememberRun(researchId: string, storage?: Pick<Storage, "getItem" | "setItem">): string[] {
+/** Session ids preserve recency when storage is unavailable or rejects writes. */
+export function rememberRun(
+  researchId: string, storage?: Pick<Storage, "getItem" | "setItem">, session: readonly string[] = []
+): string[] {
   const target = storage ?? defaultStorage();
-  const current = loadRecentRuns(target);
+  const current = normalize([...session, ...loadRecentRuns(target)]);
   const id = cleanId(researchId);
   if (!id) return current;
   const next = normalize([id, ...current]);

@@ -15,11 +15,12 @@ type Load<T> =
 /** Guarda local: solo la última petición iniciada aplica su resultado. */
 function useLatest() {
   const token = useRef(0);
-  return {
+  const guard = useRef({
     begin: () => ++token.current,
     isCurrent: (value: number) => value === token.current,
     cancel: () => { token.current += 1; }
-  };
+  });
+  return guard.current;
 }
 
 export function errorText(error: unknown, subject: string): string {
@@ -43,7 +44,7 @@ function downloadText(text: string, fileName: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export function ReportPanel({ api, research, researchState, onOpenRun }: MissionSlotProps) {
+export function ReportPanel({ api, research, researchState, onOpenRun, beginResearchIntent }: MissionSlotProps) {
   const uid = useId();
   const activeId = research?.id ?? null;
   const [report, setReport] = useState<Load<string>>({ status: "idle" });
@@ -56,6 +57,32 @@ export function ReportPanel({ api, research, researchState, onOpenRun }: Mission
   const eventsGuard = useLatest();
   const recoverGuard = useLatest();
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const recentRef = useRef(recent);
+  const recoveryIntent = useRef<(() => boolean) | null>(null);
+
+  const remember = useCallback((id: string) => {
+    const next = rememberRun(id, undefined, recentRef.current);
+    recentRef.current = next;
+    setRecent(next);
+  }, []);
+
+  // Reset unmounts this panel. A late recovery must never reopen that record.
+  useEffect(() => () => {
+    reportGuard.cancel();
+    eventsGuard.cancel();
+    recoverGuard.cancel();
+    recoveryIntent.current = null;
+  }, [api, reportGuard, eventsGuard, recoverGuard]);
+
+  // A host-owned ticket also guards changes initiated outside this panel.
+  // Without that optional integration, at least cancel on visible host changes.
+  useEffect(() => {
+    if (!beginResearchIntent || (recoveryIntent.current && !recoveryIntent.current())) {
+      recoverGuard.cancel();
+      recoveryIntent.current = null;
+      setRecover({ status: "idle" });
+    }
+  }, [activeId, researchState, beginResearchIntent, recoverGuard]);
 
   const loadReport = useCallback(async (id: string) => {
     const token = reportGuard.begin();
@@ -66,7 +93,7 @@ export function ReportPanel({ api, research, researchState, onOpenRun }: Mission
     } catch (error) {
       if (reportGuard.isCurrent(token)) setReport({ status: "error", id, message: errorText(error, "Report") });
     }
-  }, [api]);
+  }, [api, reportGuard]);
 
   const loadEvents = useCallback(async (id: string) => {
     const token = eventsGuard.begin();
@@ -77,24 +104,32 @@ export function ReportPanel({ api, research, researchState, onOpenRun }: Mission
     } catch (error) {
       if (eventsGuard.isCurrent(token)) setEvents({ status: "error", id, message: errorText(error, "Event log") });
     }
-  }, [api]);
+  }, [api, eventsGuard]);
 
   const recoverRun = useCallback(async (raw: string) => {
     const id = raw.trim();
     if (!id) return;
     const token = recoverGuard.begin();
+    const isCurrentIntent = beginResearchIntent?.() ?? (() => true);
+    recoveryIntent.current = isCurrentIntent;
     setRecover({ status: "loading", id });
     try {
       const run = await api.getResearch(id);
       if (!recoverGuard.isCurrent(token)) return;
+      recoveryIntent.current = null;
       setRecover({ status: "idle" });
-      setRecent(rememberRun(run.id));
+      if (!isCurrentIntent()) return;
+      remember(run.id);
       setFocusRun(run.id);
       onOpenRun(run);
     } catch (error) {
-      if (recoverGuard.isCurrent(token)) setRecover({ status: "error", id, message: errorText(error, "Research") });
+      if (!recoverGuard.isCurrent(token)) return;
+      recoveryIntent.current = null;
+      setRecover(isCurrentIntent()
+        ? { status: "error", id, message: errorText(error, "Research") }
+        : { status: "idle" });
     }
-  }, [api, onOpenRun]);
+  }, [api, onOpenRun, beginResearchIntent, recoverGuard, remember]);
 
   // Cada expediente activo: se recuerda, se carga su informe y se descarta el replay anterior.
   useEffect(() => {
@@ -105,9 +140,9 @@ export function ReportPanel({ api, research, researchState, onOpenRun }: Mission
       setReport({ status: "idle" });
       return;
     }
-    setRecent(rememberRun(activeId));
+    remember(activeId);
     void loadReport(activeId);
-  }, [activeId, loadReport]);
+  }, [activeId, loadReport, remember, eventsGuard, reportGuard]);
 
   // Tras recuperar, el foco va al encabezado del informe cuando el host ya muestra ese expediente.
   useEffect(() => {

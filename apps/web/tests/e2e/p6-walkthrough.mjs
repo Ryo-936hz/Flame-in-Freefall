@@ -1,130 +1,43 @@
 #!/usr/bin/env node
-// Recorrido E2E P6 con backend real (FastAPI + SQLite temporal + semilla sintética + proveedor demo)
-// y navegador real (Playwright/Chromium). No es una dependencia del proyecto: se resuelve
-// `playwright` instalado localmente o de forma global (ver README.md junto a este archivo).
-//
-// Uso:
-//   node apps/web/tests/e2e/p6-walkthrough.mjs --host=harness|p5 [--api-port=8541] [--web-port=5541]
-//        [--root=<repo>] [--db=<ruta.db>] [--headed] [--screenshots=<dir>]
-//
-// Recorrido: investigación → evidencia (expediente) → A/B y evidencia del corpus → vigencia
-// (cambiar filtros tras comparar ⇒ resultado marcado como anterior) → consulta sin evidencia
-// suficiente → informe y descarga (descargado == mostrado == GET /report) → recarga de página
-// + reinicio de la API y recuperación del expediente → error recuperable (API parada ⇒ Retry).
-// Todos los datos son fixtures sintéticos, no mediciones NASA. Código de salida ≠ 0 si algo falla.
-import { spawn, execSync } from "node:child_process";
-import { createRequire } from "node:module";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
+// Real browser + real demo API, isolated SQLite and owned processes on Windows/Linux.
+// Synthetic fixtures only. No global npm/uv/Python or external AI credentials required.
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRuntime } from "./runtime.mjs";
 
-// ---------------------------------------------------------------- argumentos
+const allowed = new Set(["host", "root", "api-port", "web-port", "headed", "screenshots", "timeout"]);
 const args = Object.fromEntries(process.argv.slice(2).map((arg) => {
   const match = /^--([^=]+)(?:=(.*))?$/.exec(arg);
-  if (!match) throw new Error(`Unknown argument: ${arg}`);
+  if (!match || !allowed.has(match[1])) throw new Error(`Unknown argument: ${arg}`);
   return [match[1], match[2] ?? "true"];
 }));
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(args.root ?? path.join(HERE, "../../../.."));
-const HOST = args.host ?? "harness";
-const API_PORT = Number(args["api-port"] ?? process.env.P6_E2E_API_PORT ?? 8541);
-const WEB_PORT = Number(args["web-port"] ?? process.env.P6_E2E_WEB_PORT ?? 5541);
-const API = `http://127.0.0.1:${API_PORT}`;
-const WEB = `http://127.0.0.1:${WEB_PORT}`;
+const HOST = args.host ?? "p5";
+if (HOST !== "p5") throw new Error("The integrated walkthrough supports --host=p5.");
 const TIMEOUT = Number(args.timeout ?? 20000);
-const workDir = mkdtempSync(path.join(process.env.P6_E2E_TMP ?? tmpdir(), "flamelab-p6-e2e-"));
-const DB = path.resolve(args.db ?? path.join(workDir, "e2e.db"));
+if (!Number.isFinite(TIMEOUT) || TIMEOUT < 100 || TIMEOUT > 120000) throw new Error("Invalid --timeout (100..120000 milliseconds).");
+const port = (value) => value === undefined ? undefined : Number(value);
+const runtime = await createRuntime(ROOT, {
+  apiPort: port(args["api-port"] ?? process.env.P6_E2E_API_PORT),
+  webPort: port(args["web-port"] ?? process.env.P6_E2E_WEB_PORT),
+  tempBase: process.env.P6_E2E_TMP,
+});
+const { apiUrl: API, webUrl: WEB, directory: workDir, startApi, stop, waitHttp } = runtime;
 const SHOTS = args.screenshots ? path.resolve(args.screenshots) : null;
-if (SHOTS) mkdirSync(SHOTS, { recursive: true });
-
-function loadPlaywright() {
-  const candidates = [path.join(ROOT, "package.json"), import.meta.url];
-  if (process.env.PLAYWRIGHT_MODULE) candidates.unshift(process.env.PLAYWRIGHT_MODULE);
-  for (const base of candidates) {
-    try { return createRequire(base)("playwright"); } catch { /* siguiente */ }
-  }
-  try {
-    const globalRoot = execSync("npm root -g", { encoding: "utf8" }).trim();
-    return createRequire(path.join(globalRoot, "noop.js"))("playwright");
-  } catch {
-    throw new Error("playwright is not installed (locally or globally). See apps/web/tests/e2e/README.md.");
-  }
-}
-
-// ---------------------------------------------------------------- adaptadores de host
-// Solo estos pasos dependen del host. El resto usa roles y atributos de los paneles P6.
-const hosts = {
-  harness: {
-    async ready(page) { await page.getByRole("heading", { name: /FlameLab SI/ }).first().waitFor(); },
-    async investigate(page) { await page.getByRole("button", { name: "Investigar", exact: true }).click(); },
-    async changeFilters(page) {
-      const box = page.getByLabel(/RankingRequest/);
-      const value = JSON.parse(await box.inputValue());
-      value.limit = (value.limit ?? 3) === 2 ? 1 : 2;
-      await box.fill(JSON.stringify(value, null, 2));
-    },
-    async restoreFilters(page) { await page.getByRole("button", { name: "Restaurar filtros sintéticos" }).click(); },
-    viewer(page) { return page.locator("section", { has: page.getByRole("heading", { name: /Evidencia seleccionada/ }) }); },
-    corpusMarker: "Leída del corpus activo actual",
-    recordMarker: /Leída del expediente/
+const host = {
+  async ready(page) { await page.getByRole("heading", { name: "Mission Brief" }).waitFor(); },
+  async investigate(page) { await page.getByRole("button", { name: "Investigate", exact: true }).click(); },
+  async changeFilters(page) {
+    const box = page.getByRole("spinbutton", { name: /Max\. trials/ });
+    await box.fill((await box.inputValue()) === "2" ? "1" : "2");
   },
-  p5: {
-    async ready(page) { await page.getByRole("heading", { name: "Mission Brief" }).waitFor(); },
-    async investigate(page) { await page.getByRole("button", { name: "Investigate", exact: true }).click(); },
-    async changeFilters(page) {
-      const box = page.getByRole("spinbutton", { name: /Max\. trials/ });
-      await box.fill((await box.inputValue()) === "2" ? "1" : "2");
-    },
-    async restoreFilters(page) { await page.getByRole("button", { name: "Reset demo query" }).click(); },
-    viewer(page) { return page.locator("#evidence"); },
-    corpusMarker: "Active corpus · not in this research record",
-    recordMarker: null
-  }
+  async restoreFilters(page) { await page.getByRole("button", { name: "Reset filters", exact: true }).click(); },
+  viewer(page) { return page.locator("#evidence"); },
+  corpusMarker: "Active corpus",
+  recordMarker: null,
 };
-const host = hosts[HOST];
-if (!host) throw new Error(`--host must be one of: ${Object.keys(hosts).join(", ")}`);
-
-// ---------------------------------------------------------------- procesos
-const children = new Set();
-function start(name, command, commandArgs, env) {
-  const child = spawn(command, commandArgs, { cwd: ROOT, env: { ...process.env, ...env }, stdio: ["ignore", "pipe", "pipe"], detached: true });
-  const log = [];
-  const keep = (chunk) => { log.push(String(chunk)); if (log.length > 200) log.shift(); };
-  child.stdout.on("data", keep); child.stderr.on("data", keep);
-  children.add(child);
-  child.on("exit", () => children.delete(child));
-  child.logTail = () => log.join("").split("\n").slice(-25).join("\n");
-  child.label = name;
-  return child;
-}
-async function stop(child) {
-  if (!child || child.exitCode !== null || child.signalCode) return;
-  const done = new Promise((resolve) => child.once("exit", resolve));
-  try { process.kill(-child.pid, "SIGTERM"); } catch { child.kill("SIGTERM"); }
-  const timer = setTimeout(() => { try { process.kill(-child.pid, "SIGKILL"); } catch { /* ya terminado */ } }, 5000);
-  await done; clearTimeout(timer);
-}
-async function waitHttp(url, child, ms = 60000) {
-  const until = Date.now() + ms;
-  while (Date.now() < until) {
-    if (child.exitCode !== null) throw new Error(`${child.label} exited early:\n${child.logTail()}`);
-    try { const response = await fetch(url); if (response.ok) return; } catch { /* aún no */ }
-    await new Promise((resolve) => setTimeout(resolve, 300));
-  }
-  throw new Error(`Timeout waiting for ${url}:\n${child.logTail()}`);
-}
-function startApi() {
-  // --no-sync: no reinstala el entorno (en un worktree con .venv enlazado no debe tocarse).
-  // PYTHONPATH asegura que se ejecuta el código de ROOT y no el del paquete editable instalado.
-  return start("api", "uv", ["run", "--no-sync", "uvicorn", "flamelab.main:app", "--host", "127.0.0.1", "--port", String(API_PORT)], {
-    FLAMELAB_SEED_DEMO: "true",
-    FLAMELAB_AI_PROVIDER: "demo",
-    FLAMELAB_DATABASE_URL: `sqlite:///${DB}`,
-    FLAMELAB_CORS_ORIGINS: JSON.stringify([WEB]),
-    PYTHONPATH: [path.join(ROOT, "apps/api/src"), process.env.PYTHONPATH].filter(Boolean).join(path.delimiter)
-  });
-}
 
 // ---------------------------------------------------------------- comprobaciones
 const results = [];
@@ -148,19 +61,26 @@ async function step(name, fn) {
 const shot = async (page, name) => { if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `${HOST}-${name}.png`), fullPage: true }); };
 
 // ---------------------------------------------------------------- recorrido
-let api = startApi();
-const web = start("web", "npx", ["vite", "--config", "apps/web/vite.config.ts", "--port", String(WEB_PORT), "--strictPort", "--host", "127.0.0.1"], {
-  VITE_API_BASE_URL: API
-});
+let api;
 let browser;
 let exitCode = 0;
+let closing;
 const pageErrors = [];
+const heldReleases = [];
+const cleanup = () => closing ??= (async () => {
+  for (const release of heldReleases) release();
+  await browser?.close().catch(() => {});
+  await runtime.close();
+})();
+for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => { void cleanup().finally(() => process.exit(130)); });
 try {
+  if (SHOTS) mkdirSync(SHOTS, { recursive: true });
+  api = startApi();
+  const web = runtime.startWeb();
   await waitHttp(`${API}/api/v1/health`, api);
   await waitHttp(WEB, web);
-  const { chromium } = loadPlaywright();
-  browser = await chromium.launch({ headless: args.headed !== "true" });
-  const context = await browser.newContext({ acceptDownloads: true, viewport: { width: 1440, height: 1000 } });
+  browser = await runtime.chromium.launch({ headless: args.headed !== "true" });
+  const context = await browser.newContext({ acceptDownloads: true, viewport: { width: 1440, height: 1000 }, reducedMotion: "reduce" });
   const page = await context.newPage();
   page.setDefaultTimeout(TIMEOUT);
   page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -181,12 +101,82 @@ try {
   }
   let researchId = "";
   let reportText = "";
+  const comparisonResult = () => lab.locator('[data-result-kind="comparison"]');
+  const queryResult = () => lab.locator('[data-result-kind="query"]');
+  const freshness = async (locator, expected) => {
+    await locator.waitFor();
+    await page.waitForFunction(({ element, value }) => element?.getAttribute("data-freshness") === value,
+      { element: await locator.elementHandle(), value: expected });
+  };
+  const settle = () => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  async function holdNext(pathname, method = "GET") {
+    let release, arrived, finished;
+    const gate = new Promise((resolve) => { release = resolve; });
+    const seen = new Promise((resolve) => { arrived = resolve; });
+    const done = new Promise((resolve) => { finished = resolve; });
+    heldReleases.push(release);
+    const matcher = (url) => decodeURIComponent(url.pathname) === pathname;
+    const handler = async (route) => {
+      if (route.request().method() !== method) { await route.continue(); return; }
+      await page.unroute(matcher, handler);
+      const response = await route.fetch();
+      arrived();
+      await gate;
+      try { await route.fulfill({ response }); }
+      catch (error) { if (!closing) throw error; }
+      finally { finished(); }
+    };
+    await page.route(matcher, handler);
+    const bounded = async (promise, label) => {
+      let timer;
+      try {
+        return await Promise.race([promise, new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`Timeout holding ${label}: ${method} ${pathname}`)), TIMEOUT);
+        })]);
+      } finally { clearTimeout(timer); }
+    };
+    return { get seen() { return bounded(seen, "request"); }, release, get done() { return bounded(done, "response"); } };
+  }
 
   await step("load host and P6 panels", async () => {
     await page.goto(WEB);
     await host.ready(page);
     await lab.waitFor(); await report.waitFor();
     check(await lab.getByText("Deterministic demo coordinator").count() === 0, "no provider text before a research");
+  });
+
+  await step("P2 catalog remains reachable", async () => {
+    await page.locator(".p6-catalog summary").click();
+    const title = page.locator("#catalog-title");
+    await title.waitFor();
+    check(await title.isVisible(), "the integrated host retains the study catalog");
+    const studies = page.getByRole("combobox", { name: "Estudio", exact: true });
+    await page.waitForFunction((select) => select?.options.length > 1, await studies.elementHandle());
+    const studyId = await studies.locator("option").nth(1).getAttribute("value");
+    const sources = page.waitForResponse((response) => new URL(response.url()).pathname.endsWith(`/studies/${encodeURIComponent(studyId)}/evidence`));
+    await studies.selectOption(studyId);
+    check((await sources).ok(), "catalog study evidence endpoint is reachable");
+    await page.locator(".p6-catalog summary").first().click();
+  });
+
+  await step("A/B evidence opens before any research exists", async () => {
+    const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/scenarios/compare"));
+    await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
+    const body = await (await response).json();
+    check(body.metric === "flame_spread_rate_mm_s", "A/B explicitly requests the selected metric");
+    const button = lab.getByRole("button", { name: /\(current corpus\)$/ }).first();
+    await button.waitFor();
+    const evidenceId = /Open evidence (.+) \(current corpus\)/.exec(await button.getAttribute("aria-label") ?? "")?.[1];
+    const sourceResponse = page.waitForResponse((r) => decodeURIComponent(new URL(r.url()).pathname).endsWith(`/evidence/${evidenceId}`));
+    await button.click();
+    const returnedSource = await sourceResponse;
+    const sourceBody = await returnedSource.json();
+    const url = new URL(returnedSource.url());
+    check(!url.searchParams.has("research_id"), "pre-research evidence reads the active corpus");
+    await host.viewer(page).getByText(host.corpusMarker, { exact: false }).first().waitFor();
+    await host.viewer(page).getByText(evidenceId, { exact: true }).waitFor();
+    check(await host.viewer(page).locator(".ev-text").textContent() === sourceBody.text, "corpus source text is displayed literally");
+    check(await report.getByText(/No active research\./).isVisible(), "opening corpus evidence does not invent a research record");
   });
 
   await step("investigate (POST /research)", async () => {
@@ -216,6 +206,36 @@ try {
     await page.waitForTimeout(200);
     check(!(await viewer.getByText(host.corpusMarker).isVisible().catch(() => false)), "record evidence is not labelled as active corpus");
     if (host.recordMarker) await viewer.getByText(host.recordMarker).waitFor();
+    const sourceBody = await (await fetch(`${API}/api/v1/evidence/${encodeURIComponent(evidenceId)}?research_id=${encodeURIComponent(researchId)}`)).json();
+    check(await viewer.locator(".ev-text").textContent() === sourceBody.text, "historical source text is displayed literally");
+  });
+
+  await step("Earth scenario selects the known-zero trial", async () => {
+    await lab.getByRole("radio", { name: /Earth gravity/i }).check();
+    const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/scenarios/compare"));
+    await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
+    const body = await (await response).json();
+    check(body.metric === "flame_spread_rate_mm_s", "Earth comparison retains the selected flame-spread metric");
+    check(body.ranking_b.items.length === 1 && body.ranking_b.items[0].trial_id === "synthetic:trial-4",
+      "the Earth fixture with a known zero remains eligible for the metric");
+    await lab.locator(".ml-row-entered").getByText("synthetic:trial-4", { exact: true }).waitFor();
+    check(await lab.locator(".ml-row-left").count() === 3, "the UI shows all three microgravity fixtures leaving");
+  });
+
+  await step("scored flow preserves trials and changes similarity only", async () => {
+    await lab.getByRole("radio", { name: /flow 2 cm\/s scored/i }).check();
+    const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/scenarios/compare"));
+    await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
+    const body = await (await response).json();
+    const expected = [["synthetic:trial-1", 1], ["synthetic:trial-2", 0.985], ["synthetic:trial-3", 0.96]];
+    check(body.ranking_a.items.length === 3 && body.ranking_a.items.every((item) => item.similarity === 1), "varied-flow A has three similarity-1 candidates");
+    check(body.ranking_b.items.length === 3 && expected.every(([id, value], index) => {
+      const item = body.ranking_b.items[index];
+      return item.trial_id === id && Math.abs(item.similarity - value) < 1e-12;
+    }), "scored-flow B matches the independently specified fixture similarities");
+    const row = lab.locator(".ml-row-kept").filter({ hasText: "synthetic:trial-2" });
+    await row.locator('[data-label="Similarity B"]').getByText("0.985", { exact: true }).waitFor();
+    check(await lab.locator(".ml-row-kept").count() === 3, "the UI labels the same three trials as kept");
   });
 
   await step("A/B comparison is an evidence comparison", async () => {
@@ -224,7 +244,7 @@ try {
     await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
     const body = await (await response).json();
     check(body.label === "evidence_comparison_not_physical_simulation", "API label evidence_comparison_not_physical_simulation");
-    const result = lab.locator(".ml-result[data-freshness]").first();
+    const result = lab.locator('[data-result-kind="comparison"]');
     await result.waitFor();
     check(await result.getAttribute("data-freshness") === "current", "fresh comparison is marked current");
     await lab.getByText("Evidence comparison · not a physical simulation").waitFor();
@@ -232,6 +252,24 @@ try {
     check(body.ranking_b.items.length === 0, "lunar B has no eligible synthetic trial");
     await lab.getByText("Insufficient applicable evidence.").first().waitFor();
     await shot(page, "2-ab");
+  });
+
+  await step("desktop themes and mobile layout keep P6 within the viewport", async () => {
+    const noOverflow = async (label) => check(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `${label}: no page horizontal overflow`);
+    await lab.scrollIntoViewIfNeeded();
+    await noOverflow("desktop dark");
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, "p5-desktop-dark.png") });
+    await page.getByRole("switch", { name: "Night mode" }).click();
+    await page.waitForFunction(() => document.documentElement.dataset.theme === "light");
+    await noOverflow("desktop light");
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, "p5-desktop-light.png") });
+    await page.getByRole("switch", { name: "Night mode" }).click();
+    await page.waitForFunction(() => document.documentElement.dataset.theme === "dark");
+    await page.setViewportSize({ width: 390, height: 844 });
+    await lab.scrollIntoViewIfNeeded();
+    await noOverflow("mobile 390px");
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, "p5-mobile-390.png"), fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 1000 });
   });
 
   await step("open evidence of an A/B row from the active corpus", async () => {
@@ -249,7 +287,7 @@ try {
 
   await step("changing filters after comparing marks the result as previous", async () => {
     await host.changeFilters(page);
-    const result = lab.locator(".ml-result[data-freshness]").first();
+    const result = lab.locator('[data-result-kind="comparison"]');
     await page.waitForFunction((el) => el?.getAttribute("data-freshness") === "filters_changed", await result.elementHandle());
     await lab.getByText("Previous comparison — not computed with the current filters").waitFor();
     await lab.getByRole("heading", { name: /^Previous A\/B result/ }).waitFor();
@@ -260,14 +298,43 @@ try {
     check(true, "restoring the same filters makes the comparison current again");
   });
 
+  await step("metric changes invalidate A/B and recompute with the selected metric", async () => {
+    const metric = page.getByRole("combobox", { name: "Metric", exact: true });
+    await metric.selectOption("heat_release_w");
+    await freshness(comparisonResult(), "metric_changed");
+    const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/scenarios/compare"));
+    await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
+    const body = await (await response).json();
+    check(body.metric === "heat_release_w", "the recomputed A/B uses heat_release_w");
+    check(body.ranking_a.items.length === 0 && body.ranking_b.items.length === 0, "missing metric is not replaced by flame-spread measurements");
+    await freshness(comparisonResult(), "current");
+    await metric.selectOption("flame_spread_rate_mm_s");
+    await freshness(comparisonResult(), "metric_changed");
+    const restored = page.waitForResponse((r) => r.url().endsWith("/api/v1/scenarios/compare"));
+    await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
+    await restored;
+    await freshness(comparisonResult(), "current");
+  });
+
   await step("query without sufficient evidence", async () => {
     const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/research") && r.request().method() === "POST");
-    await lab.getByRole("button", { name: "Run query without sufficient evidence" }).click();
+    await lab.getByRole("button", { name: "Run lunar evidence query" }).click();
     const body = await (await response).json();
     check(body.status === "insufficient_evidence", `status insufficient_evidence (got ${body.status})`);
     check(body.ranking.items.length === 0, "no eligible candidates");
     await lab.getByText("Insufficient evidence.", { exact: true }).waitFor();
     await lab.getByRole("heading", { name: /What is missing/ }).waitFor();
+  });
+
+  await step("question changes mark the prior query without invalidating numerical A/B", async () => {
+    const question = page.getByRole("textbox", { name: "Question", exact: true });
+    const original = await question.inputValue();
+    await question.fill("A revised research description for the same explicit filters.");
+    await freshness(queryResult(), "question_changed");
+    await freshness(comparisonResult(), "current");
+    await question.fill(original);
+    await freshness(queryResult(), "current");
+    check(true, "query freshness tracks question text independently of A/B");
   });
 
   await step("report shown == GET /report == downloaded file", async () => {
@@ -289,6 +356,15 @@ try {
     await shot(page, "4-report");
   });
 
+  await step("saved events are an exact replay", async () => {
+    await report.getByRole("button", { name: "Replay saved events", exact: true }).click();
+    const events = report.locator(".rp-pre-events");
+    await events.waitFor();
+    const server = await (await fetch(`${API}/api/v1/research/${encodeURIComponent(researchId)}/events`)).text();
+    check(await events.textContent() === server, "saved events match the API replay");
+    await report.getByText("Replay · not live", { exact: true }).waitFor();
+  });
+
   await step("page reload + API restart, then recover the same research", async () => {
     await stop(api);
     api = startApi();
@@ -301,6 +377,44 @@ try {
     await pre.waitFor();
     check(await pre.textContent() === reportText, "recovered report equals the report shown before restart");
     await lab.getByText(researchId, { exact: true }).first().waitFor();
+  });
+
+  await step("Reset cancels a pending recovery and A/B result", async () => {
+    const pendingRecovery = await holdNext(`/api/v1/research/${researchId}`);
+    await report.getByLabel("Research id", { exact: true }).fill(researchId);
+    await report.getByRole("button", { name: "Recover", exact: true }).click();
+    await pendingRecovery.seen;
+    await page.getByRole("button", { name: "Reset", exact: true }).click();
+    await report.getByText(/No active research\./).waitFor();
+    pendingRecovery.release(); await pendingRecovery.done; await settle();
+    check(await report.getByText(/No active research\./).isVisible(), "late recovery cannot reopen a record after Reset");
+    check(await page.locator(".run-id").count() === 0, "Reset leaves no active host research");
+
+    const pendingComparison = await holdNext("/api/v1/scenarios/compare", "POST");
+    await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
+    await pendingComparison.seen;
+    await page.getByRole("button", { name: "Reset", exact: true }).click();
+    pendingComparison.release(); await pendingComparison.done; await settle();
+    check(await comparisonResult().count() === 0, "late A/B response cannot repopulate reset panels");
+  });
+
+  await step("a new investigation wins over an earlier pending recovery", async () => {
+    const pendingRecovery = await holdNext(`/api/v1/research/${researchId}`);
+    await report.getByLabel("Research id", { exact: true }).fill(researchId);
+    await report.getByRole("button", { name: "Recover", exact: true }).click();
+    await pendingRecovery.seen;
+    await page.getByRole("textbox", { name: "Question", exact: true }).fill("New investigation after a pending recovery.");
+    const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/research") && r.request().method() === "POST");
+    await host.investigate(page);
+    const body = await (await response).json();
+    check(body.id !== researchId, "the later investigation has its own record");
+    researchId = body.id;
+    const pre = report.locator(`pre[data-research-id="${researchId}"]`).first();
+    await pre.waitFor();
+    pendingRecovery.release(); await pendingRecovery.done; await settle();
+    check(await pre.isVisible(), "late recovery does not replace the newer research report");
+    check((await page.locator(".run-id").textContent())?.includes(researchId), "the host retains the latest investigation");
+    reportText = await pre.textContent() ?? "";
   });
 
   await step("unknown research id gives a 404 message", async () => {
@@ -334,9 +448,8 @@ try {
   exitCode = 1;
   if (!results.some((r) => !r.ok)) results.push({ step: current, ok: false, message: String(error?.stack ?? error) });
 } finally {
-  await browser?.close().catch(() => {});
-  for (const child of [...children]) await stop(child);
-  if (!args.db) rmSync(workDir, { recursive: true, force: true });
+  try { await cleanup(); }
+  catch (error) { exitCode = 1; results.push({ step: "cleanup", ok: false, message: String(error) }); }
 }
 
 const failed = results.filter((r) => !r.ok);

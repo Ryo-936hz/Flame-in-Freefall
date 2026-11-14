@@ -5,11 +5,13 @@ expedientes por id. Recibe `MissionSlotProps` (`../mission-lab/slot.ts`); P5 lo 
 
 ```tsx
 import { ReportPanel } from "./features/report/ReportPanel"; // también export default
-<ReportPanel api={api} research={result} request={currentRequest} researchState={state}
-  onOpenRun={showRun} onOpenEvidence={onCite} />
+<ReportPanel api={api} research={result} request={currentRequest} metric={metric} researchState={state}
+  onOpenRun={showRun} onOpenEvidence={onCite} beginResearchIntent={beginResearchIntent} />
 ```
 
-Usa `api`, `research`, `researchState` y `onOpenRun`; `request` y `onOpenEvidence` no se usan.
+Usa `api`, `research`, `researchState`, `onOpenRun` y `beginResearchIntent`; `request`, `metric` y `onOpenEvidence` no se usan.
+El host integra `beginResearchIntent(): () => boolean`: inicia una intención compartida y devuelve una comprobación
+de vigencia. Investigar, abrir otro expediente y Reset invalidan las intenciones anteriores.
 
 ## Comportamiento
 
@@ -24,7 +26,11 @@ Usa `api`, `research`, `researchState` y `onOpenRun`; `request` y `onOpenEvidenc
   muestra como texto, rotulado «Replay · not live». Se descarta al cambiar de expediente.
 - **Recuperación.** Hay un campo de id y una lista de recientes. Recuperar llama a `api.getResearch(id)`, luego
   a `rememberRun` y después a `onOpenRun(run)`. El foco pasa al encabezado del panel cuando el host ya
-  muestra ese expediente. Cada expediente activo se recuerda automáticamente.
+  muestra ese expediente. Cada expediente activo se recuerda automáticamente. La respuesta solo publica si
+  siguen vigentes la petición local y el ticket compartido del host. Reset/desmontaje invalida también informe,
+  eventos y recuperación pendientes; una respuesta tardía no puede reabrir el expediente descartado.
+  Sin callback compartido se cancelan recuperaciones al cambiar el id/estado visible, pero el host integrado
+  debe proporcionar el callback para coordinar intenciones entre paneles.
 - **Recarga de página.** *Decisión:* no se reabre nada automáticamente. Si no hay expediente activo y hay
   recientes, se ofrece el botón «Reopen last research» y la lista. Así el host no cambia de estado sin
   una acción de la persona, y una API caída no deja un error inesperado al cargar.
@@ -33,7 +39,8 @@ Usa `api`, `research`, `researchState` y `onOpenRun`; `request` y `onOpenEvidenc
 - **Persistencia.** Los expedientes viven en la base del backend (SQLite en local), así que la recuperación
   funciona tras reiniciar la API. Los recientes son solo ids en `localStorage` (`flamelab.recentRuns.v1`):
   como máximo 10, sin duplicados, el más reciente primero. Todo acceso va en try/catch; si el
-  almacenamiento falla, la lista vale solo para la sesión.
+  almacenamiento falla, se conserva en memoria toda la lista de la sesión (con el mismo límite/orden).
+  La siguiente escritura que funcione vuelve a guardar esa lista; recargar sin almacenamiento sí la pierde.
 
 ## Archivos
 

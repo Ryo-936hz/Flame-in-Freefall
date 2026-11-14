@@ -2,6 +2,7 @@
 // Compara aplicabilidad de evidencia entre dos RankingRequest; no simula física.
 // INTERFAZ ACORDADA: las firmas y tipos exportados son estables para MissionLab.tsx.
 import type { Models, RankingRequest } from "../../lib/client";
+import type { MissionMetric } from "./slot";
 import { canonicalRequest, formatValue } from "./comparisonState";
 
 export type RankedTrial = Models["RankedTrial"];
@@ -32,6 +33,8 @@ export interface TrialChange {
   similarityDelta: number | null;
   /** Motivos de exclusión/indeterminación en B cuando sale de la selección (de ranking_b.excluded). */
   reasonsB: string[];
+  /** Una ausencia de la lista truncada no permite inventar un motivo de exclusión. */
+  selectionNote: string | null;
 }
 
 export interface ScenarioDiff {
@@ -124,13 +127,14 @@ export const scenarioPresets: readonly ScenarioPreset[] = [
   }
 ];
 
-export function buildScenarioRequest(base: RankingRequest, presetId: string): ScenarioComparisonRequest {
+export function buildScenarioRequest(base: RankingRequest, presetId: string, metric: MissionMetric): ScenarioComparisonRequest {
   const preset = scenarioPresets.find((item) => item.id === presetId);
   if (!preset) {
     const known = scenarioPresets.map((item) => item.id).join(", ");
     throw new Error(`Unknown scenario: "${presetId}". Available: ${known}.`);
   }
   return {
+    metric,
     name_a: "A · current filters",
     name_b: `B · ${preset.title}`,
     scenario_a: base,
@@ -168,17 +172,19 @@ export function diffScenarioRankings(response: ScenarioComparison): ScenarioDiff
   for (const [trialId, itemA] of selectedA) {
     const itemB = selectedB.get(trialId) ?? null;
     if (itemB) {
-      kept.push({ trial_id: trialId, status: "kept", a: itemA, b: itemB, similarityDelta: delta(itemA, itemB), reasonsB: [] });
+      kept.push({ trial_id: trialId, status: "kept", a: itemA, b: itemB, similarityDelta: delta(itemA, itemB), reasonsB: [], selectionNote: null });
     } else {
       left.push({
         trial_id: trialId, status: "left", a: itemA, b: null, similarityDelta: null,
-        reasonsB: [...(excludedB.get(trialId)?.reasons ?? [])]
+        reasonsB: [...(excludedB.get(trialId)?.reasons ?? [])],
+        selectionNote: excludedB.has(trialId) ? null
+          : "Not returned among B's selected or excluded candidates. The result limit can omit eligible trials; no exclusion reason was returned."
       });
     }
   }
   for (const [trialId, itemB] of selectedB) {
     if (!selectedA.has(trialId)) {
-      entered.push({ trial_id: trialId, status: "entered", a: null, b: itemB, similarityDelta: null, reasonsB: [] });
+      entered.push({ trial_id: trialId, status: "entered", a: null, b: itemB, similarityDelta: null, reasonsB: [], selectionNote: null });
     }
   }
   const order = (x: TrialChange, y: TrialChange) => x.trial_id < y.trial_id ? -1 : x.trial_id > y.trial_id ? 1 : 0;
@@ -189,11 +195,15 @@ export function diffScenarioRankings(response: ScenarioComparison): ScenarioDiff
   const nameA = response.name_a;
   const nameB = response.name_b;
   const summary: string[] = [
-    `${nameA}: ${countLabel(selectedA.size, "selected trial", "selected trials")} and ${a.excluded.length} outside the selection (excluded or indeterminate).`,
-    `${nameB}: ${countLabel(selectedB.size, "selected trial", "selected trials")} and ${b.excluded.length} outside the selection (excluded or indeterminate).`
+    `${nameA}: ${countLabel(selectedA.size, "selected trial", "selected trials")} and ${a.excluded.length} returned as excluded or indeterminate.`,
+    `${nameB}: ${countLabel(selectedB.size, "selected trial", "selected trials")} and ${b.excluded.length} returned as excluded or indeterminate.`
   ];
-  if (noEvidenceA) summary.push(`${nameA} has no applicable evidence with its explicit filters and minimum coverage.`);
-  if (noEvidenceB) summary.push(`${nameB} has no applicable evidence with its explicit filters and minimum coverage.`);
+  summary.push("Selected lists are limited by the request. Excluded counts do not include eligible trials omitted by that limit.");
+  const scope = response.metric
+    ? `explicit filters, minimum coverage and available measurements of ${response.metric}`
+    : "explicit filters and minimum coverage (metric availability was not requested)";
+  if (noEvidenceA) summary.push(`${nameA} has no applicable evidence with its ${scope}.`);
+  if (noEvidenceB) summary.push(`${nameB} has no applicable evidence with its ${scope}.`);
   if (kept.length) summary.push(`Kept in both: ${kept.map((item) => item.trial_id).join(", ")}.`);
   if (entered.length) summary.push(`Entered in B: ${entered.map((item) => item.trial_id).join(", ")}.`);
   if (left.length) {
@@ -201,6 +211,7 @@ export function diffScenarioRankings(response: ScenarioComparison): ScenarioDiff
     summary.push(`Left in B: ${left.map((item) => item.trial_id).join(", ")}` +
       (reasons.length ? ` (reasons in B: ${reasons.join(", ")}).` : "."));
   }
+  for (const item of left) if (item.selectionNote) summary.push(`${item.trial_id}: ${item.selectionNote}`);
   const unknownDelta = kept.filter((item) => item.similarityDelta === null).length;
   if (unknownDelta) summary.push(`${countLabel(unknownDelta, "kept trial lacks", "kept trials lack")} a similarity in one of the scenarios; its change is not calculated.`);
   if (!kept.length && !entered.length && !left.length && !noEvidenceA) summary.push("The selection does not change between A and B.");
@@ -212,6 +223,15 @@ export function diffScenarioRankings(response: ScenarioComparison): ScenarioDiff
     excludedA: a.excluded.length, excludedB: b.excluded.length,
     kept, entered, left, noEvidenceA, noEvidenceB, summary, warnings
   };
+}
+
+/** Contexto de segmento reportado por el API: no crea ensayos ni réplicas nuevas. */
+export function describeSegments(item: RankedTrial | null): string {
+  if (!item) return "Trial not selected in this scenario.";
+  const scored = item.scored_segment_id;
+  const eligible = item.eligible_segment_ids ?? [];
+  if (!scored && !eligible.length) return "Trial-level ranking; no segment selected for scoring.";
+  return `Scored segment: ${scored ?? "not assigned"}. Eligible segments: ${eligible.length ? eligible.join(", ") : "none"}. Segments remain parts of the same trial, not independent replicates.`;
 }
 
 /** Texto visible para la etiqueta de una hipótesis; nunca la presenta como física validada. */

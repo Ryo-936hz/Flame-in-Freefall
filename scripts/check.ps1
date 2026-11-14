@@ -1,3 +1,5 @@
+param([switch]$E2E)
+
 . (Join-Path $PSScriptRoot 'common.ps1')
 Push-Location -LiteralPath $script:FlameLabRoot
 try {
@@ -17,4 +19,5 @@ try {
     Invoke-ProjectNpm @('run','test:client')
     Invoke-ProjectNpm @('run','build')
     Invoke-Checked $pythonExe @('scripts/smoke.py')
+    if ($E2E) { Invoke-ProjectNpm @('run','test:e2e:p6') }
 } finally { Pop-Location }

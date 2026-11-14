@@ -74,3 +74,33 @@ test("sin localStorage global devuelve lista vacía", () => {
   assert.deepEqual(loadRecentRuns(), []);
   assert.deepEqual(rememberRun("run-1"), ["run-1"]);
 });
+
+test("la lista de sesión conserva todos los recientes si el almacenamiento rechaza escrituras", () => {
+  const stored = memoryStorage({ [RECENT_RUNS_KEY]: JSON.stringify(["stored-before"]) });
+  const unavailable = {
+    ...stored,
+    setItem: () => { throw new Error("QuotaExceededError"); }
+  };
+  let session = rememberRun("session-first", unavailable);
+  session = rememberRun("session-second", unavailable, session);
+  assert.deepEqual(session, ["session-second", "session-first", "stored-before"]);
+  session = rememberRun("session-first", unavailable, session);
+  assert.deepEqual(session, ["session-first", "session-second", "stored-before"]);
+  assert.deepEqual(loadRecentRuns(stored), ["stored-before"]);
+});
+
+test("sesión sin almacenamiento respeta el límite, filtra ids y puede volver a persistirse", () => {
+  const broken = {
+    getItem: () => { throw new Error("SecurityError"); },
+    setItem: () => { throw new Error("QuotaExceededError"); }
+  };
+  let session: string[] = ["", "older", "older", "x".repeat(201)];
+  for (let i = 0; i < 15; i += 1) session = rememberRun(`run-${i}`, broken, session);
+  assert.equal(session.length, MAX_RECENT_RUNS);
+  assert.deepEqual(session, Array.from({ length: 10 }, (_, i) => `run-${14 - i}`));
+  const restored = memoryStorage();
+  const saved = rememberRun("run-15", restored, session);
+  assert.deepEqual(loadRecentRuns(restored), saved);
+  assert.equal(saved.length, MAX_RECENT_RUNS);
+  assert.deepEqual(saved.slice(0, 3), ["run-15", "run-14", "run-13"]);
+});

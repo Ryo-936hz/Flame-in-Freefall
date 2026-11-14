@@ -97,28 +97,29 @@ test("provenance summary: empty selection is no_evidence", () => {
   const summary = summarizeProvenance([]);
   assert.equal(summary.kind, "no_evidence");
   assert.deepEqual(summary.counts, {});
-  assert.match(summary.text, /No selected evidence/);
+  assert.match(summary.text, /No selected trials/);
 });
 
 test("provenance summary: all synthetic is labelled as fixtures, not NASA data", () => {
   const summary = summarizeProvenance(["synthetic", "synthetic", "synthetic"]);
   assert.equal(summary.kind, "synthetic");
   assert.deepEqual(summary.counts, { synthetic: 3 });
-  assert.match(summary.text, /Synthetic fixtures only \(3\).*not NASA measurements/);
+  assert.match(summary.text, /Selected synthetic trials \(3 fixtures\).*not NASA measurements/);
 });
 
 test("provenance summary: non-synthetic details published, digitized and derived", () => {
   const summary = summarizeProvenance(["derived", "published", "published", "digitized"]);
   assert.equal(summary.kind, "non_synthetic");
   assert.deepEqual(summary.counts, { derived: 1, published: 2, digitized: 1 });
-  assert.match(summary.text, /2 published, 1 digitized, 1 derived/);
+  assert.match(summary.text, /Selected non-synthetic trials \(2 published, 1 digitized, 1 derived\)/);
+  assert.doesNotMatch(summary.text, /Non-synthetic sources/);
 });
 
 test("provenance summary: mixed selection counts both sides", () => {
   const summary = summarizeProvenance(["synthetic", "published"]);
   assert.equal(summary.kind, "mixed");
   assert.deepEqual(summary.counts, { synthetic: 1, published: 1 });
-  assert.match(summary.text, /1 synthetic fixture \(not NASA measurements\) and 1 published/);
+  assert.match(summary.text, /1 synthetic fixture \(not NASA measurements\) and non-synthetic trials \(1 published\)/);
 });
 
 test("published provenance never claims review or validation", () => {
@@ -133,4 +134,14 @@ test("provider text distinguishes the deterministic demo from an external model"
   assert.match(providerText("demo"), /deterministic demo coordinator.*no external model/i);
   assert.match(providerText("openai"), /external model synthesis.*requires verification/i);
   assert.doesNotMatch(providerText("demo"), /AI|LLM|model inference/);
+});
+
+
+test("displayed studied variables retain the sent order relevant to research axes", () => {
+  const request: RankingRequest = { vary: ["pressure_kpa", "flow_velocity_cm_s"] };
+  assert.ok(describeRequest(request).includes("Varied (not scored): pressure_kpa, flow_velocity_cm_s"));
+  assert.ok(describeRequest({ vary: ["flow_velocity_cm_s", "pressure_kpa"] })
+    .includes("Varied (not scored): flow_velocity_cm_s, pressure_kpa"));
+  // Rank-only eligibility still treats these as the same varied-condition set.
+  assert.equal(requestFingerprint(request), requestFingerprint({ vary: ["flow_velocity_cm_s", "pressure_kpa"] }));
 });

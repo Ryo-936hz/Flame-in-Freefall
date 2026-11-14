@@ -76,7 +76,7 @@ export function describeRequest(request: RankingRequest): string[] {
   const lines = [
     `Target: ${c.target.length ? c.target.map(([key, value]) => `${key} = ${formatValue(value)}`).join(", ") : "none"}`,
     `Required matches: ${listOrNone(c.required_match)}`,
-    `Varied (not scored): ${listOrNone(c.vary)}`,
+    `Varied (not scored): ${listOrNone([...new Set(request.vary ?? [])])}`,
     `Weights: ${c.weights.length ? c.weights.map(([key, value]) => `${key} = ${formatValue(value)}`).join(", ") : "default (1 per scored target)"}`,
     `Synthetic fixtures: ${c.allow_synthetic ? "allowed" : "not allowed"}`,
     `Minimum coverage: ${formatValue(c.minimum_coverage)}`,

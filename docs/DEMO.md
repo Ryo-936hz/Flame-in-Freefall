@@ -1,200 +1,99 @@
-# Demo y narrativa
+# Demo vigente — Mission Lab integrado
 
-## Recorrido ejecutable de la base local
+Entrega P6 en `raul`, con P1/P3/P4 y P2 de `main`, P6 `80ceba4` y el host P5
+`9f54700` integrados. El commit de entrega y pruebas ejecutadas están en
+[relevo P6](handoffs/P6.md) y [VERIFICATION](VERIFICATION.md).
+El [guion anterior](handoffs/P6_DEMO_HISTORY.md) se conserva como historial.
 
-La demo disponible utiliza **2 estudios, 5 ensayos y 6 observaciones sintéticos**. El modo de coordinación
-es determinista y no llama a un modelo externo. El catálogo real de 24 investigaciones está separado y solo
-contiene metadatos; no presentar el recorrido numérico como comparación NASA.
+## Preparación reproducible en Windows
 
-1. Preparar y arrancar la base con README/SETUP_WINDOWS. Comprobar salud y etiquetas de modo.
-2. Ejecutar la consulta demo del arnés técnico con permiso explícito de sintéticos y filtros estructurados.
-3. Revisar elegibilidad, similitud, cobertura, grupos, puntos, unidades y tamaño de muestra. Abrir la evidencia
-   enlazada: sus cifras remiten al fixture local, sin fuente NASA inventada.
-4. Cambiar restricciones o comparar escenarios A/B; verificar cambios de selección y límites. Es comparación
-   de evidencia, no simulación física.
-5. Ejecutar el caso sin evidencia suficiente. Un objetivo ausente o un eje X completamente desconocido no
-   produce cifras sustituidas ni una conclusión cuantitativa.
-6. Recuperar investigación, eventos guardados e informe. Los eventos se identifican como replay y el informe
-   conserva el corpus usado aunque se cambie el corpus activo posteriormente.
+Desde un clon de la entrega y su propia rama, conservar cualquier cambio local.
+Git, Python 3.12, Node 24/npm y PowerShell 7; instalación inicial con red:
 
-`scripts/smoke.py` automatiza el recorrido HTTP; los comandos y resultados están en README y VERIFICATION.
-La propuesta de siguiente investigación está rotulada `prepared_demo_hypothesis`: es contenido preparado,
-no descubrimiento autónomo. El arnés comprueba conexiones; no es Evidence Canvas/Mission Lab final.
-
-## Mensaje
-
-La visión de FlameLab SI es utilizar evidencia de NASA para analizar lo observado, explorar posibilidades
-y decidir qué investigar después. La base actual demuestra las conexiones con datos sintéticos y conserva
-un catálogo real trazable. La importación científica y la experiencia visual completa son siguientes incrementos.
-
-## Guion de producto futuro de tres minutos
-
-La duración es una decisión de diseño; no se ha confirmado como límite oficial local. Este guion exige una
-serie BASS-II revisada que todavía no está incorporada. No sustituir sus cifras por fixtures sin cambiar las etiquetas.
-
-| Tiempo | Acción | Resultado |
-|---|---|---|
-| 0:00–0:30 | Plantear objetivo y restricciones. | La IA organiza una investigación. |
-| 0:30–1:15 | Mostrar serie BASS-II, gráfico y ranking. | Un clic conduce a la evidencia original. |
-| 1:15–2:00 | Cambiar condiciones y contrastar Saffire. | Se explican diferencias y límites de aplicación. |
-| 2:00–2:40 | Pedir alternativas y siguiente prueba. | Se muestran hipótesis con respaldo y objeciones. |
-| 2:40–3:00 | Generar informe. | Quedan hallazgos, límites, fuentes y trabajo pendiente. |
-
-## Qué puede prepararse
-
-Extracciones revisadas, índices, gráficos calculados previamente, escenarios y una reproducción de respaldo. Cada resultado conserva su estado. Una reproducción no se presenta como búsqueda en vivo. La preparación no justifica inventar mediciones o validaciones.
-
-## Qué debe funcionar en el recorrido central
-
-En la base, un cambio de filtros estructurados afecta al escenario, selección o comparación. Cambiar solo
-la redacción de la pregunta no implica comprensión automática de nuevas restricciones. Los identificadores
-conectan puntos, filas y fuentes; ranking y advertencias explican criterios y ausencia de datos.
-
-## Ambición de producto
-
-Mission Lab puede incluir una escena conceptual, escenarios A/B y diseño inverso. El usuario pide alternativas de investigación bajo restricciones; la IA muestra fundamento, incertidumbres y prueba necesaria. Una simulación conceptual lleva su etiqueta. No se necesita afirmar que existe un predictor validado de combustión lunar.
-
-## Preparación científica
-
-Confirmar serie, variable objetivo, unidades y réplicas antes de elegir los ejemplos. Saffire puede servir como comparación descriptiva de escala y configuración; no debe agregarse automáticamente a la misma regresión. Si solo hay límites de extinción, el gráfico representa esos límites.
-
-## Respaldo operativo
-
-P6 mantiene una consulta conocida, una consulta modificada y una consulta sin evidencia suficiente. Registrar el commit usado. Comprobar archivos locales, fuentes, conexión y modo del proveedor. Una captura o grabación de respaldo se identifica como resultado previo.
-
-## Preguntas difíciles
-
-- ¿De dónde sale este punto? Abrir fuente y localizador.
-- ¿Por qué este resultado está primero? Mostrar restricciones, similitud y cobertura.
-- ¿Qué hace la IA? Distinguir el flujo determinista actual, sus herramientas y una eventual síntesis externa; no presentar demo como inferencia real.
-- ¿Qué está prototipado? Mostrar etiquetas y alcance.
-- ¿Qué falta para uso real? Corpus verificado, evaluación ampliada, revisión especializada y modelos validados donde se hagan predicciones.
-
-## P6 · Recorrido Mission Lab
-
-Guion de respaldo verificado contra la API real (modo `demo`, `FLAMELAB_SEED_DEMO=true`, SQLite temporal) el
-2026-11-14. Todas las cifras proceden de los **fixtures sintéticos** (`synthetic:*`): no son mediciones NASA. La
-coordinación es determinista y no llama a un modelo. `/scenarios/compare` compara **aplicabilidad de evidencia**
-(`label: evidence_comparison_not_physical_simulation`); no simula combustión ni predice seguridad.
-
-- Commit de partida: `422f6b03f410c6ac049b699e13fc204a3af67743` (API sin cambios en la rama de trabajo).
-- Commit del recorrido: el commit de la rama P6 que introduce esta sección (`git log -1 -- docs/DEMO.md`); el relevo registra su SHA. Repetir la verificación si el recorrido se ejecuta sobre otro commit.
-
-### 1. Consulta conocida (respondida)
-
-`POST /api/v1/research` con `demoRanking` de `apps/web/src/lib/client.ts`:
-
-```json
-{"question": "Que ensayos sinteticos en microgravedad son comparables variando la velocidad de flujo?",
- "ranking": {"target": {"gravity_regime": "microgravity"}, "required_match": ["gravity_regime"],
-             "vary": ["flow_velocity_cm_s"], "allow_synthetic": true, "minimum_coverage": 0.6, "limit": 3}}
+```powershell
+.\scripts\setup.ps1
+node node_modules/playwright/cli.js install chromium
+.\scripts\check.ps1 -E2E
 ```
 
-Resultado observado:
+El check con navegador inicia su propia API/Vite, puertos libres y SQLite temporal.
+No requiere claves, Docker, ZIP NASA ni un servidor previamente iniciado. Instala
+dependencias desde lockfiles; no presupone Playwright, uv o npm global para el E2E.
+Para la presentación manual, dos terminales desde la raíz:
 
-- `status: completed`, `provider: demo`, resumen «Demostración determinista con datos sintéticos.»
-- Seleccionados: `synthetic:trial-1`, `-2`, `-3` (`eligible`, similitud 1.0, cobertura 1.0,
-  `explicit_requirements_satisfied`). Fuera: `trial-4` `excluded` (`required_condition_mismatch:gravity_regime`,
-  es `earth`) y `trial-5` `indeterminate` (`required_condition_missing:gravity_regime`, `no_known_target_conditions`).
-- Comparación: `flame_spread_rate_mm_s` frente a `flow_velocity_cm_s`, 1 grupo, 4 puntos de 3 ensayos
-  (`trial-1` aporta 2 observaciones de la misma unidad independiente: no son réplicas).
-- Hipótesis `demo:hypothesis-controlled-series`, etiqueta `prepared_demo_hypothesis` (contenido preparado, no
-  descubrimiento). Siguiente prueba (`next_measurement`): «Registrar velocidad calibrada, O2 durante el ensayo y
-  propagación con unidades, controlando geometría y material.» Incluye `alternative_explanation` y `falsification`.
-
-### 2. Consulta modificada A/B
-
-`POST /api/v1/scenarios/compare` con A = `demoRanking` y B = la misma petición cambiando solo
-`target.gravity_regime` a `"lunar"`:
-
-```json
-{"name_a": "A microgravedad", "name_b": "B",
- "scenario_a": {"target": {"gravity_regime": "microgravity"}, "required_match": ["gravity_regime"], "vary": ["flow_velocity_cm_s"], "allow_synthetic": true, "minimum_coverage": 0.6, "limit": 3},
- "scenario_b": {"target": {"gravity_regime": "lunar"}, "required_match": ["gravity_regime"], "vary": ["flow_velocity_cm_s"], "allow_synthetic": true, "minimum_coverage": 0.6, "limit": 3}}
+```powershell
+.\scripts\dev-api.ps1
 ```
 
-| Escenario | Seleccionados | Salen y motivo en B |
-|---|---|---|
-| A microgravedad | trial-1, trial-2, trial-3 | — |
-| B lunar | ninguno | trial-1..3 `required_condition_mismatch:gravity_regime`; trial-5 sigue `indeterminate` |
+```powershell
+.\scripts\dev-web.ps1
+```
 
-Advertencias: «Compara aplicabilidad de evidencia; no simula la combustión ni predice seguridad.» y, en
-`ranking_b`, «No eligible evidence for the explicit filters and coverage requirement.» El cambio se explica por el
-filtro explícito: ningún fixture declara gravedad lunar. No implica nada sobre la combustión lunar.
+Abrir http://127.0.0.1:5173. El entorno demo habitual debe mostrar datos sintéticos.
+Setup conserva `.env`; una base con datos importados no se sustituye automáticamente.
+Si la base habitual es real, usar el recorrido E2E aislado para reproducir los
+resultados de este guion, sin reemplazar el corpus del usuario.
 
-Variantes de B también observadas (misma A):
+## Guion de tres casos
 
-- `allow_synthetic: false` (microgravedad): B vacío; todos `excluded` con `synthetic_not_allowed` (más los motivos previos de trial-4/5).
-- `gravity_regime: "earth"`: entra `trial-4` (`eligible`, similitud 1.0); salen trial-1..3 por `required_condition_mismatch:gravity_regime`. Es el único B de los fixtures donde algo **entra**.
+1. **Investigación conocida.** Usar «Reset all» y «Investigate». La tasa de propagación
+   frente al flujo usa cuatro observaciones de tres ensayos sintéticos. Varias
+   observaciones del mismo ensayo no crean unidades independientes. Abrir una
+   fuente desde tabla, gráfico o hipótesis: la evidencia del expediente se lee
+   desde su snapshot. La hipótesis preparada conserva fundamento, alternativa,
+   condición de refutación y siguiente medición; no es un descubrimiento de un LLM.
+2. **Cambio de escenario.** En Mission Lab, comparar A/B lunar: B no encuentra
+   candidato en el fixture. La variante terrestre permite entrar a `synthetic:trial-4`;
+   su medición cero es un dato conocido. El preset de flujo puntuado compara
+   parecido, no compatibilidad física. Leer motivos y segmentos A/B: una fila por
+   ensayo; el límite top-k no se describe como una exclusión física. La métrica
+   elegida en el formulario se envía a ambos rankings. Las fuentes A/B proceden
+   del corpus activo, incluso antes de ejecutar una investigación.
+3. **Evidencia insuficiente.** Ejecutar la consulta lunar de Mission Lab. Se muestra
+   el estado real del backend, sus filtros/métrica, el plan guardado y lo que falta.
+   Abrir ese expediente y descargar el informe. No se inventan observaciones ni
+   hipótesis para cubrir el vacío. La insuficiencia lunar es una expectativa de
+   estos fixtures; el resultado de un corpus distinto lo decide la API.
 
-### 3. Consulta sin evidencia suficiente
+Después de A/B, cambiar métrica o filtros muestra el resultado como anterior.
+La consulta también detecta cambios de pregunta y orden de variables. Restaurar
+los mismos valores puede devolver la marca actual, sin recalcular. «Recompute»
+ejecuta una nueva petición. Esa vigencia se refiere a entradas/expediente del
+host; no certifica que un corpus externo no haya cambiado entre lecturas.
 
-`POST /api/v1/research` con `{"question": "Aplicación lunar sin evidencia directa", "ranking": <B lunar anterior>}`
-(la misma que usa `scripts/smoke.py`). Resultado: `status: insufficient_evidence`, resumen «Evidencia insuficiente
-para la métrica y las restricciones solicitadas.», `ranking.items` vacío, `comparison: null`, `hypotheses` y
-`claims` vacíos. Qué falta, según la respuesta: «Faltan candidatos elegibles o mediciones compatibles de la
-métrica.» (0 de 5 ensayos elegibles). No se sustituyen cifras ni se propone una hipótesis.
+## Informe, recuperación y respaldo
 
-### Funcional, preparado e ilustrativo
+«Report and recovery» muestra y descarga exactamente el Markdown recibido del
+servidor, sin ejecutarlo ni reconstruirlo. «Replay saved events» son eventos
+guardados, no streaming. Tras recargar, «Reopen last research» recupera el último
+expediente disponible; también se admite su ID. Reset all limpia la vista y
+cancela respuestas pendientes, pero conserva los expedientes y los recientes.
+
+El respaldo ejecutable es el fixture `data/fixtures/demo.json` y
+`scripts/smoke.py`: consulta conocida, cambio de gravedad y caso lunar sobre
+SQLite temporal, con reinicio. En Windows:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/smoke.py
+```
+
+El E2E `npm run test:e2e:p6` añade el navegador real. Puede guardar capturas con
+`-- --screenshots=work/p6-e2e`. Una captura, informe descargado o grabación usada
+sin API se presenta como resultado guardado/precalculado del commit de entrega,
+nunca como una investigación en vivo. Los resultados no certifican ciencia NASA.
+
+## Qué es funcional, preparado o ilustrativo
 
 | Elemento | Estado |
 |---|---|
-| Ranking, elegibilidad, motivos, comparación A/B, estado `insufficient_evidence` | Funcional: calculado por la API en cada petición. |
-| Hipótesis y siguiente prueba | Preparado: texto fijo `prepared_demo_hypothesis`, no inferido por un modelo. |
-| Datos de ensayos y observaciones | Sintéticos: fixtures de software. |
-| Escena conceptual / simulación | No existe; si se añade, va rotulada como ilustrativa. |
+| Filtros, métrica, selección A/B, motivos, informe y recuperación | Funcional: peticiones a la API y persistencia. |
+| Hipótesis `prepared_demo_hypothesis` | Texto preparado con fundamento/alternativa/refutación; sin modelo externo. |
+| Fixture numérico de este guion | Sintético: 2 estudios, 5 ensayos y 6 observaciones. |
+| Ilustración de llama de P5 | Conceptual y rotulada; no calcula combustión ni riesgo. |
+| Informe/captura exportada | Resultado guardado; conserva su etiqueta cuando sirve de respaldo. |
 
-### Caso de respaldo
-
-El respaldo es la consulta conocida (1) y la lunar (3). Reproducción sin UI: `uv run python scripts/smoke.py`
-(arranca API en SQLite temporal, ejecuta research, escenarios y caso lunar y reinicia; resultado observado:
-`"n_trials": 5`, `"points": 4`, `"restart_persistence": "passed"`), o las peticiones JSON de arriba con `curl`
-contra una API en modo demo. Una captura o grabación se presenta como resultado previo, nunca como ejecución en vivo.
-
-### Pasos en la UI Mission Lab
-
-Por función. Los paneles P6 `MissionLabPanel` (`apps/web/src/features/mission-lab/`) y `ReportPanel`
-(`apps/web/src/features/report/`) están montados en el arnés técnico de `codex/p6-mission-lab`. En la interfaz P5
-se montaron solo en un worktree temporal de integración; el montaje real en la rama de P5 está pendiente
-(parche propuesto en `docs/handoffs/P6-mount-for-P5.patch`). Los textos visibles de P6 están en inglés.
-
-1. Lanzar la consulta conocida y abrir el panel de hipótesis: etiqueta preparada visible, fundamento, alternativa,
-   refutación y siguiente prueba.
-2. Elegir un escenario B en el selector (gravedad lunar, gravedad terrestre, flujo 2 cm/s puntuado, sin sintéticos) y comparar.
-3. Revisar la vista entra / sale / se mantiene: cada salida muestra sus motivos de `ranking_b.excluded`; la
-   etiqueta de comparación de evidencia es visible.
-4. Pulsar «Run query without sufficient evidence»: se muestra `insufficient_evidence` y lo que falta, sin cifras ni hipótesis.
-5. Vigencia: cambiar los filtros del formulario después de comparar. El resultado A/B pasa a «Previous A/B result»
-   con el aviso «Previous comparison — not computed with the current filters», los filtros usados y el botón
-   «Recompute with current filters»; A deja de llamarse «A · current filters». Restaurar los mismos filtros lo
-   devuelve a actual.
-6. Evidencia: las referencias de hipótesis abren la evidencia del expediente (`research_id`); las de filas A/B, la
-   del corpus activo (sin `research_id`), y el visor del host lo rotula.
-7. Informe en «Report and recovery»: se carga al activar un expediente y se muestra como fuente Markdown sin
-   renderizar, tal cual llega de `GET /research/{id}/report`. «Download report (.md)» descarga exactamente ese texto.
-   «Replay saved events» reproduce eventos persistidos (no en vivo).
-8. Recuperación: tras recargar la página no se reabre nada automáticamente; «Reopen last research» o la lista de
-   recientes (solo en este navegador) recuperan el expediente desde la API. Con la API parada aparece una alerta con
-   Retry; al volver la API, Retry funciona.
-
-### Recorrido automatizado (navegador real)
-
-`node apps/web/tests/e2e/p6-walkthrough.mjs --host=harness` (o `--host=p5` sobre la interfaz P5 con los paneles
-montados) arranca API demo con SQLite temporal y Vite, y recorre los pasos 1–8 con Chromium, incluido el reinicio
-de la API. Requiere Playwright instalado (no es dependencia del proyecto; ver `apps/web/tests/e2e/README.md`).
-Resultado del 14 nov 2026 en Linux: 12/12 pasos y 23 comprobaciones en ambos hosts; detalle en VERIFICATION.
-Es el caso de respaldo ejecutable vinculado a commit: registrar el SHA con el que se ejecute.
-
-### Aceptación de extremo a extremo
-
-| Revisor | Comprueba |
-|---|---|
-| P1 | El recorrido corre en el commit registrado; `scripts/smoke.py`, pruebas y cliente generado sin cambios manuales. |
-| P3 | Motivos de exclusión e `insufficient_evidence` son correctos; nada sugiere física lunar ni datos NASA. |
-| P4 | La hipótesis conserva `prepared_demo_hypothesis`/`ai_hypothesis` y muestra fundamento, alternativa y refutación. |
-| P5 | Mission Lab e informe se montan en su App (parche P6) sin romper el arnés; etiquetas sintético/demo visibles; `record`/`corpus` respetado en el visor. |
-
-### Límites
-
-Datos sintéticos (5 ensayos, 6 observaciones); demo determinista sin LLM; sin escena física ni simulación; sin
-datos NASA cuantitativos. Similitud no es confianza ni peligrosidad.
+El catálogo conserva acceso a las 24 investigaciones cuando el corpus P2 se importa,
+pero la demo de pruebas no contiene esas mediciones. Los datos P2 mantienen sus
+limitaciones y estado científico: consultar [P2_NASA_24](P2_NASA_24.md) y la auditoría.
+No se han ejecutado llamadas pagadas, validación física, CFD, diseño inverso ni
+pruebas con un lector de pantalla o dispositivo móvil físico.

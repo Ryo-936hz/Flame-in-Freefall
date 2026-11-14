@@ -12,6 +12,11 @@ backend. Leer primero `docs/INTEGRATION_P134.md` para el incremento actual.
 `team-start-v1` es una referencia histórica congelada, no la base para deshacer
 avances. Las guías antiguas se interpretan con el estado vigente del código.
 
+El usuario asigna ahora también **P6**: terminar Mission Lab, informe, recuperación
+y aceptación de extremo a extremo. La integración conserva P5 `9f54700` como host
+y sus funciones visuales; los cambios compartidos se limitan al montaje, acceso a
+fuentes y coordinación de solicitudes. Consultar `docs/handoffs/P6.md` y ADR 0010.
+
 ## Autoridades y contexto
 
 1. La petición vigente del usuario define el trabajo autorizado.
@@ -62,4 +67,4 @@ Si dos documentos discrepan, identifica el conflicto y revisa el contrato/códig
 
 ## Diseño
 
-El frontend de producto sigue una dirección visual inspirada en sistemas de control de Anduril, detallada en `docs/DESIGN_ANDURIL.md`. Es una referencia de densidad, jerarquía y sobriedad, sin copiar logotipos, activos ni afirmar afiliación. La base contiene únicamente un arnés técnico de integración. El diseño final sigue pendiente.
+El frontend de producto sigue una dirección visual inspirada en sistemas de control de Anduril, detallada en `docs/DESIGN_ANDURIL.md`. Es una referencia de densidad, jerarquía y sobriedad, sin copiar logotipos, activos ni afirmar afiliación. La entrega P6 incorpora el host visual existente de P5 y sus paneles. La ilustración sigue siendo conceptual; no se presenta como simulación física. Consultar el estado y las pruebas actuales antes de atribuir funcionalidades a una rama.

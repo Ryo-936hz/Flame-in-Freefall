@@ -71,7 +71,7 @@
 .ml-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .ml-column { padding: 10px; border: 1px solid var(--ml-border); border-top: 3px solid var(--ml-strong); border-radius: 3px; background: var(--ml-surface); min-width: 0; }
 .ml-column-b { border-top-color: var(--ml-accent); }
-.ml-counts { display: flex; gap: 18px; margin: 0 0 8px; }
+.ml-counts { display: flex; flex-wrap: wrap; gap: 18px; margin: 0 0 8px; }
 .ml-counts dd { font-family: var(--ml-mono); font-size: 1.25rem; font-weight: 700; }
 .ml-list { margin: 6px 0; padding-left: 18px; font-size: .84rem; }
 .ml-metrics { display: block; color: var(--ml-ink-3); font-family: var(--ml-mono); font-size: .78rem; }
@@ -126,3 +126,20 @@
 .ml-prov-synthetic .ml-tag, .ml-prov-mixed .ml-tag { border-color: var(--ml-warn); background: var(--ml-warn-bg); }
 .ml-prov-no_evidence .ml-tag { border-color: var(--ml-strong); background: var(--ml-neutral-bg); }
 .mission-lab .actions button { max-width: 100%; white-space: normal; text-align: left; }
+
+/* The host is usually a narrow desktop column: respond to its width, not only the viewport. */
+.mission-lab { overflow-wrap: anywhere; }
+.ml-segments { display: block; margin-top: 3px; color: var(--ml-ink-3); font-size: .78rem; }
+.ml-plan { margin: 8px 0; font-size: .85rem; }
+.ml-plan ul { padding-left: 18px; }
+@container mission-slot (max-width: 740px) {
+  .ml-columns, .ml-presets { grid-template-columns: minmax(0, 1fr); }
+  .mission-lab .ml-head, .ml-block { padding: 12px 14px; }
+  .ml-table, .ml-table tbody, .ml-table tr, .ml-table th, .ml-table td { display: block; width: auto; }
+  .ml-table thead tr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .ml-table caption { display: block; }
+  .ml-table tr { margin-bottom: 8px; border: 1px solid var(--ml-border); }
+  .ml-table th, .ml-table td { border: 0; border-bottom: 1px solid var(--ml-rule); text-align: left !important; white-space: normal !important; }
+  .ml-table [data-label]::before { content: attr(data-label); display: block; font-family: system-ui, sans-serif; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ml-ink-3); }
+  .ml-row-entered td:nth-child(2), .ml-row-left td:nth-child(2) { border-left: 0; }
+}

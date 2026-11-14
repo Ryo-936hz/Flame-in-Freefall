@@ -8,7 +8,7 @@ export type ProvenanceKind = "synthetic" | "non_synthetic" | "mixed" | "no_evide
 
 export interface ProvenanceSummary {
   kind: ProvenanceKind;
-  /** Recuento por valor de provenance presente (published, digitized, derived, synthetic). */
+  /** Recuento de ensayos seleccionados por valor de provenance (published, digitized, derived, synthetic). */
   counts: Partial<Record<Provenance, number>>;
   /** Texto visible. Nunca afirma "revisado" por ser published: revisión es Evidence.reviewed. */
   text: string;
@@ -31,23 +31,23 @@ export function summarizeProvenance(values: readonly Provenance[]): ProvenanceSu
   const order = [...NON_SYNTHETIC_ORDER, ...extra];
 
   if (total === 0) {
-    return { kind: "no_evidence", counts, text: "No selected evidence: provenance cannot be summarized." };
+    return { kind: "no_evidence", counts, text: "No selected trials: provenance cannot be summarized." };
   }
   if (synthetic === total) {
     return {
       kind: "synthetic", counts,
-      text: `Synthetic fixtures only (${total}): they test connections and algorithms and are not NASA measurements.`
+      text: `Selected synthetic trials (${total} fixtures): they test connections and algorithms and are not NASA measurements.`
     };
   }
   if (synthetic === 0) {
     return {
       kind: "non_synthetic", counts,
-      text: `Non-synthetic sources (${detail(counts, order)}). Provenance describes origin only; review status is reported per evidence item.`
+      text: `Selected non-synthetic trials (${detail(counts, order)}). Provenance describes origin only; review status is reported per evidence item.`
     };
   }
   return {
     kind: "mixed", counts,
-    text: `Mixed provenance: ${synthetic} synthetic fixture${synthetic === 1 ? "" : "s"} (not NASA measurements) and ${detail(counts, order)}. Provenance describes origin only; review status is reported per evidence item.`
+    text: `Selected trials with mixed provenance: ${synthetic} synthetic fixture${synthetic === 1 ? "" : "s"} (not NASA measurements) and non-synthetic trials (${detail(counts, order)}). Provenance describes origin only; review status is reported per evidence item.`
   };
 }
 
