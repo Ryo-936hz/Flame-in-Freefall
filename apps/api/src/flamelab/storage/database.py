@@ -11,13 +11,14 @@ from flamelab.config import ROOT, Settings
 
 def create_engine_and_session(settings: Settings):
     url = make_url(settings.database_url)
-    if url.drivername == "sqlite" and url.database not in (None, "", ":memory:"):
+    sqlite = url.get_backend_name() == "sqlite"
+    if sqlite and url.database not in (None, "", ":memory:"):
         Path(url.database).parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(
         settings.database_url,
-        connect_args={"check_same_thread": False, "timeout": 15} if url.drivername == "sqlite" else {},
+        connect_args={"check_same_thread": False, "timeout": 15} if sqlite else {},
     )
-    if url.drivername == "sqlite":
+    if sqlite:
         @event.listens_for(engine, "connect")
         def pragmas(connection, _record):
             connection.execute("PRAGMA foreign_keys=ON")

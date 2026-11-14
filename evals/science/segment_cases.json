@@ -4,7 +4,9 @@
     "n_trials": 3,
     "n_observations": 6,
     "n_independent_units": 3,
-    "synthetic_trials": 3
+    "synthetic_trials": 3,
+    "n_segments": 6,
+    "n_trials_with_unresolved_independence": 0
   },
   "cases": [
     {
@@ -107,7 +109,9 @@
             "n_observations": 3,
             "n_independent_units": 1,
             "median": 2,
-            "interval": null
+            "interval": null,
+            "n_segments": 3,
+            "n_trials_with_unresolved_independence": 0
           }
         ],
         "observed_independent_units": 1,
@@ -122,7 +126,15 @@
           "synthetic:shared-controls"
         ],
         "missing_x_reported": false,
-        "hypothesis_count": 0
+        "hypothesis_count": 0,
+        "selected_segments": [
+          {
+            "trial_id": "synthetic:reference-trial",
+            "scored_segment_id": null,
+            "eligible_segment_ids": []
+          }
+        ],
+        "n_quantitative_pairs": 3
       }
     },
     {
@@ -209,7 +221,9 @@
             "n_observations": 1,
             "n_independent_units": 1,
             "median": 8,
-            "interval": null
+            "interval": null,
+            "n_segments": 1,
+            "n_trials_with_unresolved_independence": 0
           },
           {
             "trial_ids": [
@@ -223,7 +237,9 @@
             "n_observations": 1,
             "n_independent_units": 1,
             "median": 4,
-            "interval": null
+            "interval": null,
+            "n_segments": 1,
+            "n_trials_with_unresolved_independence": 0
           }
         ],
         "observed_independent_units": 1,
@@ -236,7 +252,15 @@
           "synthetic:shared-controls"
         ],
         "missing_x_reported": false,
-        "hypothesis_count": 0
+        "hypothesis_count": 0,
+        "selected_segments": [
+          {
+            "trial_id": "synthetic:changed-trial",
+            "scored_segment_id": null,
+            "eligible_segment_ids": []
+          }
+        ],
+        "n_quantitative_pairs": 2
       }
     },
     {
@@ -307,7 +331,9 @@
             "n_observations": 1,
             "n_independent_units": 1,
             "median": 7,
-            "interval": null
+            "interval": null,
+            "n_segments": 1,
+            "n_trials_with_unresolved_independence": 0
           }
         ],
         "observed_independent_units": 1,
@@ -318,7 +344,400 @@
           "synthetic:shared-controls"
         ],
         "missing_x_reported": true,
-        "hypothesis_count": 0
+        "hypothesis_count": 0,
+        "selected_segments": [
+          {
+            "trial_id": "synthetic:missing-trial",
+            "scored_segment_id": null,
+            "eligible_segment_ids": []
+          }
+        ],
+        "n_quantitative_pairs": 0
+      }
+    },
+    {
+      "id": "segment_effective_geometry_and_face",
+      "rationale": "Only one segment reports cylinder and face_b, even though its trial reports sheet and face_a. Research must compare only that eligible segment.",
+      "request": {
+        "question": "Synthetic regression: select cylinder and face_b at segment scope.",
+        "ranking": {
+          "condition_scope": "segment",
+          "target": {
+            "geometry": "cylinder",
+            "combustion_face": "face_b"
+          },
+          "required_match": [
+            "geometry",
+            "combustion_face"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true
+        },
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "completed",
+        "provider": "demo",
+        "selected_trial_ids": [
+          "synthetic:changed-trial"
+        ],
+        "similarities": [
+          1.0
+        ],
+        "coverages": [
+          1.0
+        ],
+        "comparison_units": {
+          "x": "cm/s",
+          "y": "mm/s"
+        },
+        "points": [
+          {
+            "observation_id": "synthetic:changed-observation-a",
+            "trial_id": "synthetic:changed-trial",
+            "segment_id": "synthetic:changed-segment-a",
+            "sequence": 9,
+            "independent_unit_id": "synthetic:changed-unit",
+            "x": 10,
+            "y": 8,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:changed-observation-source-a",
+              "synthetic:changed-segment-source-a",
+              "synthetic:changed-trial-source",
+              "synthetic:shared-controls"
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "trial_ids": [
+              "synthetic:changed-trial"
+            ],
+            "geometry": "cylinder",
+            "combustion_face": "face_b",
+            "oxygen_initial_pct": "22",
+            "oxygen_final_pct": "18",
+            "n_trials": 1,
+            "n_observations": 1,
+            "n_independent_units": 1,
+            "median": 8,
+            "interval": null,
+            "n_segments": 1,
+            "n_trials_with_unresolved_independence": 0
+          }
+        ],
+        "observed_independent_units": 1,
+        "retrieved_evidence_ids": [
+          "synthetic:changed-observation-source-a",
+          "synthetic:changed-segment-source-a",
+          "synthetic:changed-trial-source",
+          "synthetic:shared-controls"
+        ],
+        "missing_x_reported": false,
+        "hypothesis_count": 0,
+        "selected_segments": [
+          {
+            "trial_id": "synthetic:changed-trial",
+            "scored_segment_id": "synthetic:changed-segment-a",
+            "eligible_segment_ids": [
+              "synthetic:changed-segment-a"
+            ]
+          }
+        ],
+        "n_quantitative_pairs": 1
+      }
+    },
+    {
+      "id": "segment_order_and_trial_identity",
+      "rationale": "Six eligible segments produce three ranked physical trials and three independent units. Equal segment scores choose the first source sequence; eligible IDs and points preserve reported order, not ID order or elapsed time.",
+      "request": {
+        "question": "Synthetic regression: select all reported material segments.",
+        "ranking": {
+          "condition_scope": "segment",
+          "target": {
+            "material": "demo_polymer"
+          },
+          "required_match": [
+            "material"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true
+        },
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "completed",
+        "provider": "demo",
+        "selected_trial_ids": [
+          "synthetic:changed-trial",
+          "synthetic:missing-trial",
+          "synthetic:reference-trial"
+        ],
+        "similarities": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "coverages": [
+          1.0,
+          1.0,
+          1.0
+        ],
+        "comparison_units": {
+          "x": "cm/s",
+          "y": "mm/s"
+        },
+        "points": [
+          {
+            "observation_id": "synthetic:changed-observation-z",
+            "trial_id": "synthetic:changed-trial",
+            "segment_id": "synthetic:changed-segment-z",
+            "sequence": 2,
+            "independent_unit_id": "synthetic:changed-unit",
+            "x": 5,
+            "y": 4,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:changed-observation-source-z",
+              "synthetic:changed-segment-source-z",
+              "synthetic:changed-trial-source",
+              "synthetic:shared-controls"
+            ]
+          },
+          {
+            "observation_id": "synthetic:changed-observation-a",
+            "trial_id": "synthetic:changed-trial",
+            "segment_id": "synthetic:changed-segment-a",
+            "sequence": 9,
+            "independent_unit_id": "synthetic:changed-unit",
+            "x": 10,
+            "y": 8,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:changed-observation-source-a",
+              "synthetic:changed-segment-source-a",
+              "synthetic:changed-trial-source",
+              "synthetic:shared-controls"
+            ]
+          },
+          {
+            "observation_id": "synthetic:missing-observation-z",
+            "trial_id": "synthetic:missing-trial",
+            "segment_id": "synthetic:missing-segment-z",
+            "sequence": 4,
+            "independent_unit_id": "synthetic:missing-unit",
+            "x": null,
+            "y": 7,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:missing-observation-source-z",
+              "synthetic:missing-segment-source-z",
+              "synthetic:missing-trial-source",
+              "synthetic:shared-controls"
+            ]
+          },
+          {
+            "observation_id": "synthetic:reference-observation-z",
+            "trial_id": "synthetic:reference-trial",
+            "segment_id": "synthetic:reference-segment-z",
+            "sequence": 30,
+            "independent_unit_id": "synthetic:reference-unit",
+            "x": 0,
+            "y": 1,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:reference-observation-source-z",
+              "synthetic:reference-segment-source-z",
+              "synthetic:reference-trial-source",
+              "synthetic:shared-controls"
+            ]
+          },
+          {
+            "observation_id": "synthetic:reference-observation-m",
+            "trial_id": "synthetic:reference-trial",
+            "segment_id": "synthetic:reference-segment-m",
+            "sequence": 50,
+            "independent_unit_id": "synthetic:reference-unit",
+            "x": 5,
+            "y": 2,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:reference-observation-source-m",
+              "synthetic:reference-segment-source-m",
+              "synthetic:reference-trial-source",
+              "synthetic:shared-controls"
+            ]
+          },
+          {
+            "observation_id": "synthetic:reference-observation-a",
+            "trial_id": "synthetic:reference-trial",
+            "segment_id": "synthetic:reference-segment-a",
+            "sequence": 80,
+            "independent_unit_id": "synthetic:reference-unit",
+            "x": 10,
+            "y": 3,
+            "provenance": "synthetic",
+            "evidence_ids": [
+              "synthetic:reference-observation-source-a",
+              "synthetic:reference-segment-source-a",
+              "synthetic:reference-trial-source",
+              "synthetic:shared-controls"
+            ]
+          }
+        ],
+        "groups": [
+          {
+            "trial_ids": [
+              "synthetic:changed-trial"
+            ],
+            "geometry": "cylinder",
+            "combustion_face": "face_b",
+            "oxygen_initial_pct": "22",
+            "oxygen_final_pct": "18",
+            "n_trials": 1,
+            "n_observations": 1,
+            "n_independent_units": 1,
+            "median": 8,
+            "interval": null,
+            "n_segments": 1,
+            "n_trials_with_unresolved_independence": 0
+          },
+          {
+            "trial_ids": [
+              "synthetic:changed-trial"
+            ],
+            "geometry": "sheet",
+            "combustion_face": "face_a",
+            "oxygen_initial_pct": "22",
+            "oxygen_final_pct": "18",
+            "n_trials": 1,
+            "n_observations": 1,
+            "n_independent_units": 1,
+            "median": 4,
+            "interval": null,
+            "n_segments": 1,
+            "n_trials_with_unresolved_independence": 0
+          },
+          {
+            "trial_ids": [
+              "synthetic:missing-trial"
+            ],
+            "geometry": "sheet",
+            "combustion_face": "face_a",
+            "oxygen_initial_pct": "23",
+            "oxygen_final_pct": "18",
+            "n_trials": 1,
+            "n_observations": 1,
+            "n_independent_units": 1,
+            "median": 7,
+            "interval": null,
+            "n_segments": 1,
+            "n_trials_with_unresolved_independence": 0
+          },
+          {
+            "trial_ids": [
+              "synthetic:reference-trial"
+            ],
+            "geometry": "sheet",
+            "combustion_face": "face_a",
+            "oxygen_initial_pct": "21",
+            "oxygen_final_pct": "18",
+            "n_trials": 1,
+            "n_observations": 3,
+            "n_independent_units": 1,
+            "median": 2,
+            "interval": null,
+            "n_segments": 3,
+            "n_trials_with_unresolved_independence": 0
+          }
+        ],
+        "observed_independent_units": 3,
+        "retrieved_evidence_ids": [
+          "synthetic:changed-observation-source-a",
+          "synthetic:changed-observation-source-z",
+          "synthetic:changed-segment-source-a",
+          "synthetic:changed-segment-source-z",
+          "synthetic:changed-trial-source",
+          "synthetic:missing-observation-source-z",
+          "synthetic:missing-segment-source-z",
+          "synthetic:missing-trial-source",
+          "synthetic:reference-observation-source-a",
+          "synthetic:reference-observation-source-m",
+          "synthetic:reference-observation-source-z",
+          "synthetic:reference-segment-source-a",
+          "synthetic:reference-segment-source-m",
+          "synthetic:reference-segment-source-z",
+          "synthetic:reference-trial-source",
+          "synthetic:shared-controls"
+        ],
+        "missing_x_reported": true,
+        "hypothesis_count": 0,
+        "selected_segments": [
+          {
+            "trial_id": "synthetic:changed-trial",
+            "scored_segment_id": "synthetic:changed-segment-z",
+            "eligible_segment_ids": [
+              "synthetic:changed-segment-z",
+              "synthetic:changed-segment-a"
+            ]
+          },
+          {
+            "trial_id": "synthetic:missing-trial",
+            "scored_segment_id": "synthetic:missing-segment-z",
+            "eligible_segment_ids": [
+              "synthetic:missing-segment-z"
+            ]
+          },
+          {
+            "trial_id": "synthetic:reference-trial",
+            "scored_segment_id": "synthetic:reference-segment-z",
+            "eligible_segment_ids": [
+              "synthetic:reference-segment-z",
+              "synthetic:reference-segment-m",
+              "synthetic:reference-segment-a"
+            ]
+          }
+        ],
+        "n_quantitative_pairs": 5
+      }
+    },
+    {
+      "id": "segment_required_flow_not_inherited",
+      "rationale": "Each trial reports flow 99 cm/s, but no segment does. Known segment flows mismatch; the not_measured flow remains missing. Trial values cannot make a segment eligible.",
+      "request": {
+        "question": "Synthetic regression: require measured segment flow 99 cm/s.",
+        "ranking": {
+          "condition_scope": "segment",
+          "target": {
+            "flow_velocity_cm_s": 99
+          },
+          "required_match": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true
+        },
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "insufficient_evidence",
+        "provider": "demo",
+        "selected_trial_ids": [],
+        "selected_segments": [],
+        "similarities": [],
+        "coverages": [],
+        "comparison_units": null,
+        "points": [],
+        "groups": [],
+        "observed_independent_units": 0,
+        "retrieved_evidence_ids": [],
+        "missing_x_reported": false,
+        "hypothesis_count": 0,
+        "n_quantitative_pairs": 0
       }
     }
   ]

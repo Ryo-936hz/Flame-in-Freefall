@@ -5,6 +5,8 @@ import importlib.util
 import json
 from pathlib import Path
 
+import pytest
+
 from flamelab.config import ROOT
 
 EVAL_DIRECTORY = Path(__file__).resolve().parents[3] / "evals/science"
@@ -70,3 +72,74 @@ def test_report_fingerprints_change_with_exact_input_bytes(tmp_path):
     assert original["inputs"]["suite_sha256"] != revised["inputs"]["suite_sha256"]
     assert original["inputs"]["fixture_sha256"] != revised["inputs"]["fixture_sha256"]
     assert original["cases"] == revised["cases"]
+
+
+@pytest.fixture
+def segment_evaluation(monkeypatch):
+    monkeypatch.syspath_prepend(str(EVAL_DIRECTORY))
+    segment_spec = importlib.util.spec_from_file_location(
+        "flamelab_segment_evaluation", EVAL_DIRECTORY / "segment_run.py",
+    )
+    module = importlib.util.module_from_spec(segment_spec)
+    segment_spec.loader.exec_module(module)
+    return module
+
+
+def test_six_segment_cases_preserve_scopes_and_fixture(segment_evaluation, capsys):
+    fixture = EVAL_DIRECTORY / "segment_fixture.json"
+    original_hash = hashlib.sha256(fixture.read_bytes()).hexdigest()
+    assert segment_evaluation.main([]) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["case_count"] == 6
+    assert report["passed"] is True
+    assert report["evaluation_kind"] == "synthetic_segment_software_regression_not_NASA_validation"
+    assert all(case["passed"] for case in report["cases"])
+    assert report["profile"]["n_segments"] == 6
+    assert report["profile"]["n_independent_units"] == 3
+    assert report["inputs"]["fixture_sha256"] == original_hash
+    assert hashlib.sha256(fixture.read_bytes()).hexdigest() == original_hash
+
+
+@pytest.mark.parametrize("field,value", [
+    ("scored_segment_id", "synthetic:changed-segment-z"),
+    ("eligible_segment_ids", ["synthetic:changed-segment-z", "synthetic:changed-segment-a"]),
+])
+def test_wrong_expected_segment_selection_fails(segment_evaluation, tmp_path, capsys, field, value):
+    suite = json.loads((EVAL_DIRECTORY / "segment_cases.json").read_text(encoding="utf-8"))
+    case = next(item for item in suite["cases"] if item["id"] == "segment_effective_geometry_and_face")
+    case["expected"]["selected_segments"][0][field] = value
+    changed = tmp_path / "incorrect-segment-selection.json"
+    changed.write_text(json.dumps(suite), encoding="utf-8")
+    assert segment_evaluation.main(["--cases", str(changed)]) == 1
+    report = json.loads(capsys.readouterr().out)
+    result = next(item for item in report["cases"] if item["id"] == case["id"])
+    assert result["passed"] is False
+    assert any(field in failure["path"] for failure in result["failures"])
+
+
+def test_missing_x_remains_visible_but_cannot_be_counted_as_a_quantitative_pair(segment_evaluation):
+    report = segment_evaluation.evaluate(EVAL_DIRECTORY / "segment_cases.json",
+                                         EVAL_DIRECTORY / "segment_fixture.json")
+    case = next(item for item in report["cases"] if item["id"] == "missing")
+    assert case["actual"]["status"] == "insufficient_evidence"
+    assert len(case["actual"]["points"]) == 1
+    assert case["actual"]["points"][0]["x"] is None
+    assert case["actual"]["n_quantitative_pairs"] == 0
+    combined = next(item for item in report["cases"] if item["id"] == "segment_order_and_trial_identity")
+    assert len(combined["actual"]["points"]) == 6
+    assert combined["actual"]["n_quantitative_pairs"] == 5
+
+
+def test_metric_top_k_diagnostic_passes_through_real_coordinator(monkeypatch, capsys):
+    monkeypatch.syspath_prepend(str(EVAL_DIRECTORY))
+    diagnostic_spec = importlib.util.spec_from_file_location(
+        "flamelab_metric_availability_evaluation", EVAL_DIRECTORY / "metric_availability_run.py",
+    )
+    module = importlib.util.module_from_spec(diagnostic_spec)
+    diagnostic_spec.loader.exec_module(module)
+    import asyncio
+    assert asyncio.run(module.main()) == 0
+    report = json.loads(capsys.readouterr().out)
+    assert report["synthetic_only"] is True
+    assert report["passed"] is True
+    assert report["limit_1"]["status"] == report["limit_2"]["status"] == "completed"

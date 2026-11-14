@@ -8,7 +8,7 @@ JSON snake_case en red y modelos; rutas `/api/v1`.
 
 ## Límites de módulo implementados
 
-- `flamelab.science.ranking.rank_trials(bundle, request) -> RankingResponse`.
+- `flamelab.science.ranking.rank_trials(bundle, request, *, metric=None) -> RankingResponse`.
 - `flamelab.science.comparison.compare_trials(bundle, request) -> ComparisonResponse`.
 - `flamelab.science.profiling.profile_dataset(bundle) -> ProfileResponse`.
 - `flamelab.ai.engine.run_research(request, bundle, settings) -> ResearchResponse` es async.
@@ -29,6 +29,7 @@ JSON snake_case en red y modelos; rutas `/api/v1`.
 | GET | /datasets/profile | — | ProfileResponse |
 | POST | /rankings | RankingRequest | RankingResponse |
 | POST | /comparisons | ComparisonRequest | ComparisonResponse |
+| POST | /research/plan | ResearchRequest | ResearchPlan (sin ejecutar ni guardar) |
 | POST | /research | ResearchRequest | ResearchResponse |
 | GET | /research/{id} | — | ResearchResponse |
 | GET | /research/{id}/events | — | SSE de eventos guardados, no streaming en vivo |
@@ -66,7 +67,9 @@ segment assignment lacks evidence.
 Ranking uses explicit trial conditions by default. An explicit
 `condition_scope: "segment"` evaluates segment conditions and ranks each physical
 trial once using the best eligible segment. Research forwards `eligible_segment_ids`
-to comparison. Direct comparison accepts `segment_ids`; each point retains its
+to comparison. Nonempty `segment_ids` filters every observation to those segments,
+including exclusion of unassigned observations and unsegmented trials. An empty list
+preserves unrestricted selection. Each point retains its
 `segment_id`, original value, original unit and sources. Comparison separates the
 observation's provenance and isolates unresolved controls by segment. Profiles and
 comparison summaries count segments separately from physical units.
@@ -91,9 +94,42 @@ for the requested metric. A trial with `independent_unit_status=unresolved` is
 counted separately from identified experimental units. Old snapshots load with
 the existing identified default. See [P2_NASA_24](P2_NASA_24.md) for coverage.
 
-En el esqueleto los filtros explícitos de ResearchRequest mandan. La pregunta se usa en la síntesis;
-el planificador de lenguaje natural será una ampliación del propietario P4. No afirmar que el modo demo
-entiende cualquier restricción verbal. Una variable de `vary` no puede estar en `required_match`.
+`ResearchRequest.planning_mode` distingue dos modos compatibles:
+
+- `explicit` (predeterminado): aplica exactamente `ranking`; la pregunta es descriptiva.
+- `catalog`: interpreta únicamente las frases documentadas en [AI_SYSTEM](AI_SYSTEM.md).
+  Un conflicto, ambigüedad o restricción no soportada produce un plan `blocked=true`;
+  no se ejecutan herramientas ni se llama al proveedor. No se ignoran restricciones
+  para fabricar una respuesta. El formulario explícito permite el resto de condiciones.
+
+`POST /research/plan` devuelve el mismo plan tipado que se ejecutará, sin leer el
+corpus, llamar a IA ni guardar una investigación. `ResearchPlan` contiene modo,
+intención, `ranking` efectivo, métrica, eje X, explicación, bloqueo y límites.
+El consumidor puede mostrarlo antes de enviar la misma petición a `/research`.
+No es una reserva de datos: el corpus puede cambiar entre previsualización y ejecución.
+
+Cada resultado nuevo incluye `ResearchResponse.plan`. En snapshots anteriores es
+`null`: no se reconstruye una interpretación que no se guardó. Para preservar el
+contrato de estados, un plan bloqueado devuelve `status=insufficient_evidence`
+con resultados vacíos; `plan.blocked` distingue necesidad de aclaración de falta
+de mediciones después de ejecutar. El contrato rechaza resultados que contradigan
+la métrica/eje del plan o presenten cálculos bajo un plan bloqueado.
+
+La investigación exige observaciones conocidas de la métrica solicitada antes
+de puntuar y aplicar el límite, tanto en métricas generales como de campaña.
+En modo segmento deben estar vinculadas al segmento elegible. Medidas de otro
+segmento o sin asignación no prueban disponibilidad en él. `requested_metric_unavailable`
+y `requested_metric_unavailable_for_segment` explican exclusiones.
+
+`POST /rankings` conserva selección por condiciones sin exigir resultados.
+`ScenarioComparisonRequest.metric` es opcional: `null` conserva ese comportamiento
+en A/B; una métrica explícita activa la misma comprobación de disponibilidad que
+la investigación. `ScenarioComparisonResponse.metric` informa qué modo se usó.
+Esto no convierte A/B en simulación física ni demuestra que todos los X estén medidos.
+
+Una variable de `vary` no puede estar en `required_match`. Cambiar el plan nunca
+sobrescribe silenciosamente un filtro estructurado contradictorio.
+Ver [ADR 0009](adr/0009-visible-plans-and-metric-availability.md).
 
 ## Cambios
 

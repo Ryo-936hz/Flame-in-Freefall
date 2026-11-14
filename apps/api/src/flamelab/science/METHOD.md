@@ -6,8 +6,8 @@ ejecutan instrucciones de documentos y no convierten fixtures en datos NASA.
 ## Ranking `compatibility_then_weighted_gower_v1`
 
 Primero se aplican estudio, permiso de sintéticos y `required_match`. Una diferencia
-obligatoria excluye; una condición obligatoria ausente produce `indeterminate`. Estas
-restricciones también se comprueban con peso cero. La elegibilidad solo acredita los
+obligatoria excluye; una condición obligatoria ausente produce `indeterminate`
+si no concurre otro motivo de exclusión. Estas restricciones también se comprueban con peso cero. La elegibilidad solo acredita los
 filtros explícitos: no es una certificación de compatibilidad física.
 
 Se evalúan las claves de `target`, con peso 1 salvo configuración. `vary` queda fuera
@@ -45,8 +45,12 @@ aunque la fuente específica no estuviera repetida en la lista de evidencia del 
 | thickness_mm | 100 | mm |
 | diameter_mm | 1000 | mm |
 | sample_width_mm | 1000 | mm |
+| burning_faces | 2 | count |
+| burn_duration_s / ignition_duration_s | 600 | s |
+| aging_duration_s | 3600 | s |
+| ignition_power_w | 100 | W |
 
-Son decisiones de normalización del esqueleto aprobadas por P1, no rangos medidos,
+Son decisiones de normalización del esqueleto integradas desde `main`, no rangos medidos,
 límites físicos ni validación de relevancia científica. No dependen del corpus,
 filtro ni `limit`. El recorte se indica en cada contribución. P3 debe evaluar y
 versionar nuevas escalas con consultas revisadas antes de usar resultados operativos.
@@ -58,7 +62,7 @@ Cada métrica soportada tiene unidad canónica; no se mezclan unidades incompati
 El eje X conserva `x_condition` y `x_unit`; un eje categórico queda `null` con aviso.
 
 Se estratifica por estudio, procedencia, grado del material y todas las condiciones
-excepto `vary`. Elegir un eje no autoriza por sí solo a variar esa condición: para una
+excepto `vary` y `burn_duration_s` (duración total reportada, no control de entrada). Elegir un eje no autoriza por sí solo a variar esa condición: para una
 serie se incluye explícitamente X en `vary`. Incógnitas de grado o control separan
 ensayos en grupos individuales; `not_applicable` explícito puede coincidir. Se evita
 agregar BASS-II y Saffire o sintético y publicado en un mismo grupo.
@@ -130,9 +134,9 @@ La comparación resuelve el ámbito de condiciones **por observación**:
   ámbito `trial_unassigned` y aísla esa observación; no adivina su segmento.
 - Los extremos O₂ inicial/final se conservan como contexto del ensayo, con
   `<variable>_scope=trial`. Nunca sustituyen `oxygen_pct` ni sirven de X para una
-  observación asignada a un segmento. Un extremo indebidamente declarado dentro
-  de un segmento tampoco se utiliza como condición efectiva; P1 debe endurecer
-  esa validación de ámbito en el contrato.
+  observación asignada a un segmento. El contrato integrado desde `main` ya rechaza
+  extremos en segmentos y exige valores de O₂ entre 0 y 100; las solicitudes
+  anteriores a P1 sobre esos dos huecos están resueltas.
 - Condiciones no resueltas aíslan por ensayo y segmento. Compartir una muestra no
   demuestra que dos condiciones desconocidas sean compatibles. `not_applicable`
   explícito conserva su significado y puede coincidir con el mismo estado.
@@ -161,9 +165,10 @@ El modo explícito `condition_scope=segment` evalúa únicamente las condiciones
 de cada segmento y devuelve una fila por ensayo con la puntuación de su mejor
 segmento elegible. Los empates de puntuación y cobertura conservan el orden de
 la fuente. `eligible_segment_ids` delimita los puntos en investigación y un
-`ComparisonRequest.segment_ids` explícito restringe los ensayos segmentados a
-los segmentos seleccionados. Los ensayos sin segmento quedan fuera del ranking
-por segmento.
+`ComparisonRequest.segment_ids` no vacío restringe **todas** las observaciones
+a esos segmentos: también excluye observaciones sin asignación y ensayos sin
+segmentos. Una lista vacía conserva la comparación sin ese filtro. Los ensayos
+sin segmento quedan fuera del ranking por segmento.
 
 El perfil muestra la ausencia a nivel de ensayo y de segmento por separado.
 `n_independent_units` cuenta las unidades identificadas.
@@ -175,3 +180,53 @@ de la cara de combustión (`combustion_face`) se mantienen como controles distin
 Ver `test_condition_segments.py` y `evals/science/segment_run.py`: software sintético,
 sin datos NASA, llamadas externas, estimación física ni certificación de seguridad.
 La lectura de bundles 1.0 y las seis evaluaciones anteriores se conservan.
+
+
+## Integración P2 revisada en P3 (main `04baeee`)
+
+Los controles opcionales se activan únicamente desde los ámbitos representados
+tras aplicar campaña y selección de segmentos. Añadir una condición a un segmento
+no seleccionado, a un ensayo descartado por campaña o a condiciones de ensayo que
+no se heredan no cambia los grupos ni sus medianas. Los extremos de ensayo siguen
+aportando su contexto explícito. Las pruebas metamórficas están en
+`test_science_selection.py`.
+
+El ranking sin métrica sigue ordenando condiciones, sin prometer disponibilidad
+de resultados. Su argumento Python opcional `metric` comprueba observaciones
+conocidas, unidad canónica, campaña y procedencia permitida **antes** de puntuar y
+aplicar `limit`. En modo segmento, exige una observación de esa métrica vinculada
+al propio segmento: una medida de otro segmento o sin asignación no basta.
+Una fila por ensayo conserva su mejor segmento elegible; no crea réplicas.
+El argumento anterior `metric_trial_ids` se conserva por compatibilidad, pero no
+puede acreditar disponibilidad por segmento y emite un aviso en ese modo.
+
+**Conexión P1/P3/P4 integrada:** `ai/engine.py` pasa `metric=request.metric`
+para todas las investigaciones, usando el ranking del plan resuelto. La ausencia
+de medición se excluye antes del top-k, incluso si las condiciones coincidían.
+`evals/science/metric_availability_run.py` verifica el caso sintético de dos ensayos:
+el primero solo tiene la métrica en un segmento rechazado; el segundo sí la tiene
+en el segmento elegible. Ambos límites 1/2 devuelven únicamente el segundo y el
+runner devuelve 0. También se ejecuta dentro de pytest.
+El endpoint de ranking sin métrica conserva su selección por condiciones. No se
+infieren tasas para configuraciones de Flame Design ni para medidas ausentes.
+
+La auditoría real y sus límites están en `evals/science/P2_INTEGRATION_REVIEW.md`.
+No se han cambiado importadores ni marcado evidencia NASA como revisada. Duraciones
+censuradas, anchuras nominales/efectivas y estimaciones de O₂ requieren revisión
+P2 y, si necesitan campos nuevos, acuerdo contractual P1.
+
+
+## Escenarios A/B y coordenadas ausentes
+
+El endpoint de escenarios conserva su modo por condiciones cuando `metric=null`
+o se omite: ordena candidatos, sin prometer que tengan una medición particular.
+Cuando se indica `metric`, ambos escenarios usan el mismo filtro de disponibilidad
+que investigación antes de puntuar/aplicar el límite, y la respuesta conserva la
+métrica solicitada. Así el consumidor puede pedir conjuntos coherentes sin cambiar
+la semántica de los clientes anteriores. A/B no calcula pares X/Y ni simula física;
+que una métrica exista no acredita una coordenada X conocida o comparabilidad causal.
+
+En comparación, `x=null` continúa visible por contrato, acompañado de advertencias,
+y no es un par cuantitativo. La coordinación exige al menos un X conocido para
+declarar evidencia suficiente para el recorrido; las suites sintéticas cuentan
+estos pares por separado como `n_quantitative_pairs` y verifican el caso sin X.

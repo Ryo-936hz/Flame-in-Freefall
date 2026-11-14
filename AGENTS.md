@@ -1,6 +1,16 @@
 # Instrucciones de trabajo para FlameLab SI
 
-Estas instrucciones se aplican al proyecto FlameLab SI. La petición vigente autoriza publicar el esqueleto integrado en GitHub y preparar el arranque de seis personas. La fase documental y el historial de construcción local son antecedentes. La integración compartida usa `main`; los seis puestos parten de `origin/codex/team-start-v1` y crean ramas propias. Lee primero `docs/TEAM_START.md`, `docs/START_HERE.md`, `docs/IMPLEMENTATION_STATUS.md` y `docs/TEAM_HANDOFF.md`; después utiliza tu paquete `docs/team/Px_*.md`. El prompt maestro y BUILD_ORDER conservan el proceso de construcción.
+Estas instrucciones se aplican al proyecto FlameLab SI. La petición vigente autoriza publicar el esqueleto integrado en GitHub y preparar el arranque de seis personas. La fase documental y el historial de construcción local son antecedentes. La integración compartida usa `main`; `origin/codex/team-start-v1` conserva la primera entrega. Para continuar, usa la referencia vigente de TEAM_HANDOFF y crea una rama propia. Lee primero `docs/TEAM_START.md`, `docs/START_HERE.md`, `docs/IMPLEMENTATION_STATUS.md` y `docs/TEAM_HANDOFF.md`; después utiliza tu paquete `docs/team/Px_*.md`. El prompt maestro y BUILD_ORDER conservan el proceso de construcción.
+
+## Asignación vigente
+
+El usuario ha asignado conjuntamente **P1, P3 y P4** a este trabajo en `raul` para
+cerrar su parte de la demo. La integración P2 de `main` y la rama P4 se conservan
+mediante merge. P1/P3/P4 coordinan aquí contratos, ciencia e IA según ADR 0009.
+P2, P5 y P6 conservan sus rutas; no se da por terminado su trabajo por cerrar
+backend. Leer primero `docs/INTEGRATION_P134.md` para el incremento actual.
+`team-start-v1` es una referencia histórica congelada, no la base para deshacer
+avances. Las guías antiguas se interpretan con el estado vigente del código.
 
 ## Autoridades y contexto
 

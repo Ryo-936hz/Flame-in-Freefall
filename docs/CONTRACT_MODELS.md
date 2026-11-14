@@ -13,7 +13,7 @@ documental. No hay una API desplegada.
 | `Observation` | Optional `segment_id` must reference a segment of the same trial. Optional `original_value` and `original_unit` retain the source text. |
 | `RankingRequest` | `condition_scope` defaults to `trial`. `segment` opts into filtering/scoring explicit segment conditions. |
 | `RankedTrial` | `scored_segment_id` identifies the segment underlying the score in segment mode. `eligible_segment_ids` gives the segments that passed eligibility and coverage. |
-| `ComparisonRequest` | Optional `segment_ids` limits the selection to specified segments for segmented trials. Unknown or out-of-scope IDs give 404. |
+| `ComparisonRequest` | Nonempty `segment_ids` restricts all observations to those segments; unassigned/unsegmented observations are excluded. Unknown or out-of-scope IDs give 404. |
 | `PlotPoint` | Optional `segment_id`, `original_value` and `original_unit` trace the segment and measurement. |
 | `ComparisonGroup`, `ProfileResponse` | `n_segments` counts segments apart from trials and units. `missing_by_segment_condition` counts explicit segment conditions in the profile. |
 
@@ -28,6 +28,23 @@ reject initial and final oxygen fields regardless of their missingness status.
 Older canonical unstaged bundles load through the same models. A storage-only reader
 loads historical P2 snapshots without rewriting them. Identical legacy corpus reimports
 remain idempotent.
+
+## Plan visible y disponibilidad de métrica (adición compatible)
+
+| Modelo | Campos y semántica |
+|---|---|
+| `ResearchRequest` | `planning_mode`: `explicit` por defecto, o `catalog` para las frases acotadas. |
+| `ResearchPlan` | Modo, intención, ranking canónico efectivo, métrica, eje X, mensaje, `blocked` y límites. No contiene código ejecutable. |
+| `ResearchResponse` | `plan` opcional; ausente en snapshots anteriores significa `null`, sin recalcular el expediente. |
+| `ScenarioComparisonRequest/Response` | `metric` opcional. `null`: selección por condiciones; valor explícito: exige métrica disponible antes de limitar candidatos. |
+
+La ruta de previsualización `POST /api/v1/research/plan` acepta `ResearchRequest`
+y devuelve `ResearchPlan`. Un resultado bloqueado no admite análisis ejecutado.
+Una comparación debe conservar métrica y eje declarado en su plan.
+Los nuevos campos tienen valores predeterminados para mantener compatibilidad
+con solicitudes y snapshots anteriores. No cambian la versión del corpus 1.1
+ni requieren migración de tablas. OpenAPI/TypeScript se regeneran desde la API.
+La tabla histórica inferior debe leerse junto a estas adiciones.
 
 ## Ajustes aceptados en la primera implementación
 
@@ -397,5 +414,5 @@ observation to a stage. Trial oxygen endpoints are distinct from unmeasured stag
 oxygen, and burning faces and original observation values/units are explicit.
 These additive changes and their consumer behavior are recorded in
 [ADR 0008](adr/0008-successive-conditions-and-bass-import.md).
-P3 still needs to review comparability and source discrepancies. Saffire is not
+P3 reviewed extraction and representation; documented source discrepancies and scientific comparability still require human review. Saffire is not
 automatically combined with BASS-II. See [P2_DELIVERY](P2_DELIVERY.md).

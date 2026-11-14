@@ -3,7 +3,8 @@
 from fractions import Fraction
 
 from flamelab.domain.contracts import (
-    TRIAL_ONLY_CONDITIONS, DatasetBundle, RankedTrial, RankingContribution, RankingRequest,
+    METRIC_STUDIES, METRIC_UNITS, TRIAL_ONLY_CONDITIONS, DatasetBundle, Metric,
+    RankedTrial, RankingContribution, RankingRequest,
     RankingResponse,
 )
 from flamelab.science.common import GOWER_SCALES_V1
@@ -82,8 +83,9 @@ def _score_conditions(conditions, request, active, total_weight, exclusions):
 
 
 def rank_trials(bundle: DatasetBundle, request: RankingRequest,
-                metric_trial_ids: set[str] | None = None) -> RankingResponse:
-    """Rank one score per physical trial, optionally using explicit segments."""
+                metric_trial_ids: set[str] | None = None, *,
+                metric: Metric | None = None) -> RankingResponse:
+    """Rank physical trials; an explicit metric gates availability before top-k."""
     segment_mode = request.condition_scope == "segment"
     warnings = [
         "Gower v1 uses fixed software scales; similarity is not confidence, hazard or physical validity.",
@@ -91,6 +93,9 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest,
     ]
     if segment_mode:
         warnings.append("segment_level_ranking: each trial score uses its best eligible explicit segment.")
+        if metric_trial_ids is not None and metric is None:
+            warnings.append("metric_availability_trial_only: metric_trial_ids cannot verify "
+                            "availability within an eligible segment; pass metric explicitly.")
     elif any(trial.segments for trial in bundle.trials):
         warnings.append("trial_level_ranking: filters and Gower use explicit trial conditions; "
                         "segment conditions are not substituted or ranked independently.")
@@ -99,13 +104,25 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest,
         if key not in request.vary and request.weights.get(key, 1.0) > 0
     }
     total_weight = sum(active.values())
+    trials = {trial.id: trial for trial in bundle.trials}
+    metric_trials = set()
+    metric_segments = set()
+    metric_unit = METRIC_UNITS.get(metric)
+    metric_studies = METRIC_STUDIES.get(metric)
     trial_refs = {}
     segment_refs = {}
     for obs in bundle.observations:
         trial_refs.setdefault(obs.trial_id, []).extend(obs.evidence_ids)
         if obs.segment_id is not None:
             segment_refs.setdefault(obs.segment_id, []).extend(obs.evidence_ids)
-    trials = {trial.id: trial for trial in bundle.trials}
+        if (metric is not None and metric_unit is not None and obs.metric == metric
+                and obs.status == "known" and obs.unit == metric_unit
+                and (request.allow_synthetic or obs.provenance != "synthetic")
+                and (not metric_studies or trials[obs.trial_id].study_id in metric_studies)):
+            metric_trials.add(obs.trial_id)
+            # An unassigned observation never proves a segment's metric availability.
+            if obs.segment_id is not None:
+                metric_segments.add(obs.segment_id)
     eligible, excluded = [], []
     for trial in sorted(bundle.trials, key=lambda item: item.id):
         exclusions = []
@@ -113,7 +130,8 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest,
             exclusions.append("study_not_selected")
         if trial.provenance == "synthetic" and not request.allow_synthetic:
             exclusions.append("synthetic_not_allowed")
-        if metric_trial_ids is not None and trial.id not in metric_trial_ids:
+        if ((metric_trial_ids is not None and trial.id not in metric_trial_ids)
+                or (metric is not None and trial.id not in metric_trials)):
             exclusions.append("requested_metric_unavailable")
         segments = sorted(trial.segments, key=lambda segment: segment.sequence)
         scored_segment = None
@@ -124,7 +142,9 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest,
                 (segment, _score_conditions(
                     {key: value for key, value in segment.conditions.items()
                      if key not in TRIAL_ONLY_CONDITIONS},
-                    request, active, total_weight, exclusions,
+                    request, active, total_weight,
+                    [*exclusions, "requested_metric_unavailable_for_segment"]
+                    if metric is not None and segment.id not in metric_segments else exclusions,
                 ))
                 for segment in segments
             ]

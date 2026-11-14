@@ -174,3 +174,17 @@ def test_reported_sequence_can_have_gaps_and_observation_can_remain_unassigned()
     assert [segment.sequence for segment in bundle.trials[0].segments] == [3, 8]
     assert bundle.observations[0].segment_id is None
     assert bundle.observations[1].segment_id == bundle.trials[0].segments[1].id
+
+
+@pytest.mark.parametrize("key,model", [(" ", "mock"), ("test-only-sentinel", " "),
+                                      ("\t", "\n")])
+def test_blank_provider_configuration_is_rejected_without_exposing_key(key, model):
+    with pytest.raises(ValidationError) as caught:
+        Settings(_env_file=None, ai_provider="openai", openai_api_key=key, openai_model=model)
+    assert "test-only-sentinel" not in str(caught.value)
+
+
+def test_explicit_provider_model_surrounding_whitespace_is_normalized():
+    settings = Settings(_env_file=None, ai_provider="openai", openai_api_key="test-only",
+                        openai_model="  mock  ")
+    assert settings.openai_model == "mock"
