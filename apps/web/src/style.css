@@ -576,3 +576,17 @@ body { background: var(--bg); }
 
 /* Day background: neutral warm white instead of the greenish bone. */
 :root[data-theme="light"] { --bg: #f6f5f2; --surface: #ffffff; }
+
+/* Habitat presets */
+.presets { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.preset {
+  text-align: left; border: 1px solid var(--rule); background: transparent; border-radius: 4px; padding: 7px 9px;
+  font-size: 12.5px; font-weight: 500; color: var(--ink); transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.12s var(--ease);
+}
+.preset small { display: block; font-family: var(--font-num); font-size: 9.5px; color: var(--ink-3); font-weight: 400; margin-top: 2px; }
+.preset:hover { border-color: var(--signal); }
+.preset:active { transform: scale(0.97); }
+.preset[aria-pressed="true"] { background: var(--signal); border-color: var(--signal); color: var(--signal-ink); }
+.preset[aria-pressed="true"] small { color: inherit; opacity: 0.8; }
+.preset:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.block-actions { display: inline-flex; align-items: center; gap: 12px; }

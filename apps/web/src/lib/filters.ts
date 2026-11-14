@@ -88,6 +88,49 @@ export function demoDraft(): BriefDraft {
   };
 }
 
+/**
+ * Habitat presets: atmosphere targets cited in the challenge text (Moon base and
+ * rover at >=30 % O2 and <=10.2 psi; suit at 100 % O2 and 4.3 psi) or common
+ * cabin values. They only fill the form; gravity is a label that must exist in
+ * the corpus to match. psi converted to kPa (1 psi = 6.895 kPa).
+ */
+export const HABITATS = [
+  { id: "iss", label: "ISS cabin", note: "21 % O₂ · 14.7 psi · microgravity", gravity: "microgravity", o2: 21, kpa: 101.3 },
+  { id: "moon", label: "Moon base", note: "34 % O₂ · 8.2 psi · lunar", gravity: "lunar", o2: 34, kpa: 56.5 },
+  { id: "rover", label: "Pressurized rover", note: "34 % O₂ · 8.2 psi · lunar", gravity: "lunar", o2: 34, kpa: 56.5 },
+  { id: "mars", label: "Mars habitat", note: "30 % O₂ · 10.2 psi · martian", gravity: "martian", o2: 30, kpa: 70.3 },
+  { id: "suit", label: "Spacesuit", note: "100 % O₂ · 4.3 psi · lunar", gravity: "lunar", o2: 100, kpa: 29.6 },
+] as const;
+
+export type HabitatId = (typeof HABITATS)[number]["id"];
+
+/** Gravity must match; O2 and pressure rank by similarity; flow stays the studied variable. */
+export function applyHabitat(draft: BriefDraft, id: HabitatId): BriefDraft {
+  const habitat = HABITATS.find((item) => item.id === id);
+  if (!habitat) return draft;
+  return {
+    ...draft,
+    question: `Which evidence applies to a ${habitat.label.toLowerCase()} (${habitat.note})?`,
+    conditions: {
+      ...draft.conditions,
+      gravity_regime: { role: "match", value: habitat.gravity },
+      oxygen_pct: { role: "similar", value: String(habitat.o2) },
+      pressure_kpa: { role: "similar", value: String(habitat.kpa) },
+      flow_velocity_cm_s: { role: "vary", value: "" },
+    },
+  };
+}
+
+/** Which preset the current form still matches exactly, if any. */
+export function activeHabitat(draft: BriefDraft): HabitatId | null {
+  const c = draft.conditions;
+  const hit = HABITATS.find((h) => c.gravity_regime.role === "match" && c.gravity_regime.value === h.gravity
+    && c.oxygen_pct.role === "similar" && Number(c.oxygen_pct.value) === h.o2
+    && c.pressure_kpa.role === "similar" && Number(c.pressure_kpa.value) === h.kpa
+    && draft.question.includes(h.label.toLowerCase()));
+  return hit?.id ?? null;
+}
+
 export interface BuildResult {
   request: RankingRequest | null;
   errors: Partial<Record<ConditionKey, string>>;

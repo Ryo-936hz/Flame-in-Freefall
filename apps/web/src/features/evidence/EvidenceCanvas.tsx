@@ -8,6 +8,7 @@ import ScatterChart from "./ScatterChart";
 import PointsTable from "./PointsTable";
 import RankingTable from "./RankingTable";
 import type { Selection } from "./selection";
+import { comparisonCsv, csvFileName, downloadCsv } from "./exportCsv";
 
 export default function EvidenceCanvas({ result, labels, selection, onSelectObservation, onSelectTrial }: {
   result: ResearchResponse;
@@ -38,9 +39,13 @@ export default function EvidenceCanvas({ result, labels, selection, onSelectObse
       {comparison && comparison.points.length > 0 && <section className="block" aria-labelledby="cmp-title">
         <div className="block-h">
           <h3 id="cmp-title">Comparison · metric vs {conditionLabel(comparison.x_condition ?? "")}</h3>
+          <div className="block-actions">
+          <button type="button" className="btn ghost" onClick={() => downloadCsv(csvFileName(result), comparisonCsv(result, comparison))}
+            title="One row per observation, with units, provenance and evidence IDs">Export CSV</button>
           <div className="seg" role="group" aria-label="Comparison view">
             <button type="button" aria-pressed={view === "chart"} onClick={() => setView("chart")}>Chart</button>
             <button type="button" aria-pressed={view === "table"} onClick={() => setView("table")}>Table</button>
+          </div>
           </div>
         </div>
         {view === "chart"
@@ -52,7 +57,7 @@ export default function EvidenceCanvas({ result, labels, selection, onSelectObse
           {comparison.groups.map((group, index) => <li key={group.id}>
             <span className="swatch" data-series={index % 4} aria-hidden="true" />
             <b>G{index + 1}</b>
-            <span className="num">{group.n_trials} trials · {group.n_observations} obs. · {group.n_independent_units} indep. units</span>
+            <span className="num">{group.n_trials} {group.n_trials === 1 ? "trial" : "trials"} · {group.n_observations} obs. · {group.n_independent_units} indep. {group.n_independent_units === 1 ? "unit" : "units"}</span>
             <span className="num">median {fmt(group.median)} {comparison.unit}</span>
           </li>)}
         </ul>

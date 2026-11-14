@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import { gsap, prefersReducedMotion, useGSAP } from "../lib/motion";
 import type { RankingRequest } from "../lib/client";
-import { CONDITIONS, METRICS, ROLE_LABELS, buildRanking, describeRanking } from "../lib/filters";
+import { CONDITIONS, HABITATS, METRICS, ROLE_LABELS, activeHabitat, applyHabitat, buildRanking, describeRanking } from "../lib/filters";
 import type { BriefDraft, ConditionKey, ConditionRole } from "../lib/filters";
 import { Panel } from "./ui";
 
@@ -48,6 +48,17 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
           }} />
         <small className="hint">Shown with the synthesis. The filters below drive the analysis; the demo does not interpret written constraints.</small>
       </label>
+
+      <div className="field">
+        <span className="cap">Habitat presets</span>
+        <div className="presets" role="group" aria-label="Habitat presets">
+          {HABITATS.map((h) => <button type="button" key={h.id} className="preset" aria-pressed={activeHabitat(draft) === h.id}
+            onClick={() => onChange(applyHabitat(draft, h.id))}>
+            {h.label}<small>{h.note}</small>
+          </button>)}
+        </div>
+        <small className="hint">Fills gravity, O₂ and pressure. Gravity must exist in the data to match.</small>
+      </div>
 
       <fieldset className="conditions">
         <legend className="cap">Conditions</legend>
