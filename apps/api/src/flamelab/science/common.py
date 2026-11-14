@@ -5,6 +5,8 @@ from flamelab.domain.contracts import CONDITION_KEYS, CONDITION_UNITS, METRIC_UN
 # These are normalization scales, not measured domains or physical validity limits.
 GOWER_SCALES_V1 = {
     "oxygen_pct": 100.0,
+    "oxygen_initial_pct": 100.0,
+    "oxygen_final_pct": 100.0,
     "pressure_kpa": 200.0,
     "flow_velocity_cm_s": 100.0,
     "thickness_mm": 100.0,

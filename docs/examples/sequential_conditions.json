@@ -1,0 +1,139 @@
+{
+  "schema_version": "1.1",
+  "dataset_id": "synthetic:sequential-conditions-example",
+  "description": "Illustrative synthetic example only; not NASA measurements.",
+  "studies": [
+    {
+      "id": "synthetic:sequence-study",
+      "title": "Sequential conditions example",
+      "family": "synthetic_example",
+      "description": "A single test unit observed across two reported condition segments.",
+      "dataset_status": "synthetic"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "synthetic:sequence-source",
+      "study_id": "synthetic:sequence-study",
+      "title": "Synthetic source record",
+      "text": "Illustrative source record supporting the synthetic example values.",
+      "locator": "Synthetic example, not a published source",
+      "provenance": "synthetic"
+    }
+  ],
+  "trials": [
+    {
+      "id": "synthetic:sequence-trial",
+      "study_id": "synthetic:sequence-study",
+      "sample_id": "synthetic:sample-1",
+      "independent_unit_id": "synthetic:unit-1",
+      "label": "One specimen, two reported conditions",
+      "conditions": {
+        "oxygen_initial_pct": {
+          "value": 21,
+          "status": "known",
+          "unit": "%",
+          "original_value": "21 vol%",
+          "original_unit": "vol%",
+          "evidence_ids": ["synthetic:sequence-source"]
+        },
+        "oxygen_final_pct": {
+          "value": 18,
+          "status": "known",
+          "unit": "%",
+          "original_value": "18 vol%",
+          "original_unit": "vol%",
+          "evidence_ids": ["synthetic:sequence-source"]
+        },
+        "geometry": {
+          "value": "flat_sheet",
+          "status": "known",
+          "evidence_ids": ["synthetic:sequence-source"]
+        },
+        "combustion_face": {
+          "value": "face_a",
+          "status": "known",
+          "evidence_ids": ["synthetic:sequence-source"]
+        }
+      },
+      "evidence_ids": ["synthetic:sequence-source"],
+      "provenance": "synthetic",
+      "segments": [
+        {
+          "id": "synthetic:sequence-segment-1",
+          "sequence": 1,
+          "conditions": {
+            "oxygen_pct": {
+              "value": 20,
+              "status": "known",
+              "unit": "%",
+              "original_value": "20 vol%",
+              "original_unit": "vol%",
+              "evidence_ids": ["synthetic:sequence-source"]
+            },
+            "geometry": {
+              "value": "flat_sheet",
+              "status": "known",
+              "evidence_ids": ["synthetic:sequence-source"]
+            },
+            "combustion_face": {
+              "value": "face_a",
+              "status": "known",
+              "evidence_ids": ["synthetic:sequence-source"]
+            }
+          },
+          "evidence_ids": ["synthetic:sequence-source"]
+        },
+        {
+          "id": "synthetic:sequence-segment-2",
+          "sequence": 2,
+          "conditions": {
+            "oxygen_pct": {
+              "value": 19,
+              "status": "known",
+              "unit": "%",
+              "original_value": "19 vol%",
+              "original_unit": "vol%",
+              "evidence_ids": ["synthetic:sequence-source"]
+            },
+            "geometry": {
+              "value": "flat_sheet",
+              "status": "known",
+              "evidence_ids": ["synthetic:sequence-source"]
+            },
+            "combustion_face": {
+              "value": "face_a",
+              "status": "known",
+              "evidence_ids": ["synthetic:sequence-source"]
+            }
+          },
+          "evidence_ids": ["synthetic:sequence-source"]
+        }
+      ]
+    }
+  ],
+  "observations": [
+    {
+      "id": "synthetic:sequence-observation-1",
+      "trial_id": "synthetic:sequence-trial",
+      "segment_id": "synthetic:sequence-segment-1",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 4.2,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": ["synthetic:sequence-source"],
+      "provenance": "synthetic"
+    },
+    {
+      "id": "synthetic:sequence-observation-2",
+      "trial_id": "synthetic:sequence-trial",
+      "segment_id": "synthetic:sequence-segment-2",
+      "metric": "flame_spread_rate_mm_s",
+      "value": 3.1,
+      "unit": "mm/s",
+      "status": "known",
+      "evidence_ids": ["synthetic:sequence-source"],
+      "provenance": "synthetic"
+    }
+  ]
+}
