@@ -1,9 +1,10 @@
 # Estado real de FlameLab SI
 
-Actualizado: 14 de noviembre de 2026. La petición vigente autorizó construir el
-esqueleto; sustituye la fase anterior limitada a documentación. Rama local
-`codex/integrated-skeleton`, base identificada por tag `flamelab-skeleton-2026-11-14`.
-SHA definitivo y bundle en el relevo exportado. No publicado en GitHub.
+Actualizado: 14 de noviembre de 2026. La petición vigente autoriza publicar el
+esqueleto y preparar el arranque del equipo. GitHub usa `main` y una referencia
+de partida `codex/team-start-v1` para que los seis creen ramas desde el mismo commit.
+Ver [TEAM_START](TEAM_START.md). El historial local anterior y el tag
+`flamelab-skeleton-2026-11-14` se conservan como archivo, no como base de PR remotas.
 
 ## Implementado y ejecutado
 
@@ -26,7 +27,9 @@ SHA definitivo y bundle en el relevo exportado. No publicado en GitHub.
   Validar IDs no demuestra que una afirmación esté respaldada científicamente.
 - SQLAlchemy, dependencia opcional psycopg y Compose PostgreSQL/pgvector: no se
   ejecutó servidor PostgreSQL/Docker. No se creó ni pobló un índice vectorial.
-- CI Windows/Linux escrita, pero no ejecutada en GitHub porque no hubo publicación.
+- CI Windows/Linux configurada en GitHub para push/PR a main. Consultar el registro
+  de publicación en VERIFICATION y Actions para el resultado observado; configurar
+  un workflow por sí solo no acredita una ejecución satisfactoria.
 - P5/P6 tienen carpetas y cliente común. DESIGN_ANDURIL conserva la dirección visual;
   no se ha construido frontend de producto ni una escena física.
 
@@ -39,7 +42,7 @@ SHA definitivo y bundle en el relevo exportado. No publicado en GitHub.
    pruebas de software con validación de datos NASA o predicción de incendios.
 3. P4: planificador de lenguaje natural, modelo/budget autorizado y prueba acotada
    del proveedor. Las restricciones verbales no cambian filtros automáticamente.
-4. P1: publicación coordinada, CI remota, motor PostgreSQL, autenticación/límites
+4. P1: mantener CI, motor PostgreSQL, autenticación/límites
    antes de exposición de red y recuperación operativa.
 5. P5/P6: Evidence Canvas, Mission Lab, experiencia visual y diseño inverso; los
    siguientes experimentos actuales son una propuesta preparada, no descubrimientos.

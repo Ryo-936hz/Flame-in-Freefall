@@ -18,8 +18,8 @@ apoyan en DATA_INSPECTION, ADR 0007 y TEAM_HANDOFF.
 | OQ-08 | ¿Regresión o vídeo como única ampliación cuantitativa? | P3 + P6 | Decidir tras revisar datos y calibración. |
 | OQ-09 | ¿Qué archivos pueden redistribuirse? | P2 | Registrar licencia por fuente. |
 | OQ-10 | ¿Se necesita exponer la demo fuera de localhost? | P1 | Definir acceso, coste y secretos antes de desplegar. |
-| OQ-11 | ¿Cuándo publicar la referencia común local en GitHub? | P1 + equipo | Usar TEAM_HANDOFF; no asumir que origin/main contiene la base ni crear seis versiones de contrato. |
-| OQ-12 | ¿Cuándo validar PostgreSQL/pgvector y CI remoto? | P1 | Ejecutar migraciones/recorrido en el motor y workflow reales; la configuración preparada no acredita resultado. |
+| OQ-11 resuelta | Publicación autorizada por el usuario. | P1 + equipo | main y codex/team-start-v1 son referencias remotas; TEAM_START contiene instrucciones comunes. |
+| OQ-12 | ¿Cuándo validar PostgreSQL/pgvector? | P1 | Ejecutar migraciones/recorrido del motor real; CI se consulta en Actions/VERIFICATION. |
 | OQ-13 | ¿Cómo evaluar relevancia de ranking y semántica de afirmaciones? | P3 + P4 + P6 | Preparar consultas científicas independientes y revisión humana; las pruebas sintéticas solo validan reglas y conexiones. |
 
 Al resolver una pregunta, anotar evidencia y decisión en DECISIONS o un ADR, y actualizar los documentos afectados. No borrar la historia de por qué se eligió una opción.

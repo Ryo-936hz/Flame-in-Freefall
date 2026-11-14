@@ -1,12 +1,14 @@
 # Empieza aquí
 
-FlameLab SI es la base de Los TTS para investigar seguridad contra incendios espaciales con IA. El esqueleto integrado existe localmente: API, SQLite, ingesta, herramientas científicas, coordinación demo y cliente TypeScript con arnés React. El frontend de producto sigue pendiente. La documentación reduce ambigüedad; no garantiza que un modelo no cometa errores.
+FlameLab SI es la base compartida de Los TTS: API, SQLite, ingesta, ciencia,
+coordinación demo y cliente TypeScript con arnés React. Para clonar, arrancar y
+elegir tarea, usar [TEAM_START](TEAM_START.md). El frontend de producto sigue pendiente.
 
 ## Estado local al 14 de noviembre de 2026
 
-- Rama de integración: `codex/integrated-skeleton`; publicación remota pendiente. La referencia común de reparto se registra en [TEAM_HANDOFF](TEAM_HANDOFF.md).
+- Integración: `main` en GitHub; referencia de arranque para los seis: `origin/codex/team-start-v1`. Crear rama propia desde ella según [TEAM_START](TEAM_START.md).
 - La demo usa 2 estudios, 5 ensayos y 6 observaciones **sintéticos**. El catálogo real contiene 24 investigaciones `metadata_only`, en un bundle separado; no hay una serie NASA cuantitativa importada.
-- SQLite y modo demo se comprueban localmente. El proveedor externo tiene pruebas HTTP simuladas; no se han hecho llamadas reales. PostgreSQL/pgvector y CI remoto no están ejecutados.
+- SQLite y modo demo comprobados localmente. Proveedor externo probado con HTTP simulado, sin llamadas reales. PostgreSQL/pgvector pendiente; CI registrada en [VERIFICATION](VERIFICATION.md).
 - [README](../README.md) y [SETUP_WINDOWS](SETUP_WINDOWS.md) contienen comandos reales; [VERIFICATION](VERIFICATION.md) conserva resultados, entorno y límites.
 
 ## Primera lectura para cualquier asistente

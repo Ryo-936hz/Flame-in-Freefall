@@ -1,8 +1,15 @@
 # Relevo de ingeniería — Los TTS
 
-Integrador P1. Rama `codex/integrated-skeleton`; base común: tag
-`flamelab-skeleton-2026-11-14`. El relevo exportado junto al bundle registra SHA
-completo. Remoto vacío al inicio; no publicado ni alterados permisos/main.
+Integrador P1. [Repositorio compartido](https://github.com/Ryo-936hz/Flame-in-Freefall),
+rama de integración `main`. La referencia común de arranque es
+`origin/codex/team-start-v1`: conservarla sin mover y crear una rama propia.
+[TEAM_START](TEAM_START.md) contiene comandos para clonar, comprobar SHA, arrancar
+y elegir puesto. No se han cambiado permisos ni asignado personas ficticias.
+
+La construcción local anterior (`543c13b`, tag `flamelab-skeleton-2026-11-14`)
+se conserva en el equipo y bundle históricos. La publicación mediante el conector
+genera un nuevo historial remoto con el contenido verificado y la guía de equipo;
+no utilizar el SHA histórico local como base de nuevas PR del remoto.
 
 ## Terminado y pendiente
 
@@ -18,7 +25,7 @@ encabezados/unidades/configuración. No se validó IA real, PostgreSQL ni cienci
 
 | Puesto | Primer incremento | Área | Criterio y revisores |
 |---|---|---|---|
-| P1 Integración | Coordinar publicación de base; verificar PostgreSQL. | Contratos, API, storage, migraciones, scripts/CI | Motor y recuperación reales, sin deriva; P2/P4/P5. |
+| P1 Integración | Mantener CI y verificar PostgreSQL. | Contratos, API, storage, migraciones, scripts/CI | Motor y recuperación reales, sin deriva; P2/P4/P5. |
 | P2 Datos | Revisar tabla 5.1, identidad, O2 temporal, caras, licencias. | data/, flamelab/data | Cada cifra con original/unidad/localizador; P3. |
 | P3 Ciencia | Contrato de condiciones sucesivas con P2 y evaluación independiente. | science/, tests ciencia, evals | Sin pseudorreplicación ni métricas mezcladas; P1/P2/P4. |
 | P4 IA | Planificador/evaluación de síntesis con corpus autorizado. | ai/, pruebas proveedor | Citas pertinentes, presupuesto y fallos medidos; P3/P5. |

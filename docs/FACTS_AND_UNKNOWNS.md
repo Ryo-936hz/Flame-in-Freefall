@@ -14,7 +14,10 @@ Actualización local: 14 de noviembre de 2026. Cada afirmación nueva debe indic
 
 ## Instrucción vigente
 
-El usuario ha autorizado construir y verificar el esqueleto integrado, conservar Documents y trabajo previo, y entregar un reparto reproducible. La restricción anterior de terminar solo Markdown pertenece a la fase documental. La base actual es local; no se ha publicado código del esqueleto en GitHub.
+El usuario ha autorizado además publicar la base en GitHub y dejar instrucciones
+para seis personas. Se conserva Documents y el historial local. `main` es la
+integración y `codex/team-start-v1` la referencia común de arranque, según TEAM_START.
+La fase limitada a Markdown y la entrega exclusivamente local son antecedentes.
 
 ## Observado en la implementación local
 
@@ -63,8 +66,8 @@ Enlaces y precisión del alcance en [SOURCES](SOURCES.md).
 | Nombres y usuarios de las seis personas | Equipo | Asignar P1–P6 en una decisión de coordinación. |
 | Tiempo local de pitch y entrega | Equipo | Confirmar con organización local. |
 | Licencias de cada archivo | P2 | Registrar por fuente antes de redistribuir. |
-| PostgreSQL/pgvector y CI remoto | P1 | Ejecutar los motores y el workflow; la configuración por sí sola no prueba su funcionamiento. |
-| Publicación de la base común | P1 + equipo | Compartir la referencia local mediante el relevo; coordinar publicación remota posteriormente. |
+| PostgreSQL/pgvector | P1 | Ejecutar motor y migraciones; la configuración no prueba su funcionamiento. |
+| Estado de cada nueva CI | P1 | Consultar Actions y VERIFICATION; no inferir éxito por haber subido el workflow. |
 
 ## Regla para nuevos resultados
 

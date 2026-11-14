@@ -2,11 +2,11 @@
 
 ## Cuándo comenzar
 
-Este paquete se ejecuta después de crear y verificar una sola base común mediante el [prompt maestro](../LOCAL_CODEX_MASTER_PROMPT.md) y [BUILD_ORDER](../BUILD_ORDER.md). Antes de ese hito, P1 coordina la inspección local y el esqueleto; el resto puede revisar datos, criterios y diseño sin duplicar contratos ni infraestructura. Los criterios siguientes son objetivos futuros, no capacidades entregadas.
+La base integrada ya existe. Sigue [TEAM_START](../TEAM_START.md), crea tu rama desde `origin/codex/team-start-v1` y comprueba el SHA común antes de comenzar. El prompt maestro y BUILD_ORDER conservan el proceso de construcción. Este paquete define las siguientes tareas del puesto; consulta IMPLEMENTATION_STATUS y VERIFICATION para distinguir lo ya ejecutado de lo pendiente.
 
 ## Resultado del puesto
 
-El ZIP no fue leído al generar la base. No afirmes que un campo o vídeo existe sin inspeccionarlo. Una tabla plausible no es un sustituto de datos reales.
+El ZIP ya se inspeccionó: consulta DATA_INSPECTION. Hay 24 estudios metadata_only y una serie BASS-II candidata, pero ninguna observación científica importada. No hay vídeos en el ZIP inventariado. Parte de ese registro y revisa la fuente antes de normalizar; una tabla plausible no sustituye datos reales.
 
 Este puesto se asigna a una persona del equipo. No presupone un usuario GitHub ni habilita a enviar mensajes en su nombre.
 
@@ -22,11 +22,11 @@ AGENTS y START_HERE; después FACTS_AND_UNKNOWNS, DATA_DICTIONARY, DATA_INGESTIO
 - `data/raw/ y data/processed/ como trabajo local`
 - `pruebas de ingesta y validación de datos`
 
-Las rutas futuras son fronteras de responsabilidad, no funciones ya implementadas. No modificar contratos, migraciones, dependencias compartidas o archivos de otra persona sin coordinación. P1 mantiene `packages/contracts` generado; ningún puesto lo edita a mano.
+Estas son fronteras de responsabilidad. Parte del código existente y consulta REPOSITORY_LAYOUT para las rutas todavía preparadas. No modificar contratos, migraciones, dependencias compartidas o archivos de otra persona sin coordinación. P1 mantiene `packages/contracts` generado; ningún puesto lo edita a mano.
 
 ## Tareas en orden
 
-1. Inventariar el ZIP local sin ejecutar su contenido ni asumir su estructura.
+1. Revisar el inventario existente y verificar el hash del ZIP disponible; inventariar de nuevo solo si cambia la fuente, sin ejecutar contenido.
 2. Resolver catálogo PSI/NTRS, licencia y archivos de la serie BASS-II candidata.
 3. Extraer tablas y relaciones condición–observación con localizadores.
 4. Normalizar unidades y materiales conservando origen, ausencias y formulación.
@@ -44,11 +44,11 @@ Las rutas futuras son fronteras de responsabilidad, no funciones ya implementada
 
 P3 revisa semántica y comparabilidad; P1 revisa importación y persistencia.
 
-Cuando la base exista, empieza con los contratos y fixtures verificados en ese commit. Un bloqueo de datos reales no impide implementar tipos, estados vacíos o pruebas con fixtures identificados. No conviertas esa independencia en afirmación de validación científica.
+Empieza con los contratos y fixtures de la referencia común comprobada. Un bloqueo de datos reales no impide trabajar en estados vacíos o conexiones con fixtures identificados. No conviertas esa independencia en afirmación de validación científica.
 
 ## Primera entrega pequeña
 
-Escoge un resultado de la lista que pueda integrarse completo: comportamiento, prueba y documentación. Describe qué falta para el siguiente incremento. Usa una rama `feat/p2-descripcion` y el prompt [de inicio](../prompts/P2_START.md).
+Escoge un resultado de la lista que pueda integrarse completo: comportamiento, prueba y documentación. Describe qué falta para el siguiente incremento. Usa una rama `codex/p2-descripcion` y el prompt [de inicio](../prompts/P2_START.md).
 
 ## Relevo
 

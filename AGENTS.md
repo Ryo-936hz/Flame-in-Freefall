@@ -1,6 +1,6 @@
 # Instrucciones de trabajo para FlameLab SI
 
-Estas instrucciones se aplican al proyecto FlameLab SI. La petición vigente autoriza el esqueleto integrado, implementado localmente el 14 de noviembre de 2026 en `codex/integrated-skeleton`. La fase anterior terminó solo en documentación; ese límite histórico ya no es la tarea vigente. No confundir código local con publicación remota. Lee primero `docs/START_HERE.md`, `docs/IMPLEMENTATION_STATUS.md` y `docs/TEAM_HANDOFF.md`; después utiliza tu paquete `docs/team/Px_*.md`. El prompt maestro y BUILD_ORDER conservan el proceso seguido para crear la base.
+Estas instrucciones se aplican al proyecto FlameLab SI. La petición vigente autoriza publicar el esqueleto integrado en GitHub y preparar el arranque de seis personas. La fase documental y el historial de construcción local son antecedentes. La integración compartida usa `main`; los seis puestos parten de `origin/codex/team-start-v1` y crean ramas propias. Lee primero `docs/TEAM_START.md`, `docs/START_HERE.md`, `docs/IMPLEMENTATION_STATUS.md` y `docs/TEAM_HANDOFF.md`; después utiliza tu paquete `docs/team/Px_*.md`. El prompt maestro y BUILD_ORDER conservan el proceso de construcción.
 
 ## Autoridades y contexto
 

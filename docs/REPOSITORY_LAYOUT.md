@@ -1,6 +1,10 @@
 # Estructura del repositorio y fronteras futuras
 
-La base local implementa dominio, API, datos, ciencia, IA, persistencia y cliente técnico. Algunas fronteras del frontend de producto y evaluación científica siguen preparadas para la siguiente fase. El estado y las verificaciones están en [IMPLEMENTATION_STATUS](IMPLEMENTATION_STATUS.md) y [VERIFICATION](VERIFICATION.md); no se ha publicado el esqueleto en remoto.
+La base compartida implementa dominio, API, datos, ciencia, IA, persistencia y cliente
+técnico. Las fronteras del frontend de producto y evaluación científica siguen
+preparadas. El estado está en [IMPLEMENTATION_STATUS](IMPLEMENTATION_STATUS.md), las
+verificaciones en [VERIFICATION](VERIFICATION.md), y el arranque desde GitHub en
+[TEAM_START](TEAM_START.md).
 
 ## Carpetas del equipo Windows
 

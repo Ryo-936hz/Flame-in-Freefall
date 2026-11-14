@@ -7,6 +7,11 @@ ingesta CLI, perfil, ranking Gower, comparación, coordinador determinista, adap
 externo configurable y cliente React/TypeScript generado desde OpenAPI.
 El frontend entregado es un **arnés técnico**, no el diseño final.
 
+**Equipo: empezar por [la guía de los seis puestos](docs/TEAM_START.md).** La base
+compartida se publica en [GitHub](https://github.com/Ryo-936hz/Flame-in-Freefall).
+`main` integra cambios; `codex/team-start-v1` conserva el punto de partida común.
+Cada persona crea su propia rama desde esa referencia, aunque `main` avance.
+
 El recorrido numérico utiliza **datos sintéticos**, no mediciones NASA. El ZIP real
 se inventarió: 24 investigaciones, 22 CSV y 27 PDF, sin vídeos. El catálogo real se
 importa como `metadata_only`, sin observaciones numéricas. La serie BASS-II candidata
@@ -14,20 +19,25 @@ y los problemas de Saffire están en [inspección](docs/DATA_INSPECTION.md).
 
 ## Arrancar en Windows
 
-Requisitos: Git, Python 3.12 (3.13 admitido, no probado), Node >=22.12 con npm y red
+Requisitos: Git, Python 3.12, Node 24 con npm, PowerShell 7 y red
 para la primera instalación. `setup.ps1` utiliza los lockfiles; si falta uv instala
 0.9.5 dentro de `work/`. En este equipo detecta también los runtimes de Codex.
 
 ```powershell
-Set-Location 'C:\Users\user\Desktop\NASA\Flame-in-Freefall'
+git clone https://github.com/Ryo-936hz/Flame-in-Freefall.git
+Set-Location Flame-in-Freefall
+# Ejemplo P1; elegir la rama del puesto en docs/TEAM_START.md.
+git switch --no-track -c codex/p1-integracion origin/codex/team-start-v1
+git rev-parse HEAD
 .\scripts\setup.ps1
+.\scripts\check.ps1
 .\scripts\dev-api.ps1
 ```
 
 En otra terminal:
 
 ```powershell
-Set-Location 'C:\Users\user\Desktop\NASA\Flame-in-Freefall'
+Set-Location 'C:\ruta\de\tu\clon\Flame-in-Freefall'
 .\scripts\dev-web.ps1
 ```
 
@@ -88,9 +98,12 @@ Repetir observaciones no crea réplicas independientes.
 inspección](docs/adr/0007-inspection-and-integrated-base.md).
 
 SQLite y demo comprobados. Adaptador OpenAI probado con HTTP simulado, sin llamadas
-reales ni claves. PostgreSQL/pgvector preparados, no ejecutados. CI escrita, sin
-ejecución remota. Pendientes: planificador de lenguaje natural, corpus numérico
+reales ni claves. PostgreSQL/pgvector preparados, no ejecutados. El estado de CI
+se registra en VERIFICATION. Pendientes: planificador de lenguaje natural, corpus numérico
 revisado, embeddings, bootstrap, regresión, CFD, diseño inverso y frontend final.
 
-Entrega local en rama/commit y bundle Git; no publicada en GitHub. Documents y el
-paquete original permanecen intactos. [Dirección visual](docs/DESIGN_ANDURIL.md).
+Código compartido en GitHub; comprobar las ejecuciones de [Actions](https://github.com/Ryo-936hz/Flame-in-Freefall/actions)
+y VERIFICATION antes de atribuir un resultado a CI. El historial de construcción
+local y su bundle se conservan como referencia histórica. Documents y el paquete
+original permanecen intactos. No necesitas el ZIP para arrancar la demo.
+[Dirección visual](docs/DESIGN_ANDURIL.md).

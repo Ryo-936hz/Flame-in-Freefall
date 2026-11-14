@@ -1,6 +1,10 @@
 # Preparación Windows
 
-Clon: `C:\Users\user\Desktop\NASA\Flame-in-Freefall`. El paquete original estaba
+Para un nuevo miembro del equipo, seguir primero [TEAM_START](TEAM_START.md):
+clonar GitHub y crear la rama del puesto desde `origin/codex/team-start-v1`.
+La ruta del clon es libre; no copiar la ruta del equipo de integración.
+
+Clon original: `C:\Users\user\Desktop\NASA\Flame-in-Freefall`. El paquete original estaba
 en `NASA\FlameLab_Contexto_Codex\FlameLab_Contexto`; este y Documents se conservaron.
 No se requieren Docker ni claves para la demo.
 
@@ -58,7 +62,8 @@ verificar migración, concurrencia, copia/restauración y motor real antes de ha
 
 ## Base para seis personas
 
-Todos parten del tag `flamelab-skeleton-2026-11-14`; el relevo exportado contiene SHA
-y bundle. Copiar bundle y usar `git clone <ruta-bundle> Flame-in-Freefall`, o esperar
-publicación coordinada del mismo commit. Crear después una rama `codex/p1-...` a
-`codex/p6-...`. No se han creado seis versiones de contratos ni ramas vacías.
+Todos parten de `origin/codex/team-start-v1` publicado en GitHub, conservado sin
+mover por acuerdo del equipo. Comprobar `git rev-parse HEAD` frente a
+`git rev-parse origin/codex/team-start-v1`. Crear una rama `codex/p1-...` a
+`codex/p6-...` siguiendo TEAM_START. No se han creado seis versiones de contratos
+ni seis ramas vacías. El bundle anterior queda como archivo histórico local.

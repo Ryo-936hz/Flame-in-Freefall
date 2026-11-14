@@ -32,7 +32,7 @@ al código local integrado; no son resultados de CI remota ni validación cient�
 
 Los 112 casos cubren contratos estrictos, referencias/procedencia, ZIP malicioso,
 ceros y ausencias, ranking y comparación, snapshots/SQLite, API y proveedor simulado.
-No son 111 ensayos científicos. Las observaciones sintéticas prueban conexiones.
+No son ensayos científicos. Las observaciones sintéticas prueban conexiones.
 
 ## Incidencias resueltas y límites
 

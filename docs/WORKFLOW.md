@@ -2,9 +2,17 @@
 
 ## Base común
 
-Cada persona utiliza su propio clon y una rama de tarea. La base existe localmente en `codex/integrated-skeleton`; el remoto se comprobó vacío y todavía no se publica esta entrega. Todos deben partir de la misma referencia registrada en [TEAM_HANDOFF](TEAM_HANDOFF.md), del contrato canónico y de su paquete. No asumir que `origin/main` ya contiene el esqueleto. Las suscripciones y los chats no comparten memoria automáticamente: el repositorio es el contexto común.
+Cada persona utiliza su propio clon y una rama de tarea. `main` integra el código
+compartido en GitHub. Los seis puestos crean su primera rama desde
+`origin/codex/team-start-v1`, no desde un `main` que puede haber avanzado. Esa rama
+de referencia se conserva sin mover por acuerdo del equipo; no se afirma que exista
+una regla técnica de protección. [TEAM_START](TEAM_START.md) contiene los comandos.
+Las suscripciones y los chats no comparten memoria: el repositorio es el contexto común.
 
-El arranque siguió [BUILD_ORDER](BUILD_ORDER.md); P1 coordina el cierre de una única base y sus verificaciones antes del reparto. El bundle Git y la referencia común permiten transferirla sin reconstruirla; su creación efectiva se registra en TEAM_HANDOFF. La matriz de rutas está en [REPOSITORY_LAYOUT](REPOSITORY_LAYOUT.md).
+El arranque siguió [BUILD_ORDER](BUILD_ORDER.md). P1 mantiene el contrato y el
+recorrido común; las PR pequeñas se revisan e integran en `main`. El bundle local
+anterior se conserva como archivo histórico. La matriz de rutas está en
+[REPOSITORY_LAYOUT](REPOSITORY_LAYOUT.md).
 
 ## Inicio de una tarea
 
