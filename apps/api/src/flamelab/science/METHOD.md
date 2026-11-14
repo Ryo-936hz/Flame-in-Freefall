@@ -51,6 +51,30 @@ serie se incluye explícitamente X en `vary`. Incógnitas de grado o control sep
 ensayos en grupos individuales; `not_applicable` explícito puede coincidir. Se evita
 agregar BASS-II y Saffire o sintético y publicado en un mismo grupo.
 
+La estratificación incluye además la procedencia de **cada observación**, expuesta
+en `ComparisonGroup.conditions.observation_provenance`. El contrato permite que
+un ensayo publicado contenga observaciones publicadas, digitalizadas y derivadas;
+estas representaciones no comparten mediana. `conditions.provenance` sigue siendo
+la procedencia del ensayo. Si no existe observación de la métrica se conserva un
+grupo sin valores con `observation_provenance=not_reported`; este marcador es una
+condición descriptiva del grupo, no una nueva enumeración del contrato.
+
+Cada grupo cuenta sus propios ensayos/unidades: un mismo ensayo puede aparecer en
+varios estratos de procedencia, por lo que **no se suman sus cuentas para inferir
+replicación global**. El perfil del corpus cuenta las unidades físicas por identidad.
+Las observaciones repetidas se conservan y la mediana sigue siendo descriptiva por
+observación, no un promedio ponderado por unidad independiente.
+
+La selección se deduplica y ordena por ID; observaciones, referencias y grupos
+tienen orden determinista. Cambiar el orden del bundle o la selección no modifica
+la respuesta. La dimensión de procedencia añadida cambia los IDs calculados de
+grupo para nuevas comparaciones; los snapshots históricos no se recalculan.
+
+Se conserva el contrato 1.0 de `x=null` cuando falta X o es categórico: esos registros
+no son pares cuantitativos válidos. La coordinación IA ya devuelve insuficiencia si
+no queda ningún X conocido. Retirar esos registros de la API requerirá acuerdo P1/P5;
+este incremento no cambia esa semántica ni inventa segmentos para BASS-II.
+
 La mediana describe las observaciones del grupo, sin ponderación inferencial. Se muestran
 por separado ensayos, observaciones y unidades independientes; pasos de una muestra no
 crean réplicas. Un grupo sin mediciones conocidas tiene mediana nula. `interval=null`

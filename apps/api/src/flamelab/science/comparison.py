@@ -10,10 +10,10 @@ from flamelab.domain.contracts import (
 from flamelab.science.common import CONDITION_KEYS, CONDITION_UNITS, METRIC_UNITS
 
 
-def _stratum(trial, vary):
+def _stratum(trial, vary, observation_provenance):
     conditions = {
         "study_id": trial.study_id, "material_grade": trial.material_grade or "not_reported",
-        "provenance": trial.provenance,
+        "provenance": trial.provenance, "observation_provenance": observation_provenance,
     }
     unknown = trial.material_grade is None
     for key in CONDITION_KEYS:
@@ -42,13 +42,14 @@ def _stratum(trial, vary):
 
 def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> ComparisonResponse:
     trials_by_id = {trial.id: trial for trial in bundle.trials}
-    selected_ids = list(dict.fromkeys(request.trial_ids))
+    selected_ids = sorted(set(request.trial_ids))
     for trial_id in selected_ids:
         if trial_id not in trials_by_id:
             raise KeyError(trial_id)
     warnings = [
         "Groups are descriptive strata, not evidence of causal effects or physical equivalence.",
         "Intervals are not implemented; repeated observations are not independent replicates.",
+        "Independent-unit counts are per stratum; do not sum them across source representations.",
     ]
     unit = METRIC_UNITS.get(request.metric, "unsupported")
     x_unit = CONDITION_UNITS.get(request.x_condition)
@@ -62,49 +63,59 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
     group_data = {}
     points = []
     observations_by_trial = {}
-    for observation in bundle.observations:
+    for observation in sorted(bundle.observations, key=lambda item: item.id):
         observations_by_trial.setdefault(observation.trial_id, []).append(observation)
     for trial_id in selected_ids:
         trial = trials_by_id[trial_id]
         if trial.provenance == "synthetic" and not request.allow_synthetic:
             warnings.append(f"synthetic_not_allowed:{trial_id}")
             continue
-        group_id, conditions, unknown = _stratum(trial, request.vary)
-        group = group_data.setdefault(group_id, {
-            "conditions": conditions, "trials": [], "units": set(), "values": [], "warnings": [],
-        })
-        group["trials"].append(trial.id)
-        group["units"].add(trial.independent_unit_id)
-        if unknown and not group["warnings"]:
-            group["warnings"].append("Incomplete control conditions; this trial is isolated, not pooled.")
         x_value = trial.conditions.get(request.x_condition)
         x = x_value.value if x_unit and x_value and x_value.status == "known" else None
         if x is None:
             warnings.append(f"x_unavailable:{trial_id}:{request.x_condition}")
         matching = [item for item in observations_by_trial.get(trial.id, []) if item.metric == request.metric]
-        if not matching:
-            group["warnings"].append(f"metric_not_reported:{trial_id}:{request.metric}")
+        by_provenance = {}
         for observation in matching:
-            if observation.status != "known":
-                group["warnings"].append(f"observation_missing:{observation.id}:{observation.status}")
-                continue
-            if observation.unit != unit:
-                group["warnings"].append(f"incompatible_unit:{observation.id}:{observation.unit}")
-                continue
-            if observation.provenance == "synthetic" and not request.allow_synthetic:
-                group["warnings"].append(f"synthetic_not_allowed:{observation.id}")
-                continue
-            # A point retains observation provenance; evidence includes both measurement
-            # and condition sources so the X coordinate is also traceable.
-            evidence_ids = list(dict.fromkeys(
-                observation.evidence_ids + trial.evidence_ids + (x_value.evidence_ids if x_value else [])
-            ))
-            points.append(PlotPoint(
-                trial_id=trial.id, observation_id=observation.id,
-                independent_unit_id=trial.independent_unit_id, x=x, y=observation.value,
-                group_id=group_id, evidence_ids=evidence_ids, provenance=observation.provenance,
-            ))
-            group["values"].append(observation.value)
+            by_provenance.setdefault(observation.provenance, []).append(observation)
+        if not matching:
+            by_provenance["not_reported"] = []
+        if len(by_provenance) > 1:
+            warnings.append(f"observation_provenance_split:{trial_id}")
+        for provenance, observations in sorted(by_provenance.items()):
+            # A published trial may legally carry derived/digitized observations.
+            # Their provenance, not just the trial's, must constrain the median.
+            group_id, conditions, unknown = _stratum(trial, request.vary, provenance)
+            group = group_data.setdefault(group_id, {
+                "conditions": conditions, "trials": [], "units": set(), "values": [], "warnings": [],
+            })
+            group["trials"].append(trial.id)
+            group["units"].add(trial.independent_unit_id)
+            if unknown and not group["warnings"]:
+                group["warnings"].append("Incomplete control conditions; this trial is isolated, not pooled.")
+            if not observations:
+                group["warnings"].append(f"metric_not_reported:{trial_id}:{request.metric}")
+            for observation in observations:
+                if observation.status != "known":
+                    group["warnings"].append(f"observation_missing:{observation.id}:{observation.status}")
+                    continue
+                if observation.unit != unit:
+                    group["warnings"].append(f"incompatible_unit:{observation.id}:{observation.unit}")
+                    continue
+                if observation.provenance == "synthetic" and not request.allow_synthetic:
+                    group["warnings"].append(f"synthetic_not_allowed:{observation.id}")
+                    continue
+                # Retain measurement and X-coordinate sources in a stable order.
+                evidence_ids = sorted(set(
+                    observation.evidence_ids + trial.evidence_ids
+                    + (x_value.evidence_ids if x_value else [])
+                ))
+                points.append(PlotPoint(
+                    trial_id=trial.id, observation_id=observation.id,
+                    independent_unit_id=trial.independent_unit_id, x=x, y=observation.value,
+                    group_id=group_id, evidence_ids=evidence_ids, provenance=observation.provenance,
+                ))
+                group["values"].append(observation.value)
     groups = []
     for group_id, group in sorted(group_data.items()):
         groups.append(ComparisonGroup(

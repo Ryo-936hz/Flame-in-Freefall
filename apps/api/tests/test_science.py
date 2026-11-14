@@ -249,3 +249,75 @@ def test_empty_bundle_profile_and_ranking_are_explicit():
     ranking = rank_trials(bundle, RankingRequest())
     assert profile.n_trials == profile.n_observations == profile.n_independent_units == 0
     assert not ranking.items and ranking.warnings
+
+
+def _artificial_mixed_source_bundle(bundle):
+    """Exercise non-synthetic provenance enums with invented numbers, never NASA data."""
+    data = bundle.model_dump()
+    data["description"] = "ARTIFICIAL regression case; published/derived labels test schema behavior."
+    data["studies"][0]["dataset_status"] = "unverified"
+    data["evidence"][0].update(provenance="published", reviewed=False)
+    data["trials"][0]["provenance"] = "published"
+    data["observations"][0].update(value=2.0, provenance="published")
+    for index, provenance, value in [(2, "derived", 20.0), (3, "digitized", 200.0)]:
+        ref = f"synthetic:artificial-source-{index}"
+        data["evidence"].append(dict(data["evidence"][0], id=ref, provenance=provenance))
+        data["observations"].append(dict(
+            data["observations"][0], id=f"synthetic:observation-{index}",
+            provenance=provenance, evidence_ids=[ref], value=value,
+        ))
+    return DatasetBundle.model_validate(data)
+
+
+def test_measurement_provenances_do_not_share_a_median(science_bundle):
+    bundle = _artificial_mixed_source_bundle(science_bundle)
+    result = _compare(bundle)
+    assert len(result.groups) == 3
+    medians = {group.conditions["observation_provenance"]: group.median for group in result.groups}
+    assert medians == {"published": 2.0, "derived": 20.0, "digitized": 200.0}
+    assert all(group.n_trials == group.n_observations == group.n_independent_units == 1
+               for group in result.groups)
+    # Source representations of one trial do not create three physical units.
+    assert profile_dataset(bundle).n_independent_units == 1
+    groups = {group.id: group for group in result.groups}
+    for point in result.points:
+        assert groups[point.group_id].conditions["observation_provenance"] == point.provenance
+    assert any("observation_provenance_split" in warning for warning in result.warnings)
+
+
+def test_missing_derived_observation_does_not_borrow_published_value(science_bundle):
+    data = _artificial_mixed_source_bundle(science_bundle).model_dump()
+    data["observations"][1].update(value=None, status="not_extracted")
+    result = _compare(DatasetBundle.model_validate(data))
+    derived = next(group for group in result.groups
+                   if group.conditions["observation_provenance"] == "derived")
+    assert derived.n_observations == 0 and derived.median is None
+    assert not any(point.provenance == "derived" for point in result.points)
+    assert any("not_extracted" in warning for warning in derived.warnings)
+
+
+def test_comparison_is_stable_under_equivalent_input_order(science_bundle):
+    bundle = _clone_trial(science_bundle)
+    forward = _compare(bundle)
+    data = bundle.model_dump()
+    data["trials"].reverse()
+    data["observations"].reverse()
+    backward = _compare(DatasetBundle.model_validate(data),
+                        trial_ids=["synthetic:trial-2", "synthetic:trial-1", "synthetic:trial-2"])
+    assert backward.model_dump() == forward.model_dump()
+
+
+def test_three_observations_of_one_trial_are_not_three_replicates(science_bundle):
+    data = science_bundle.model_dump()
+    for index, value in [(2, 0.2), (3, 0.4)]:
+        data["observations"].append(dict(data["observations"][0],
+                                         id=f"synthetic:observation-{index}", value=value))
+    bundle = DatasetBundle.model_validate(data)
+    result = _compare(bundle)
+    group = result.groups[0]
+    assert len(result.points) == group.n_observations == 3
+    assert group.n_trials == group.n_independent_units == 1
+    assert group.median == 0.2 and group.interval is None
+    assert profile_dataset(bundle).n_independent_units == 1
+    # These are repeat observations at the same static X, not invented BASS segments.
+    assert {point.x for point in result.points} == {5}
