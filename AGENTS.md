@@ -1,5 +1,20 @@
 # Instrucciones de trabajo para FlameLab SI
 
+## Petición vigente: experimento UX solo en `raul`
+
+La base estable del equipo permanece en `main`, commit `4833000d98fcb9d197a01e4d7622c8639115131d`.
+El usuario pide probar una interfaz de varias pantallas, con menos densidad y
+texto repetido, conservando estilo, estado y límites científicos. Este incremento
+permanece exclusivamente en `raul`: **no fusionar PR ni actualizar `main` con él**.
+No cambia backend, contratos, cálculos ni datos. Consultar
+[alcance y guion del experimento](docs/UX_EXPERIMENT_RAUL.md).
+
+Las autorizaciones de integración y publicación que siguen describen la entrega
+anterior; no autorizan integrar este experimento. Las reglas de ingeniería,
+procedencia y colaboración de este archivo siguen aplicándose.
+
+## Antecedentes de la integración estable
+
 La petición vigente autoriza integrar y terminar la demo compartida, conservar
 el trabajo del equipo y publicarlo mediante el flujo de integración. `main` es
 la base actual: la PR #3 se fusionó como `0b732cb`, incluyendo P2 y P6 sobre P1/P3/P4.

@@ -1,5 +1,33 @@
 # Dirección visual inspirada en sistemas de Anduril
 
+## Composición experimental vigente en `raul`
+
+La petición actual prueba una interfaz de cinco pantallas, separando la tarea
+principal del detalle que se consulta bajo demanda. Conserva los tokens de color,
+tipografía y contraste de la interfaz integrada, incluidos los temas oscuro y claro.
+La referencia estable sigue siendo `main`, `4833000d98fcb9d197a01e4d7622c8639115131d`; este rediseño
+permanece en `raul` y no se fusiona en `main` como parte del experimento.
+
+| Pantalla | Función principal |
+|---|---|
+| Research | Pregunta, métrica y filtros explícitos con controles desplegables. |
+| Results | Datos o conclusiones del expediente seleccionado; fuentes en un panel modal lateral. |
+| Lab | Casos BASS-II, escenarios A/B o hipótesis y consultas, con una vista visible cada vez. |
+| Library | Estudios del corpus activo y contexto documental Saffire en vistas separadas. |
+| Reports | Informe guardado, recuperación y reproducción de eventos. |
+
+Las pantallas permanecen montadas al navegar; las selecciones y resultados se
+conservan. Las advertencias científicas activas mantienen su jerarquía y las
+explicaciones extensas usan desplegables. El panel de fuentes conserva la
+distinción entre evidencia guardada en el expediente y evidencia del corpus activo.
+[Guion, alcance y límites del experimento](UX_EXPERIMENT_RAUL.md).
+
+## Antecedentes de diseño
+
+El mandato inicial y la composición por zonas que siguen se conservan como
+historial. La propuesta de paneles simultáneos y el host anterior de tres columnas
+no describen la composición experimental de cinco pantallas.
+
 ## Mandato del usuario
 
 El frontend futuro debe seguir una estética de sistemas de software de Anduril. Esta referencia guía composición, densidad y jerarquía. No implica copiar su interfaz exacta, sus activos, su logotipo ni afirmar relación con la empresa. Referencia pública: https://www.anduril.com/.
@@ -21,7 +49,7 @@ Una estación de trabajo científica sobria: información densa pero legible, pa
 
 Estos son criterios de diseño propuestos para FlameLab, no una descripción certificada de componentes internos de Anduril.
 
-## Composición de la pantalla principal
+## Composición histórica de la pantalla principal
 
 | Zona | Contenido |
 |---|---|

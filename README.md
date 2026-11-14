@@ -1,5 +1,11 @@
 # FlameLab SI — demo integrada
 
+> **Experimento UX exclusivo de `raul`.** La petición vigente reorganiza la interfaz
+> en cinco pantallas y conserva la paleta, la ciencia y los datos. La base estable
+> sigue en `main` (`4833000d98fcb9d197a01e4d7622c8639115131d`). No se fusiona una PR ni se actualiza
+> `main` con este experimento; no cambia backend ni contratos. El texto de integración
+> inferior conserva el historial. [Alcance y recorrido del rediseño](docs/UX_EXPERIMENT_RAUL.md).
+
 La [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3) está fusionada en
 `main` mediante `0b732cb`: P1/P3/P4, la ingesta y los contratos de P2, Mission Lab
 y recuperación P6, sobre el host P5 `9f54700`. La referencia de arranque del equipo
