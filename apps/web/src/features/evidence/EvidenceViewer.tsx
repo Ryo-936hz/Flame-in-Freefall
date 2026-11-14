@@ -4,6 +4,7 @@ import type { Api, Evidence } from "../../lib/client";
 import { ApiError, sourceLink } from "../../lib/client";
 import { createLatest } from "../../lib/latest";
 import { shortId } from "../../lib/format";
+import { tx, txText } from "../../lib/backendText";
 import { Panel, ProvenanceTag, StateMessage, Tag } from "../../components/ui";
 
 type Load = { state: "idle" } | { state: "loading" } | { state: "ready"; evidence: Evidence } | { state: "error"; message: string };
@@ -37,7 +38,7 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
       (evidence) => { if (latest.current.isCurrent(token)) setLoad({ state: "ready", evidence }); },
       (error: unknown) => {
         if (!latest.current.isCurrent(token)) return;
-        setLoad({ state: "error", message: error instanceof ApiError ? `${error.message} (${error.code}${error.requestId ? ` · ${error.requestId}` : ""})` : "The evidence could not be loaded." });
+        setLoad({ state: "error", message: error instanceof ApiError ? `${tx(error.message)} (${error.code}${error.requestId ? ` · ${error.requestId}` : ""})` : "The evidence could not be loaded." });
       },
     );
   }, [api, activeId, researchId, retrieved, attempt]);
@@ -69,13 +70,13 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
           <Tag tone={evidence.reviewed ? "neutral" : "warn"}>{evidence.reviewed ? "Reviewed" : "Review pending"}</Tag>
           {!retrieved && <Tag tone="warn">Active corpus · not in this research record</Tag>}
         </div>
-        <h3>{evidence.title}</h3>
+        <h3>{tx(evidence.title)}</h3>
         <dl className="ev-meta">
           <div><dt>ID</dt><dd className="id">{evidence.id}</dd></div>
           <div><dt>Study</dt><dd className="id">{evidence.study_id}</dd></div>
           <div><dt>Locator</dt><dd className="id">{evidence.locator}{evidence.page != null ? ` · PDF page ${evidence.page}` : ""}</dd></div>
         </dl>
-        <pre className="ev-text">{evidence.text}</pre>
+        <pre className="ev-text">{txText(evidence.text)}</pre>
         {link
           ? <a className="btn" href={link} target="_blank" rel="noreferrer">Open public source ↗</a>
           : <p className="hint">{evidence.provenance === "synthetic"

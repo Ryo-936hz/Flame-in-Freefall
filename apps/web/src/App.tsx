@@ -4,6 +4,7 @@ import type { Health, Profile, RankingRequest, ResearchResponse } from "./lib/cl
 import { buildRanking, demoDraft } from "./lib/filters";
 import type { BriefDraft, ConditionKey } from "./lib/filters";
 import { createLatest } from "./lib/latest";
+import { tx } from "./lib/backendText";
 import { countUp, reveal, useGSAP } from "./lib/motion";
 import { shortId } from "./lib/format";
 import TopBar from "./components/TopBar";
@@ -27,7 +28,7 @@ type Run =
   | { state: "ready"; result: ResearchResponse };
 
 function failure(error: unknown): string {
-  if (error instanceof ApiError) return `${error.message} · ${error.code} (HTTP ${error.status})${error.requestId ? ` · request ${error.requestId}` : ""}`;
+  if (error instanceof ApiError) return `${tx(error.message)} · ${error.code} (HTTP ${error.status})${error.requestId ? ` · request ${error.requestId}` : ""}`;
   return error instanceof Error ? error.message : "The operation could not be completed.";
 }
 
@@ -69,7 +70,7 @@ export default function App() {
     try {
       const [newHealth, newProfile, trials] = await Promise.all([api.health(), api.profile(), api.trials()]);
       setHealth(newHealth); setProfile(newProfile); setOffline(null);
-      setLabels(new Map(trials.map((trial) => [trial.id, trial.label])));
+      setLabels(new Map(trials.map((trial) => [trial.id, tx(trial.label)])));
       const values: Partial<Record<ConditionKey, Set<string>>> = {};
       for (const trial of trials) {
         for (const [key, condition] of Object.entries(trial.conditions)) {

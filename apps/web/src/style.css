@@ -573,3 +573,6 @@ body { background: var(--bg); }
 :root:not([data-theme="light"]) { --warn: #8fbaff; }
 :root:not([data-theme="light"]) .flame-tag { color: #8fbaff; border-color: #8fbaff; }
 :root[data-theme="light"] .flame-tag { color: #f0a35e; border-color: #f0a35e; }
+
+/* Day background: neutral warm white instead of the greenish bone. */
+:root[data-theme="light"] { --bg: #f6f5f2; --surface: #ffffff; }

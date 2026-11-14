@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Api, RankingRequest, ResearchResponse, ScenarioComparison } from "../lib/client";
 import { ApiError } from "../lib/client";
 import { reasonText, shortId } from "../lib/format";
+import { tx, txText } from "../lib/backendText";
 import { Panel, StateMessage, Tag } from "./ui";
 
 /**
@@ -19,7 +20,7 @@ export interface MissionSlotProps {
 }
 
 function message(error: unknown): string {
-  return error instanceof ApiError ? `${error.message} (${error.code})` : "The operation could not be completed.";
+  return error instanceof ApiError ? `${tx(error.message)} (${error.code})` : "The operation could not be completed.";
 }
 
 export default function InterimMissionTools({ api, research, request, onOpenRun }: MissionSlotProps) {
@@ -69,8 +70,8 @@ export default function InterimMissionTools({ api, research, request, onOpenRun 
       <section aria-labelledby="report-title">
         <h3 id="report-title" className="cap">Research record</h3>
         <div className="actions">
-          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Saved report · Markdown, not rendered", body: await api.report(research.id) }); })}>Open report</button>
-          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Saved events · replay, not live", body: await api.events(research.id) }); })}>Replay events</button>
+          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Saved report · Markdown, not rendered", body: txText(await api.report(research.id)) }); })}>Open report</button>
+          <button type="button" className="btn" disabled={busy || !research} onClick={() => run(async () => { if (research) setText({ title: "Saved events · replay, not live", body: txText(await api.events(research.id)) }); })}>Replay events</button>
         </div>
         <form className="recover" onSubmit={(event) => { event.preventDefault(); const id = runId.trim(); if (id) run(async () => onOpenRun(await api.getResearch(id))); }}>
           <label className="field"><span className="cap">Recover saved research</span>

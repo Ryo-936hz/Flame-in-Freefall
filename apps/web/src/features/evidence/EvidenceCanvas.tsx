@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { ResearchResponse } from "../../lib/client";
 import { conditionLabel } from "../../lib/filters";
 import { fmt, reasonText } from "../../lib/format";
+import { tx } from "../../lib/backendText";
 import { Panel, StateMessage, Tag } from "../../components/ui";
 import ScatterChart from "./ScatterChart";
 import PointsTable from "./PointsTable";
@@ -26,7 +27,7 @@ export default function EvidenceCanvas({ result, labels, selection, onSelectObse
     {synthetic && <Tag tone="synthetic">Synthetic data · not NASA</Tag>}
   </>}>
     <div className="panel-b">
-      <p className="summary">{result.summary}</p>
+      <p className="summary">{tx(result.summary)}</p>
 
       {result.status === "insufficient_evidence" && <StateMessage kind="insufficient" title="Not enough evidence to answer with these filters">
         <p>No figures are substituted and no conclusion is forced. Reasons returned by the ranking:</p>
@@ -55,7 +56,7 @@ export default function EvidenceCanvas({ result, labels, selection, onSelectObse
             <span className="num">median {fmt(group.median)} {comparison.unit}</span>
           </li>)}
         </ul>
-        {comparison.warnings.length > 0 && <ul className="warnings">{comparison.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>}
+        {comparison.warnings.length > 0 && <ul className="warnings">{comparison.warnings.map((warning) => <li key={warning}>{tx(warning)}</li>)}</ul>}
       </section>}
       {comparison && comparison.points.length === 0 && <StateMessage kind="empty" title="No comparable observations for this metric" />}
 
