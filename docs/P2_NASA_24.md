@@ -4,6 +4,10 @@ Starting commit on `lujan`: `6e3350ef7fb2bdda2d57c26ce1111536381f60b6`.
 The scope follows the [P3 study matrix](https://github.com/Ryo-936hz/Flame-in-Freefall/blob/f25a4a251769d8bd1ed31617adee486dacf34425/evals/science/NASA_24_REVIEW.md).
 Every study has a profile with its question, source inventory, row granularity and review limits.
 
+The follow-up on `lujan` starts from `cfc0795`. It uses P1's shared segment contract
+(`94989a7`) and P3's comparison and evaluation baseline (`8134b1c`). The bundle
+uses schema 1.1. Its canonical segment fields are `segments`, `sequence` and `segment_id`.
+
 ## Generate and open the corpus
 
 A **bundle** is a JSON file containing the studies, evidence, trial records, and normalized
@@ -15,17 +19,17 @@ output directory for each extraction. The extractor checks the source sizes and 
 
 ```bash
 uv run --locked --with pymupdf==2.1 python -m flamelab.data.cli \
-  extract-nasa datasets --output-dir data/processed/nasa-24
-uv run --locked python -m flamelab.data.cli validate data/processed/nasa-24/bundle.json
+  extract-nasa datasets --output-dir data/processed/nasa-24-v11
+uv run --locked python -m flamelab.data.cli validate data/processed/nasa-24-v11/bundle.json
 uv run --locked python -m flamelab.data.cli import \
-  data/processed/nasa-24/bundle.json --database-url sqlite:///work/nasa-24.db
+  data/processed/nasa-24-v11/bundle.json --database-url sqlite:///work/nasa-24-v11.db
 ```
 
 To open the technical web harness, start the API with the corpus database and run `npm run dev:web`
 in another terminal. Open the URL printed by Vite and use **Catálogo de estudios**.
 
 ```bash
-FLAMELAB_DATABASE_URL=sqlite:///work/nasa-24.db FLAMELAB_SEED_DEMO=false \
+FLAMELAB_DATABASE_URL=sqlite:///work/nasa-24-v11.db FLAMELAB_SEED_DEMO=false \
   FLAMELAB_AI_PROVIDER=demo uv run --locked uvicorn flamelab.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -61,6 +65,13 @@ units. BASS-II retains its 20 sample-based units and 43 linked conditions. The s
 status of mapped studies is `unverified`; decisions about censored runs, ambiguous fields,
 derived values and cross-campaign compatibility are for P3 review.
 
+BASS-II writes the documented effective controls into each segment. Initial/final O₂
+and total duration stay with the trial. The table gives `burning_faces` as a count and
+leaves the identity `combustion_face` unresolved. P3's comparison separates published,
+digitized and derived observations and isolates segments with unresolved controls.
+Its stable weighted scoring and midpoint arithmetic apply to queries across the corpus.
+Use `condition_scope: "segment"` for ranking by an explicit segment condition.
+
 ## Analysis paths by family
 
 | Family | Analysis supported by the current corpus | Evidence needed to extend it |
@@ -79,6 +90,17 @@ derived values and cross-campaign compatibility are for P3 review.
   links, campaign isolation, and counting unresolved independence through the API.
 - Regenerated OpenAPI and TypeScript from the executable API contract. See
   [VERIFICATION](VERIFICATION.md) for the commands and results.
+
+For the 1.1 review, validate [P1's example](examples/sequential_conditions.json)
+and run both [P3 evaluation suites](../evals/science/README.md). With the local
+1.1 BASS-II and NASA bundles generated, run the real-data integration tests with:
+
+```bash
+FLAMELAB_BASS_BUNDLE=data/processed/bass-table51-v11/bundle.json \
+FLAMELAB_NASA_BUNDLE=data/processed/nasa-24-v11/bundle.json \
+uv run --locked pytest -q apps/api/tests/test_condition_segments.py \
+  apps/api/tests/test_p2_integration.py apps/api/tests/test_nasa_corpus_integration.py
+```
 
 P1 should review the additive contract, generated artifacts, and existing storage compatibility.
 P3 should review the per-campaign mappings against `quality.json`. P4–P6 can use the catalog

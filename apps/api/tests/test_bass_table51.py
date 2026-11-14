@@ -45,18 +45,19 @@ def _build(table, operating):
     return build_bundle(table, csv.DictReader(target, strict=True), load_bundle(CATALOG))
 
 
-def test_staged_trial_preserves_originals_source_scope_and_absence(source_cells):
+def test_segmented_trial_preserves_originals_source_scope_and_absence(source_cells):
     bundle, quality = _build(*source_cells)
+    assert bundle.schema_version == "1.1"
     trial = bundle.trials[0]
-    first, second = trial.condition_stages
-    assert [first.order, second.order] == [1, 2]
+    first, second = trial.segments
+    assert [first.sequence, second.sequence] == [1, 2]
     assert trial.id == f"{STUDY}:M1"
     assert trial.sample_id == trial.independent_unit_id == f"{STUDY}:sample:900"
     assert first.conditions["flow_velocity_cm_s"].value == 0
     assert second.conditions["flow_velocity_cm_s"].value == 7
-    stage_o2 = second.conditions["oxygen_pct"]
-    assert stage_o2.value is None
-    assert stage_o2.status == "not_measured"
+    segment_o2 = second.conditions["oxygen_pct"]
+    assert segment_o2.value is None
+    assert segment_o2.status == "not_measured"
     assert "oxygen_pct" not in trial.conditions
     assert trial.conditions["oxygen_initial_pct"].value == 23.2
     assert trial.conditions["oxygen_initial_pct"].original_unit == "vol%"
@@ -67,9 +68,17 @@ def test_staged_trial_preserves_originals_source_scope_and_absence(source_cells)
     )
     assert trial.conditions["burn_duration_s"].value == 150
     assert trial.conditions["burning_faces"].value == 2
+    for segment in trial.segments:
+        assert not {"oxygen_initial_pct", "oxygen_final_pct", "burn_duration_s"} & segment.conditions.keys()
+        assert segment.conditions["combustion_face"].status == "not_reported"
+        assert segment.conditions["combustion_face"].value is None
+        for key in ("material", "geometry", "thickness_mm", "sample_width_mm", "flow_direction",
+                    "gravity_regime", "burning_faces"):
+            assert segment.conditions[key] == trial.conditions[key]
+            assert set(segment.conditions[key].evidence_ids) <= set(segment.evidence_ids)
 
     obs = bundle.observations[0]
-    assert (obs.trial_id, obs.condition_id) == (trial.id, first.id)
+    assert (obs.trial_id, obs.segment_id) == (trial.id, first.id)
     assert (obs.value, obs.status, obs.original_value, obs.original_unit) == (0, "known", "0", "mm/s")
     evidence = {item.id: item for item in bundle.evidence}
     source = evidence[obs.evidence_ids[0]]

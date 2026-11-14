@@ -10,9 +10,10 @@ from pydantic import (
 Number = StrictFloat | StrictInt
 Scalar = Number | StrictStr
 ConditionKey = Literal[
-    "oxygen_pct", "pressure_kpa", "flow_velocity_cm_s", "material", "geometry",
-    "thickness_mm", "diameter_mm", "sample_width_mm", "flow_direction", "gravity_regime",
-    "oxygen_initial_pct", "oxygen_final_pct", "burning_faces", "burn_duration_s",
+    "oxygen_pct", "oxygen_initial_pct", "oxygen_final_pct", "pressure_kpa",
+    "flow_velocity_cm_s", "material", "geometry", "combustion_face", "thickness_mm",
+    "diameter_mm", "sample_width_mm", "flow_direction", "gravity_regime",
+    "burning_faces", "burn_duration_s",
     "test_end", "test_configuration", "aging_duration_s", "ignition_power_w",
     "ignition_duration_s",
 ]
@@ -36,7 +37,7 @@ CONDITION_UNITS = {
     "aging_duration_s": "s", "ignition_power_w": "W", "ignition_duration_s": "s",
 }
 TRIAL_ONLY_CONDITIONS = frozenset({
-    "oxygen_initial_pct", "oxygen_final_pct", "burning_faces", "burn_duration_s",
+    "oxygen_initial_pct", "oxygen_final_pct", "burn_duration_s",
 })
 METRIC_UNITS = {
     "flame_spread_rate_mm_s": "mm/s", "extinction_oxygen_pct": "%", "heat_release_w": "W",
@@ -139,15 +140,16 @@ def validate_conditions(conditions: dict[ConditionKey, ConditionValue]) -> None:
                 raise ValueError("known conditions require evidence")
 
 
-class ConditionStage(Contract):
+class ConditionSegment(Contract):
+    """Source-reported effective conditions within one physical trial."""
+
     id: Identifier
-    order: int = Field(ge=1)
+    sequence: Annotated[StrictInt, Field(ge=1)]
     conditions: dict[ConditionKey, ConditionValue]
+    evidence_ids: list[Identifier] = Field(min_length=1)
 
     @model_validator(mode="after")
     def typed_conditions(self) -> Self:
-        if TRIAL_ONLY_CONDITIONS.intersection(self.conditions):
-            raise ValueError("trial-only conditions cannot appear in condition stages")
         validate_conditions(self.conditions)
         return self
 
@@ -160,26 +162,26 @@ class Trial(Contract):
     independent_unit_status: Literal["identified", "unresolved"] = "identified"
     label: str
     conditions: dict[ConditionKey, ConditionValue]
-    condition_stages: list[ConditionStage] = Field(default_factory=list)
     evidence_ids: list[Identifier] = Field(min_length=1)
     provenance: Provenance
     material_grade: str | None = None
     notes: list[str] = Field(default_factory=list)
+    segments: list[ConditionSegment] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def typed_conditions(self) -> Self:
         validate_conditions(self.conditions)
-        if [stage.order for stage in self.condition_stages] != list(range(1, len(self.condition_stages) + 1)):
-            raise ValueError("condition stages must be in contiguous order starting at one")
-        if len({stage.id for stage in self.condition_stages}) != len(self.condition_stages):
-            raise ValueError("duplicate condition stage identifier")
+        if len({segment.id for segment in self.segments}) != len(self.segments):
+            raise ValueError("segment identifiers must be unique within a trial")
+        if len({segment.sequence for segment in self.segments}) != len(self.segments):
+            raise ValueError("segment sequence must be unique within a trial")
         return self
 
 
 class Observation(Contract):
     id: Identifier
     trial_id: Identifier
-    condition_id: Identifier | None = None
+    segment_id: Identifier | None = None
     metric: Metric
     value: Number | None = None
     unit: str
@@ -214,7 +216,7 @@ class StudyObservationPage(Contract):
 
 
 class DatasetBundle(Contract):
-    schema_version: Literal["1.0"] = "1.0"
+    schema_version: Literal["1.0", "1.1"] = "1.1"
     dataset_id: Identifier
     description: str
     studies: list[Study] = Field(default_factory=list)
@@ -230,7 +232,7 @@ class DatasetBundle(Contract):
         studies = {x.id: x for x in self.studies}
         evidence = {x.id: x for x in self.evidence}
         trials = {x.id: x for x in self.trials}
-        stage_trials = {}
+        segment_trials: dict[str, str] = {}
         for item in self.evidence:
             if item.study_id not in studies:
                 raise ValueError("evidence references unknown study")
@@ -251,11 +253,12 @@ class DatasetBundle(Contract):
                 raise ValueError("trial/study synthetic provenance mismatch")
             check_refs(trial.evidence_ids, trial.study_id, trial.provenance == "synthetic")
             condition_maps = [trial.conditions]
-            for stage in trial.condition_stages:
-                if stage.id in stage_trials:
-                    raise ValueError("duplicate condition stage identifier")
-                stage_trials[stage.id] = trial.id
-                condition_maps.append(stage.conditions)
+            for segment in trial.segments:
+                if segment.id in segment_trials:
+                    raise ValueError("segment identifiers must be unique in the dataset")
+                segment_trials[segment.id] = trial.id
+                check_refs(segment.evidence_ids, trial.study_id, trial.provenance == "synthetic")
+                condition_maps.append(segment.conditions)
             for conditions in condition_maps:
                 for condition in conditions.values():
                     check_refs(condition.evidence_ids, trial.study_id, trial.provenance == "synthetic")
@@ -263,10 +266,8 @@ class DatasetBundle(Contract):
             if observation.trial_id not in trials:
                 raise ValueError("observation references unknown trial")
             trial = trials[observation.trial_id]
-            if observation.condition_id is None and trial.condition_stages:
-                raise ValueError("observations of a staged trial require a condition stage")
-            if observation.condition_id is not None and stage_trials.get(observation.condition_id) != trial.id:
-                raise ValueError("observation condition stage must belong to its trial")
+            if observation.segment_id is not None and segment_trials.get(observation.segment_id) != trial.id:
+                raise ValueError("observation segment reference is missing or belongs to another trial")
             if (observation.provenance == "synthetic") != (trial.provenance == "synthetic"):
                 raise ValueError("observation/trial provenance mismatch")
             allowed_studies = METRIC_STUDIES.get(observation.metric)
@@ -277,6 +278,7 @@ class DatasetBundle(Contract):
 
 
 class RankingRequest(Contract):
+    condition_scope: Literal["trial", "segment"] = "trial"
     target: dict[ConditionKey, Scalar] = Field(default_factory=dict)
     required_match: list[ConditionKey] = Field(default_factory=list)
     vary: list[ConditionKey] = Field(default_factory=list)
@@ -310,8 +312,8 @@ class RankingContribution(Contract):
 
 class RankedTrial(Contract):
     trial_id: Identifier
-    scored_condition_id: Identifier | None = None
-    eligible_condition_ids: list[Identifier] = Field(default_factory=list)
+    scored_segment_id: Identifier | None = None
+    eligible_segment_ids: list[Identifier] = Field(default_factory=list)
     similarity: float | None = Field(default=None, ge=0, le=1)
     coverage: float = Field(ge=0, le=1)
     eligibility: Literal["eligible", "excluded", "indeterminate"]
@@ -332,7 +334,7 @@ class RankingResponse(Contract):
 
 class ComparisonRequest(Contract):
     trial_ids: list[Identifier] = Field(min_length=1, max_length=50)
-    condition_ids: list[Identifier] = Field(default_factory=list)
+    segment_ids: list[Identifier] = Field(default_factory=list)
     metric: Metric = "flame_spread_rate_mm_s"
     x_condition: ConditionKey = "flow_velocity_cm_s"
     vary: list[ConditionKey] = Field(default_factory=list)
@@ -342,7 +344,7 @@ class ComparisonRequest(Contract):
 class PlotPoint(Contract):
     trial_id: Identifier
     observation_id: Identifier
-    condition_id: Identifier | None = None
+    segment_id: Identifier | None = None
     independent_unit_id: Identifier
     independent_unit_status: Literal["identified", "unresolved"] = "identified"
     x: Number | None
@@ -359,7 +361,7 @@ class ComparisonGroup(Contract):
     conditions: dict[str, str]
     trial_ids: list[Identifier]
     n_trials: int
-    n_condition_stages: int = 0
+    n_segments: int = 0
     n_observations: int
     n_independent_units: int
     n_trials_with_unresolved_independence: int = 0
@@ -382,12 +384,12 @@ class ProfileResponse(Contract):
     dataset_id: Identifier
     n_studies: int
     n_trials: int
-    n_condition_stages: int = 0
+    n_segments: int = 0
     n_observations: int
     n_independent_units: int
     n_trials_with_unresolved_independence: int = 0
     missing_by_condition: dict[str, dict[str, int]]
-    missing_by_stage_condition: dict[str, dict[str, int]] = Field(default_factory=dict)
+    missing_by_segment_condition: dict[str, dict[str, int]] = Field(default_factory=dict)
     missing_by_study: dict[str, dict[str, dict[str, int]]] = Field(default_factory=dict)
     issues: list[str]
     synthetic_trials: int

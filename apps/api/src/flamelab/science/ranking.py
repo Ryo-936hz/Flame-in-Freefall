@@ -1,12 +1,15 @@
 """Explicit eligibility followed by weighted Gower similarity."""
 
+from fractions import Fraction
+
 from flamelab.domain.contracts import (
-    DatasetBundle, RankedTrial, RankingContribution, RankingRequest, RankingResponse,
+    TRIAL_ONLY_CONDITIONS, DatasetBundle, RankedTrial, RankingContribution, RankingRequest,
+    RankingResponse,
 )
-from flamelab.science.common import GOWER_SCALES_V1, effective_conditions
+from flamelab.science.common import GOWER_SCALES_V1
 
 
-def _score(conditions, request, total_weight, exclusions):
+def _score_conditions(conditions, request, active, total_weight, exclusions):
     reasons = list(exclusions)
     rejection = bool(exclusions)
     indeterminate = False
@@ -19,8 +22,10 @@ def _score(conditions, request, total_weight, exclusions):
             rejection = True
             reasons.append(f"required_condition_mismatch:{key}")
     contributions = []
-    known_weight = 0.0
-    weighted_distance = 0.0
+    # Exact intermediate sums avoid inf/inf and preserve tiny known weights
+    # when a much larger weight belongs to an unavailable condition.
+    known_weight = Fraction(0)
+    weighted_distance = Fraction(0)
     for key, target in request.target.items():
         condition = conditions.get(key)
         candidate = condition.value if condition and condition.status == "known" else None
@@ -34,34 +39,41 @@ def _score(conditions, request, total_weight, exclusions):
         elif candidate is None:
             note = "missing_condition_reduces_coverage"
         else:
-            known_weight += weight
+            known_weight += active[key]
             if key in GOWER_SCALES_V1:
-                raw_distance = abs(float(target) - float(candidate)) / GOWER_SCALES_V1[key]
-                distance = min(1.0, raw_distance)
+                raw_distance = abs(Fraction(target) - Fraction(candidate)) / Fraction(GOWER_SCALES_V1[key])
+                exact_distance = min(Fraction(1), raw_distance)
                 note = "fixed_numeric_scale_v1"
                 if raw_distance > 1.0:
                     note += ":distance_clipped_at_one"
             else:
-                distance = 0.0 if target == candidate else 1.0
+                exact_distance = Fraction(0 if target == candidate else 1)
                 note = "categorical_equality"
-            weighted_distance += weight * distance
+            distance = float(exact_distance)
+            weighted_distance += active[key] * exact_distance
         contributions.append(RankingContribution(
             variable=key, target=target, candidate=candidate, weight=weight,
             distance=distance, note=note,
         ))
-    coverage = known_weight / total_weight if total_weight else 0.0
+    exact_coverage = known_weight / total_weight if total_weight else Fraction(0)
+    coverage = float(exact_coverage)
+    # Interpret the threshold's public decimal representation without letting
+    # output rounding make incomplete evidence satisfy full coverage.
+    minimum_coverage = Fraction(str(request.minimum_coverage))
     if not total_weight:
         indeterminate = True
         reasons.append("no_active_target_weights")
     elif not known_weight:
         indeterminate = True
         reasons.append("no_known_target_conditions")
-    elif coverage < request.minimum_coverage:
+    elif exact_coverage < minimum_coverage:
         indeterminate = True
         reasons.append("coverage_below_minimum")
+        if coverage >= request.minimum_coverage:
+            reasons.append("coverage_rounded_to_threshold")
     eligibility = "excluded" if rejection else "indeterminate" if indeterminate else "eligible"
     similarity = (
-        max(0.0, min(1.0, 1.0 - weighted_distance / known_weight))
+        float(1 - weighted_distance / known_weight)
         if eligibility == "eligible" else None
     )
     if eligibility == "eligible":
@@ -71,76 +83,93 @@ def _score(conditions, request, total_weight, exclusions):
 
 def rank_trials(bundle: DatasetBundle, request: RankingRequest,
                 metric_trial_ids: set[str] | None = None) -> RankingResponse:
-    """Rank physical trials using their best eligible condition without mixing stages."""
-    eligible = []
-    excluded = []
+    """Rank one score per physical trial, optionally using explicit segments."""
+    segment_mode = request.condition_scope == "segment"
     warnings = [
         "Gower v1 uses fixed software scales; similarity is not confidence, hazard or physical validity.",
         "Eligibility checks the explicit required_match filters; it does not prove physical comparability.",
     ]
-    total_weight = sum(
-        request.weights.get(key, 1.0) for key in request.target if key not in request.vary
-    )
-    observation_refs = {}
-    for observation in bundle.observations:
-        key = (observation.trial_id, observation.condition_id)
-        observation_refs.setdefault(key, []).extend(observation.evidence_ids)
-    trials_by_id = {trial.id: trial for trial in bundle.trials}
+    if segment_mode:
+        warnings.append("segment_level_ranking: each trial score uses its best eligible explicit segment.")
+    elif any(trial.segments for trial in bundle.trials):
+        warnings.append("trial_level_ranking: filters and Gower use explicit trial conditions; "
+                        "segment conditions are not substituted or ranked independently.")
+    active = {
+        key: Fraction(request.weights.get(key, 1.0)) for key in request.target
+        if key not in request.vary and request.weights.get(key, 1.0) > 0
+    }
+    total_weight = sum(active.values())
+    trial_refs = {}
+    segment_refs = {}
+    for obs in bundle.observations:
+        trial_refs.setdefault(obs.trial_id, []).extend(obs.evidence_ids)
+        if obs.segment_id is not None:
+            segment_refs.setdefault(obs.segment_id, []).extend(obs.evidence_ids)
+    trials = {trial.id: trial for trial in bundle.trials}
+    eligible, excluded = [], []
     for trial in sorted(bundle.trials, key=lambda item: item.id):
         exclusions = []
         if request.study_ids and trial.study_id not in request.study_ids:
             exclusions.append("study_not_selected")
-        if metric_trial_ids is not None and trial.id not in metric_trial_ids:
-            exclusions.append("requested_metric_unavailable")
         if trial.provenance == "synthetic" and not request.allow_synthetic:
             exclusions.append("synthetic_not_allowed")
-        scores = []
-        for stage in trial.condition_stages or [None]:
-            conditions = effective_conditions(trial, stage)
-            score = _score(conditions, request, total_weight, exclusions)
-            scores.append((stage.id if stage else None, conditions, score))
-        # max() retains the first stage on a tie, preserving source order.
-        scored_id, _, score = max(scores, key=lambda item: (
-            item[2][0] == "eligible", item[2][0] == "indeterminate",
-            item[2][1] if item[2][1] is not None else -1.0, item[2][2],
-        ))
-        eligibility, similarity, coverage, score_reasons, contributions = score
-        reasons = list(score_reasons)
-        accepted = [item for item in scores if item[2][0] == "eligible"]
-        evidence_ids = list(trial.evidence_ids)
-        for stage_id, conditions, stage_score in scores:
-            if not accepted or stage_score[0] == "eligible":
-                evidence_ids.extend(ref for value in conditions.values() for ref in value.evidence_ids)
-                evidence_ids.extend(observation_refs.get((trial.id, stage_id), []))
-            if stage_id and stage_score[0] != "eligible" and not exclusions:
-                reasons.extend(
-                    f"condition_stage_rejected:{stage_id}:{reason}" for reason in stage_score[3]
-                )
-        result = RankedTrial(
-            trial_id=trial.id, scored_condition_id=scored_id,
-            eligible_condition_ids=[stage_id for stage_id, _, _ in accepted if stage_id is not None],
-            similarity=similarity, coverage=coverage, eligibility=eligibility, reasons=reasons,
-            contributions=contributions, evidence_ids=list(dict.fromkeys(evidence_ids)),
-            provenance=trial.provenance,
+        if metric_trial_ids is not None and trial.id not in metric_trial_ids:
+            exclusions.append("requested_metric_unavailable")
+        segments = sorted(trial.segments, key=lambda segment: segment.sequence)
+        scored_segment = None
+        accepted = []
+        segment_reasons = []
+        if segment_mode and segments:
+            scored = [
+                (segment, _score_conditions(
+                    {key: value for key, value in segment.conditions.items()
+                     if key not in TRIAL_ONLY_CONDITIONS},
+                    request, active, total_weight, exclusions,
+                ))
+                for segment in segments
+            ]
+            accepted = [segment for segment, score in scored if score[0] == "eligible"]
+            scored_segment, assessment = max(scored, key=lambda item: (
+                item[1][0] == "eligible", item[1][0] == "indeterminate",
+                item[1][1] if item[1][1] is not None else -1.0, item[1][2],
+            ))
+            segment_reasons = [
+                f"segment_rejected:{segment.id}:{reason}"
+                for segment, score in scored if score[0] != "eligible" and not exclusions
+                for reason in score[3]
+            ]
+        elif segment_mode:
+            assessment = _score_conditions({}, request, active, total_weight,
+                                           [*exclusions, "trial_has_no_segments"])
+        else:
+            assessment = _score_conditions(trial.conditions, request, active, total_weight, exclusions)
+        eligibility, similarity, coverage, reasons, contributions = assessment
+        refs = [*trial.evidence_ids,
+                *(ref for condition in trial.conditions.values() for ref in condition.evidence_ids)]
+        for segment in accepted or segments:
+            refs.extend(segment.evidence_ids)
+            refs.extend(ref for condition in segment.conditions.values() for ref in condition.evidence_ids)
+            if segment_mode:
+                refs.extend(segment_refs.get(segment.id, []))
+        if not segment_mode:
+            refs.extend(trial_refs.get(trial.id, []))
+        item = RankedTrial(
+            trial_id=trial.id, similarity=similarity, coverage=coverage,
+            scored_segment_id=scored_segment.id if scored_segment else None,
+            eligible_segment_ids=[segment.id for segment in accepted],
+            eligibility=eligibility, reasons=[*reasons, *segment_reasons], contributions=contributions,
+            evidence_ids=sorted(set(refs)), provenance=trial.provenance,
         )
-        (eligible if eligibility == "eligible" else excluded).append(result)
+        (eligible if eligibility == "eligible" else excluded).append(item)
     eligible.sort(key=lambda item: (-item.similarity, -item.coverage, item.trial_id))
     items = eligible[:request.limit]
-    if not items:
+    if not eligible:
         warnings.append("No eligible evidence for the explicit filters and coverage requirement.")
     if any(item.provenance == "synthetic" for item in items):
         warnings.append("Synthetic fixtures are software examples, not NASA measurements.")
-    if any(item.eligible_condition_ids for item in items):
-        warnings.append("A staged trial's similarity describes its best eligible stage; stages share the same physical trial.")
-    unverified_studies = {study.id for study in bundle.studies if study.dataset_status == "unverified"}
-    unreviewed_evidence = {entry.id for entry in bundle.evidence if not entry.reviewed}
-    if any(trials_by_id[item.trial_id].study_id in unverified_studies
-           or unreviewed_evidence.intersection(item.evidence_ids) for item in items):
+    unverified = {study.id for study in bundle.studies if study.dataset_status == "unverified"}
+    if any(trials[item.trial_id].study_id in unverified for item in items):
         warnings.append("Selected evidence includes unverified data awaiting scientific review.")
-    warnings.extend(
-        f"source_note:{item.trial_id}:{note}"
-        for item in items for note in trials_by_id[item.trial_id].notes
-    )
-    return RankingResponse(
-        dataset_id=bundle.dataset_id, items=items, excluded=excluded, warnings=warnings,
-    )
+    warnings.extend(f"source_note:{item.trial_id}:{note}"
+                    for item in items for note in trials[item.trial_id].notes)
+    return RankingResponse(dataset_id=bundle.dataset_id, items=items, excluded=excluded, warnings=warnings)

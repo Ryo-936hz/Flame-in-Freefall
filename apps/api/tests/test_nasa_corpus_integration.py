@@ -25,8 +25,11 @@ def test_nasa_corpus_through_import_and_api(tmp_path, capsys):
     settings = Settings(_env_file=None, database_url=url, ai_provider="demo", seed_demo=False)
     with TestClient(create_app(settings)) as client:
         prefix = "/api/v1"
+        assert client.get(f"{prefix}/health").json()["schema_version"] == "1.1"
         studies = {item["id"]: item for item in client.get(f"{prefix}/studies").json()}
         assert len(studies) == 24
+        bass = client.get(f"{prefix}/trials", params={"study_id": "psi:PSI-25"}).json()
+        assert len(bass) == 20 and sum(len(trial["segments"]) for trial in bass) == 43
         for study_id in studies:
             page = client.get(f"{prefix}/studies/{study_id}/evidence", params={"limit": 1}).json()
             assert page["total"] >= 2

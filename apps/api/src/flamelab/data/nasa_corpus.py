@@ -44,7 +44,7 @@ def build_corpus(datasets: Path, catalog_path: Path, inventory_path: Path,
         }))
 
     bundle = DatasetBundle(
-        dataset_id="psi:nasa-local-corpus-v1",
+        schema_version="1.1", dataset_id="psi:nasa-local-corpus-v1",
         description="NASA PSI documentary corpus and campaign-specific descriptive data awaiting review.",
         studies=studies, evidence=[*bass.evidence, *sources], trials=trials, observations=observations,
     )

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from flamelab.data.loader import load_bundle
 from flamelab.domain.contracts import (
-    ConditionStage, ConditionValue, DatasetBundle, Evidence, Observation, Trial,
+    ConditionSegment, ConditionValue, DatasetBundle, Evidence, Observation, Trial,
 )
 
 STUDY = "psi:PSI-25"
@@ -160,7 +160,7 @@ def build_bundle(
         f"{STUDY}:method:oxygen", "BASS-II oxygen measurement scope",
         "§5.4, Oxygen Concentration Analysis",
         "Oxygen data are available at test start and end. The report assumes a linear "
-        "profile to estimate intermediate oxygen. No stage oxygen is imported.",
+        "profile to estimate intermediate oxygen. No segment oxygen is imported.",
         page=68,
     )
     evidence = [*catalog.evidence, configuration, oxygen_method]
@@ -190,60 +190,68 @@ def build_bundle(
             provenance="published",
         )
         evidence.extend([row_evidence, csv_evidence])
-        conditions = {
+        static_conditions = {
             key: _known(value, original, configuration.id)
             for key, (value, original) in BASS_CONFIG.items()
         }
-        conditions.update({
+        static_conditions.update({
             "thickness_mm": _measure(thickness, "mm", row_evidence.id),
             "sample_width_mm": _measure(width, "cm", row_evidence.id, unit="mm", scale=10),
             "burning_faces": _known(
                 int(faces), faces, row_evidence.id, unit="count", original_unit="count",
             ),
-            "burn_duration_s": _measure(duration, "min", row_evidence.id, unit="s", scale=60),
-            "oxygen_initial_pct": _measure(initial, "vol%", row_evidence.id, unit="%"),
-            "oxygen_final_pct": _measure(final, "vol%", row_evidence.id, unit="%"),
+            "combustion_face": ConditionValue(status="not_reported", evidence_ids=[row_evidence.id]),
             "diameter_mm": ConditionValue(
                 status="not_applicable", unit="mm", evidence_ids=[configuration.id],
             ),
         })
+        conditions = {
+            **static_conditions,
+            "burn_duration_s": _measure(duration, "min", row_evidence.id, unit="s", scale=60),
+            "oxygen_initial_pct": _measure(initial, "vol%", row_evidence.id, unit="%"),
+            "oxygen_final_pct": _measure(final, "vol%", row_evidence.id, unit="%"),
+        }
 
         velocities = _series(flows)
         spread_rates = [None] * len(velocities) if rates == "Not tracked" else _series(rates)
         if len(velocities) != len(spread_rates):
             raise ValueError(f"{test}: velocity and spread rate counts differ")
-        stages = []
-        for order, (velocity, spread) in enumerate(zip(velocities, spread_rates, strict=True), 1):
-            stage_id = f"{trial_id}:stage:{order}"
-            stage_evidence = _pdf_evidence(
-                f"{stage_id}:table51", f"BASS-II {test}, flow entry {order}",
-                f"{locator}, Velocity and Spread rate columns, listed entry {order}",
+        segments = []
+        for sequence, (velocity, spread) in enumerate(zip(velocities, spread_rates, strict=True), 1):
+            # Preserve previously issued opaque identifiers across schema versions.
+            segment_id = f"{trial_id}:stage:{sequence}"
+            segment_evidence = _pdf_evidence(
+                f"{segment_id}:table51", f"BASS-II {test}, flow entry {sequence}",
+                f"{locator}, Velocity and Spread rate columns, listed entry {sequence}",
                 f"Velocity cell (cm/s): {flows}\nSpread rate cell (mm/s): {rates}\n"
-                f"Entry {order}: {velocity} cm/s, "
+                f"Entry {sequence}: {velocity} cm/s, "
                 + (f"{spread} mm/s." if spread is not None else "'Not tracked' at test scope."),
             )
-            evidence.append(stage_evidence)
-            stages.append(ConditionStage(
-                id=stage_id, order=order, conditions={
-                    "flow_velocity_cm_s": _measure(velocity, "cm/s", stage_evidence.id),
+            evidence.append(segment_evidence)
+            segments.append(ConditionSegment(
+                id=segment_id, sequence=sequence,
+                evidence_ids=[segment_evidence.id, row_evidence.id, configuration.id, oxygen_method.id],
+                conditions={
+                    **static_conditions,
+                    "flow_velocity_cm_s": _measure(velocity, "cm/s", segment_evidence.id),
                     "oxygen_pct": ConditionValue(
                         status="not_measured", unit="%", evidence_ids=[oxygen_method.id],
                     ),
                 },
             ))
             observations.append(Observation(
-                id=f"{stage_id}:spread", trial_id=trial_id, condition_id=stage_id,
+                id=f"{segment_id}:spread", trial_id=trial_id, segment_id=segment_id,
                 metric="flame_spread_rate_mm_s", unit="mm/s", provenance="published",
                 value=float(_decimal(spread)) if spread is not None else None,
                 status="known" if spread is not None else "not_measured",
                 original_value=spread if spread is not None else rates, original_unit="mm/s",
-                evidence_ids=[stage_evidence.id],
+                evidence_ids=[segment_evidence.id],
             ))
 
         sample_id = f"{STUDY}:sample:{operating['Sample #']}"
         trials.append(Trial(
             id=trial_id, study_id=STUDY, sample_id=sample_id, independent_unit_id=sample_id,
-            label=f"BASS-II {test}", conditions=conditions, condition_stages=stages,
+            label=f"BASS-II {test}", conditions=conditions, segments=segments,
             evidence_ids=[row_evidence.id, csv_evidence.id, configuration.id, oxygen_method.id],
             provenance="published", material_grade="clear cast",
             notes=list(issues.values()),
@@ -252,6 +260,7 @@ def build_bundle(
             "trial_id": trial_id, "sample_id": sample_id, "table_data_row": row_number,
             "operational_csv_line": csv_line, "table_cells": table_cells,
             "operational_cells": operating, "issues": issues,
+            "segments": [{"id": segment.id, "sequence": segment.sequence} for segment in segments],
         })
 
     studies = [
@@ -263,6 +272,7 @@ def build_bundle(
         for study in catalog.studies
     ]
     bundle = DatasetBundle(
+        schema_version="1.1",
         dataset_id=f"{STUDY}:table51-v1",
         description="Local scientific catalog with unverified BASS-II Table 5.1 observations.",
         studies=studies, trials=trials, observations=observations, evidence=evidence,
@@ -281,18 +291,20 @@ def build_bundle(
             "sample_based_independent_units": len(samples),
             "listed_flow_entries": len(observations),
             "spread_status": dict(Counter(obs.status for obs in observations)),
-            "stage_oxygen_not_measured": len(observations),
+            "segment_oxygen_not_measured": len(observations),
             "issues": dict(Counter(code for row in trial_quality for code in row["issues"])),
         },
         "reused_sample_ids": [sample for sample, count in samples.items() if count > 1],
         "decisions": [
-            "Flow and rate are paired by listed table order. The stage order does not "
+            "Flow and rate are paired by listed table order. The segment sequence does not "
             "encode timestamps or the length of each flow interval.",
-            "Each staged observation belongs to its physical test and source sample.",
+            "Each segment observation belongs to its physical test and source sample.",
+            "Each segment explicitly carries the documented static controls. The reported count "
+            "of burning faces does not identify which face burned.",
             "Width uses the quantitative table rather than the nominal CSV description.",
             "Width converts cm to mm and test burn duration converts min to s.",
             "Oxygen endpoints remain trial conditions on the original volume percent basis. "
-            "Stage oxygen is unavailable as a measurement.",
+            "Segment oxygen is unavailable as a measurement.",
             "Operational display text is preserved separately from table velocities.",
         ],
         "trials": trial_quality,

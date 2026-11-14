@@ -105,7 +105,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             data = Repository(session).get_bundle()
         synthetic = sum(trial.provenance == "synthetic" for trial in data.trials)
         mode = "empty" if not data.studies else "metadata_only" if not data.trials else "synthetic" if synthetic == len(data.trials) else "mixed" if synthetic else "scientific_unverified"
-        return HealthResponse(status="ok", version="0.1.0", schema_version="1.0", database=app.state.engine.dialect.name, ai_provider=config.ai_provider, data_mode=mode)
+        return HealthResponse(status="ok", version="0.1.0", schema_version="1.1", database=app.state.engine.dialect.name, ai_provider=config.ai_provider, data_mode=mode)
 
     @app.get("/api/v1/studies", response_model=list[Study])
     def studies():

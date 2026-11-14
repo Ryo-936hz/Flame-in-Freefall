@@ -14,7 +14,7 @@ from flamelab.data.cli import main
 from flamelab.data.loader import load_bundle
 from flamelab.domain.contracts import RankingRequest, ResearchRequest
 from flamelab.storage.database import create_engine_and_session, migrate
-from flamelab.storage.models import ActiveDataset, DatasetSnapshot
+from flamelab.storage.models import ActiveDataset, DatasetSnapshot, ResearchRun
 from flamelab.storage.repository import Repository, bundle_digest
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -89,9 +89,9 @@ def test_legacy_snapshot_reimport_does_not_replace_identical_corpus(tmp_path):
     original = load_bundle(DEMO)
     previous = original.model_dump(mode="json")
     for trial in previous["trials"]:
-        del trial["condition_stages"]
+        del trial["segments"]
     for observation in previous["observations"]:
-        for field in ("condition_id", "original_value", "original_unit"):
+        for field in ("segment_id", "original_value", "original_unit"):
             del observation[field]
     payload = json.dumps(previous, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
@@ -106,6 +106,61 @@ def test_legacy_snapshot_reimport_does_not_replace_identical_corpus(tmp_path):
             assert repository.get_bundle() == original
             assert repository.replace_bundle(original) is False
             assert session.get(ActiveDataset, 1).digest == digest
+    finally:
+        engine.dispose()
+
+
+def test_historical_p2_segment_records_are_read_without_rewriting_snapshots(tmp_path):
+    settings = Settings(_env_file=None, database_url="sqlite:///" + (tmp_path / "p2.db").as_posix(),
+                        ai_provider="demo", seed_demo=False)
+    bundle = load_bundle(ROOT / "docs/examples/sequential_conditions.json")
+    previous = bundle.model_dump(mode="json")
+    previous["schema_version"] = "1.0"
+    trial = previous["trials"][0]
+    trial["condition_stages"] = trial.pop("segments")
+    for record in trial["condition_stages"]:
+        record["order"] = record.pop("sequence")
+        record.pop("evidence_ids")
+    for record in previous["observations"]:
+        record["condition_id"] = record.pop("segment_id")
+    payload = json.dumps(previous, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    response = asyncio.run(run_research(ResearchRequest(
+        question="Comparar las observaciones del ejemplo de segmentos.",
+        ranking=RankingRequest(target={"oxygen_initial_pct": 21},
+                               vary=["oxygen_pct"], allow_synthetic=True),
+    ), bundle, settings))
+    previous_run = response.model_dump(mode="json")
+    assert response.status == "completed"
+    for item in previous_run["ranking"]["items"]:
+        item["eligible_condition_ids"] = item.pop("eligible_segment_ids")
+        item["scored_condition_id"] = item.pop("scored_segment_id")
+    for point in previous_run["comparison"]["points"]:
+        point["condition_id"] = point.pop("segment_id")
+    for group in previous_run["comparison"]["groups"]:
+        group["n_condition_stages"] = group.pop("n_segments")
+    previous_run_payload = json.dumps(previous_run, ensure_ascii=False)
+
+    migrate(settings)
+    engine, sessions = create_engine_and_session(settings)
+    try:
+        with sessions() as session:
+            session.add(DatasetSnapshot(digest=digest, dataset_id=bundle.dataset_id, payload=payload))
+            session.flush()
+            session.add(ActiveDataset(id=1, digest=digest))
+            session.add(ResearchRun(id=response.id, dataset_digest=digest, payload=previous_run_payload))
+            session.commit()
+            repository = Repository(session)
+            assert repository.get_bundle() == bundle
+            assert repository.replace_bundle(bundle) is False
+            repository.replace_bundle(load_bundle(CATALOG), allow_replace=True)
+            assert repository.get_run_bundle(response.id) == bundle
+            recovered = repository.get_run(response.id)
+            assert recovered.comparison.points == response.comparison.points
+            assert any("Expediente histórico" in warning for warning in recovered.warnings)
+            assert session.get(DatasetSnapshot, digest).payload == payload
+            assert session.get(ResearchRun, response.id).payload == previous_run_payload
     finally:
         engine.dispose()
 

@@ -1,6 +1,6 @@
 # Contrato local implementado
 
-El contrato `1.0` está implementado en `apps/api/src/flamelab/domain/contracts.py`, autoridad ejecutable.
+El contrato de corpus `1.1` está implementado en `apps/api/src/flamelab/domain/contracts.py`, autoridad ejecutable.
 OpenAPI y tipos TypeScript se generan desde la API en `packages/contracts/`. La API es local, no un
 servicio publicado. [CONTRACT_MODELS](CONTRACT_MODELS.md) conserva las tablas y explica los ajustes
 respecto de la propuesta documental. P1 coordina cambios y regeneración con productores/consumidores.
@@ -50,18 +50,26 @@ Los paneles son una lista cerrada con `data_ref`; nunca HTML o JavaScript genera
 
 ## Successive conditions
 
-`Trial` represents one physical test. Its ordered `condition_stages` may override the
-test's shared conditions, including with an explicit missing value. An observation
-under a staged trial must identify its own stage. `sample_id` and
-`independent_unit_id` stay on the physical trial. Legacy trials and observations
-load with empty stages and a null stage reference.
+`Trial` represents one physical test. Its `segments` each have a source `sequence`,
+evidence IDs and an explicit effective condition map. An observation with `segment_id`
+uses that segment's conditions. Trial-level values do not fill missing segment fields.
+Initial and final oxygen describe the trial. `burning_faces` is a count and
+`combustion_face` identifies a specific face when the source reports one. Sample and
+independent unit IDs stay on the physical trial. See the exact P1
+[sequential example](examples/sequential_conditions.json).
 
-Ranking evaluates each stage separately and ranks the physical trial once, using
-its best eligible stage. `eligible_condition_ids` lists the stages that passed.
-Research forwards those IDs to comparison. A direct comparison accepts an optional
-`condition_ids` selection for staged trials. A point exposes its stage ID, original
-observation value and unit when available, and links to its X and Y sources.
-Profiles and comparison summaries count stages separately from independent units.
+Ranking uses explicit trial conditions by default. An explicit
+`condition_scope: "segment"` evaluates segment conditions and ranks each physical
+trial once using the best eligible segment. Research forwards `eligible_segment_ids`
+to comparison. Direct comparison accepts `segment_ids`; each point retains its
+`segment_id`, original value, original unit and sources. Comparison separates the
+observation's provenance and isolates unresolved controls by segment. Profiles and
+comparison summaries count segments separately from physical units.
+
+Canonical bundles with version `1.0` remain readable. Newly generated scientific
+bundles use `1.1`. Previously saved P2 snapshots have a storage-only reader for
+the old field names. Historical reports keep their saved calculations and flag their
+previous scientific rules when they contain segments.
 
 ## Autoridad de la pregunta
 

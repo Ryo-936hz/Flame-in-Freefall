@@ -17,6 +17,11 @@ stores searchable evidence by study, and extends the first seven candidates with
 scoped numeric or configuration mappings. It includes catalog browsing in the technical harness.
 Scientific review remains pending for imported observations and unresolved sample identities.
 
+The follow-up on `lujan` adopts P1's segment contract 1.1 and P3's explicit condition
+resolution, provenance strata and stable arithmetic. The BASS-II PDF and full NASA
+corpus were regenerated under 1.1. Science and contract integration still need the
+team's review before merging into `main`.
+
 | Área | Capacidad real | Evidencia de ejecución |
 |---|---|---|
 | Inspección | ZIP seguro, hashes, 24 estudios, tablas/unidades/duplicados y revisión visual BASS-II tabla5.1. | DATA_INSPECTION y catálogo; hash original intacto al cierre. |

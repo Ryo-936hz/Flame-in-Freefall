@@ -2,8 +2,8 @@
 
 Date: 14 November 2026.
 
-Status: implemented provisionally on P2's `lujan` branch under the current user's
-authorization; P1/P3 integration and scientific review remain pending.
+Status: adapted to P1's shared 1.1 contract and P3's scientific rules on `lujan`.
+Integration review and scientific review of the real corpus remain pending.
 
 ## Problem
 
@@ -19,21 +19,20 @@ duplicating trials. Deferring the whole import would leave P2 without an integra
 deliverable. The selected extension preserves physical identity while keeping
 legacy unstaged bundles readable.
 
-Add ordered `Trial.condition_stages` with validated identifiers, condition maps and
-contiguous source order. Each staged Observation must reference a stage belonging
-to the same trial. Retain original observation values/units. Add explicit burning
-faces, initial/final oxygen and total burn duration as trial-scoped conditions.
-Stage values override inherited trial conditions, including explicit absence.
-Order means source table order; it does not introduce timestamps.
+Use `Trial.segments`, `sequence` and `Observation.segment_id` from P1. The BASS-II
+importer explicitly declares each segment's source-backed controls. Initial/final
+oxygen and total burn duration describe the trial. `burning_faces` preserves the
+published count. `combustion_face` remains unknown where the table does not identify
+the face. Sequence means source order without a timestamp.
 
-Rank each physical trial once using its best eligible stage. Return eligible stage
-IDs and pass them to comparison, keeping filters coherent. Plot each observation
-using its linked stage and retain the trial/sample independent-unit identity.
-Groups remain descriptive, isolate unknown controls and do not claim causality.
-Expose stage counts, source notes and pending-review warnings to consumers.
+Rank on trial conditions by default. Explicit segment mode ranks each trial once
+and passes eligible segment IDs to comparison. Plot each observation using its
+linked segment and retain the physical unit. P3 comparison separates provenance
+and isolates unknown controls by segment. P3 ranking and medians use exact
+intermediate arithmetic for large finite inputs.
 
-The version 1.0 envelope remains readable: new fields have defaults, old unstaged
-bundles and research snapshots still validate. Storage compares validated content
+Version 1.0 canonical bundles remain readable alongside newly extracted version 1.1.
+Storage adapts previously saved P2 research and corpus snapshots on read and compares validated content
 as well as the stored digest so additive defaults do not force replacement of an
 unchanged old corpus. Existing immutable snapshot payloads are not rewritten.
 JSON-backed persistence needs no relational table migration for these fields.

@@ -1,5 +1,9 @@
 # P2 delivery: real data and provenance
 
+The original increment is documented below. The follow-up aligns the importer with
+P1's shared corpus schema 1.1 and P3's science. See [P2_NASA_24](P2_NASA_24.md)
+and [VERIFICATION](VERIFICATION.md) for the follow-up and full-corpus review.
+
 ## Task and starting point
 
 Implement a reproducible local BASS-II Table 5.1 extraction, canonical import,
@@ -29,11 +33,11 @@ automated checks do not replace their scientific review.
 Run from the repository root, with the supplied `datasets/` directory available:
 
 ```bash
-uv run --locked --with pymupdf==2.1 python -m flamelab.data.cli extract-bass-table51 datasets --output-dir data/processed/bass-table51
-uv run --locked python -m flamelab.data.cli validate data/processed/bass-table51/bundle.json
-uv run --locked python -m flamelab.data.cli import data/processed/bass-table51/bundle.json --database-url sqlite:///work/bass-p2.db
-uv run --locked python -m flamelab.data.cli import data/processed/bass-table51/bundle.json --database-url sqlite:///work/bass-p2.db
-FLAMELAB_BASS_BUNDLE=data/processed/bass-table51/bundle.json uv run --locked pytest apps/api/tests/test_p2_integration.py -q
+uv run --locked --with pymupdf==2.1 python -m flamelab.data.cli extract-bass-table51 datasets --output-dir data/processed/bass-table51-v11
+uv run --locked python -m flamelab.data.cli validate data/processed/bass-table51-v11/bundle.json
+uv run --locked python -m flamelab.data.cli import data/processed/bass-table51-v11/bundle.json --database-url sqlite:///work/bass-p2-v11.db
+uv run --locked python -m flamelab.data.cli import data/processed/bass-table51-v11/bundle.json --database-url sqlite:///work/bass-p2-v11.db
+FLAMELAB_BASS_BUNDLE=data/processed/bass-table51-v11/bundle.json uv run --locked pytest apps/api/tests/test_p2_integration.py -q
 ```
 
 The extraction tool uses an isolated PyMuPDF dependency; runtime requirements and
@@ -46,7 +50,7 @@ To explore this imported database through the existing API, use the same explici
 database URL and turn off automatic synthetic seeding:
 
 ```bash
-FLAMELAB_DATABASE_URL=sqlite:///work/bass-p2.db FLAMELAB_SEED_DEMO=false FLAMELAB_AI_PROVIDER=demo uv run --locked uvicorn flamelab.main:app --host 127.0.0.1 --port 8000
+FLAMELAB_DATABASE_URL=sqlite:///work/bass-p2-v11.db FLAMELAB_SEED_DEMO=false FLAMELAB_AI_PROVIDER=demo uv run --locked uvicorn flamelab.main:app --host 127.0.0.1 --port 8000
 ```
 
 An existing different corpus is replaced only with the CLI's explicit `--replace`.
@@ -75,12 +79,12 @@ observation count reports the available measurements separately.
 
 ## Shared contract and consumers
 
-The executable contract gains ordered condition stages, observation-stage links,
-original observation values/units, and explicit burning-face and test-level oxygen
-fields. Ranking identifies eligible stages without multiplying trials; comparison
-uses each observation's linked condition. Research passes the selected stage IDs
-through to comparison. Profiles and groups distinguish stage counts from trial and
-independent-unit counts.
+The canonical 1.1 fields are `segments`, `sequence` and `segment_id`. Comparisons
+use each observation's explicit segment conditions. The trial's oxygen endpoints
+do not fill in segment oxygen. Count and face identity have distinct fields.
+Ranking defaults to trial scope. Research carries eligible segment IDs into comparison
+when `condition_scope=segment` is selected. Profiles and groups count segments separately
+from physical trials and independent units.
 
 OpenAPI and TypeScript must be regenerated from the executable model. Existing
 unstaged fixtures and stored research remain supported. Persistence continues to
@@ -91,10 +95,11 @@ and P5/P6 typed consumers and require their review before integration into main.
 ## Verification and next step
 
 Executed commands and results are recorded in [VERIFICATION](VERIFICATION.md).
-Final results: 132 Python tests and 6 client tests passed; Ruff, generated-contract
+Original increment results: 132 Python tests and 6 client tests passed; Ruff, generated-contract
 drift checks, typecheck, build and HTTP/restart smoke passed. The validated real
 series is imported in `work/bass-p2.db`, with the second import reporting no change.
-Changes remain uncommitted on `lujan`; the starting SHA above is still HEAD.
+The original increment was published as `bb7ac4f`. See the verification record for
+the subsequent 1.1 checks.
 The real-source HTTP test covers import twice, stage filtering, evidence lookup,
 scenario change, insufficient evidence, report persistence, corpus replacement,
 and reopening the API. It requires the local extracted bundle and skips explicitly

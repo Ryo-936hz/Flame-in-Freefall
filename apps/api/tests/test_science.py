@@ -1,14 +1,9 @@
-"""Behavior tests use synthetic fixtures exclusively."""
-
-import asyncio
+"""Behavior tests use synthetic fixtures exclusively; no NASA validation is claimed."""
 
 import pytest
-from pydantic import ValidationError
 
-from flamelab.ai.engine import run_research
-from flamelab.config import Settings
 from flamelab.domain.contracts import (
-    CONDITION_UNITS, ComparisonRequest, DatasetBundle, RankingRequest, ResearchRequest,
+    CONDITION_UNITS, ComparisonRequest, DatasetBundle, RankingRequest,
 )
 from flamelab.science.comparison import compare_trials
 from flamelab.science.profiling import profile_dataset
@@ -73,6 +68,36 @@ def _compare(bundle, **kwargs):
     kwargs.setdefault("allow_synthetic", True)
     kwargs.setdefault("vary", ["flow_velocity_cm_s"])
     return compare_trials(bundle, ComparisonRequest(**kwargs))
+
+
+def test_opt_in_segment_ranking_only_selects_explicit_matches(science_bundle):
+    data = science_bundle.model_dump()
+    trial = data["trials"][0]
+    trial["segments"] = [
+        {"id": "synthetic:explicit", "sequence": 1, "evidence_ids": trial["evidence_ids"],
+         "conditions": {"flow_velocity_cm_s": trial["conditions"]["flow_velocity_cm_s"]}},
+        {"id": "synthetic:unknown", "sequence": 2, "evidence_ids": trial["evidence_ids"],
+         "conditions": {}},
+    ]
+    first = data["observations"][0]
+    first["segment_id"] = "synthetic:explicit"
+    data["observations"].append({**first, "id": "synthetic:unknown-observation",
+                                 "segment_id": "synthetic:unknown"})
+    bundle = DatasetBundle.model_validate(data)
+    trial_ranking = _rank(bundle, required_match=["flow_velocity_cm_s"])
+    assert len(trial_ranking.items) == 1
+    assert trial_ranking.items[0].eligible_segment_ids == []
+    ranking = _rank(bundle, condition_scope="segment", required_match=["flow_velocity_cm_s"])
+    assert len(ranking.items) == 1
+    assert ranking.items[0].scored_segment_id == "synthetic:explicit"
+    assert ranking.items[0].eligible_segment_ids == ["synthetic:explicit"]
+    all_points = _compare(bundle).points
+    assert [(point.segment_id, point.x) for point in all_points] == [
+        ("synthetic:explicit", 5), ("synthetic:unknown", None),
+    ]
+    filtered = _compare(bundle, segment_ids=ranking.items[0].eligible_segment_ids)
+    assert [point.segment_id for point in filtered.points] == ["synthetic:explicit"]
+    assert filtered.groups[0].n_segments == 1
 
 
 def test_zero_is_known_and_not_imputed(science_bundle):
@@ -256,112 +281,187 @@ def test_empty_bundle_profile_and_ranking_are_explicit():
     assert not ranking.items and ranking.warnings
 
 
-@pytest.fixture
-def staged_data(science_bundle):
-    data = science_bundle.model_dump()
-    trial = data["trials"][0]
-    evidence = data["evidence"][0]
-    trial["condition_stages"] = []
-    for order, flow in enumerate((0, 12), 1):
-        stage_id = f"synthetic:stage-{order}"
-        source = f"synthetic:stage-source-{order}"
-        data["evidence"].append(dict(evidence, id=source))
-        trial["condition_stages"].append({
-            "id": stage_id, "order": order,
-            "conditions": {
-                "flow_velocity_cm_s": {"value": flow, "status": "known", "unit": "cm/s",
-                                       "evidence_ids": [source]},
-                "oxygen_pct": {"status": "not_measured"},
-            },
-        })
-        obs = dict(
-            data["observations"][0], id=f"synthetic:observation-{order}", condition_id=stage_id,
-            value=order / 2, original_value=f"{order / 2:.2f}", original_unit="mm/s",
-            evidence_ids=[source],
-        )
-        if order == 1:
-            data["observations"][0] = obs
-        else:
-            data["observations"].append(obs)
-    trial["conditions"]["oxygen_initial_pct"] = {
-        "value": 23, "unit": "%", "status": "known", "evidence_ids": [evidence["id"]],
-    }
-    return data
-
-
-@pytest.mark.parametrize("violation,error", [
-    ("stage_order", "contiguous order"),
-    ("duplicate_stage", "duplicate condition stage"),
-    ("foreign_stage", "must belong to its trial"),
-    ("missing_stage", "require a condition stage"),
-    ("wrong_source", "evidence reference is missing"),
-    ("oxygen_endpoint_at_stage", "trial-only conditions"),
-])
-def test_staged_bundle_rejects_ambiguous_conditions(staged_data, violation, error):
-    trial = staged_data["trials"][0]
-    stage = trial["condition_stages"][0]
-    if violation == "stage_order":
-        stage["order"] = 3
-    elif violation == "duplicate_stage":
-        trial["condition_stages"][1]["id"] = stage["id"]
-    elif violation == "foreign_stage":
-        staged_data["trials"].append(dict(
-            trial, id="synthetic:foreign-trial",
-            condition_stages=[dict(stage, id="synthetic:foreign-stage")],
+def _artificial_mixed_source_bundle(bundle):
+    """Exercise non-synthetic provenance enums with invented numbers, never NASA data."""
+    data = bundle.model_dump()
+    data["description"] = "ARTIFICIAL regression case; published/derived labels test schema behavior."
+    data["studies"][0]["dataset_status"] = "unverified"
+    data["evidence"][0].update(provenance="published", reviewed=False)
+    data["trials"][0]["provenance"] = "published"
+    data["observations"][0].update(value=2.0, provenance="published")
+    for index, provenance, value in [(2, "derived", 20.0), (3, "digitized", 200.0)]:
+        ref = f"synthetic:artificial-source-{index}"
+        data["evidence"].append(dict(data["evidence"][0], id=ref, provenance=provenance))
+        data["observations"].append(dict(
+            data["observations"][0], id=f"synthetic:observation-{index}",
+            provenance=provenance, evidence_ids=[ref], value=value,
         ))
-        staged_data["observations"][0]["condition_id"] = "synthetic:foreign-stage"
-    elif violation == "missing_stage":
-        staged_data["observations"][0]["condition_id"] = None
-    elif violation == "wrong_source":
-        stage["conditions"]["flow_velocity_cm_s"]["evidence_ids"] = ["synthetic:unknown"]
-    else:
-        stage["conditions"]["oxygen_initial_pct"] = trial["conditions"]["oxygen_initial_pct"]
-    with pytest.raises(ValidationError, match=error):
-        DatasetBundle.model_validate(staged_data)
+    return DatasetBundle.model_validate(data)
 
 
-def test_comparison_joins_each_observation_to_its_stage(staged_data):
-    bundle = DatasetBundle.model_validate(staged_data)
+def test_measurement_provenances_do_not_share_a_median(science_bundle):
+    bundle = _artificial_mixed_source_bundle(science_bundle)
     result = _compare(bundle)
-    assert [(point.condition_id, point.x, point.y) for point in result.points] == [
-        ("synthetic:stage-1", 0, 0.5), ("synthetic:stage-2", 12, 1),
-    ]
-    group, = result.groups
-    assert (group.n_trials, group.n_condition_stages, group.n_observations, group.n_independent_units) == (1, 2, 2, 1)
-    assert "synthetic:stage-source-1" in result.points[0].evidence_ids
-    assert "synthetic:stage-source-2" not in result.points[0].evidence_ids
-    assert result.points[0].original_value == "0.50"
-    assert result.points[0].original_unit == "mm/s"
-    assert len(_compare(bundle, vary=[]).groups) == 2
-    oxygen = _compare(bundle, x_condition="oxygen_pct", vary=["oxygen_pct"])
-    assert all(point.x is None for point in oxygen.points)
-    assert any("x_unavailable:synthetic:stage-1:oxygen_pct" in item for item in oxygen.warnings)
-    profile = profile_dataset(bundle)
-    assert (profile.n_trials, profile.n_condition_stages, profile.n_independent_units) == (1, 2, 1)
-    assert profile.missing_by_stage_condition["oxygen_pct"]["not_measured"] == 2
+    assert len(result.groups) == 3
+    medians = {group.conditions["observation_provenance"]: group.median for group in result.groups}
+    assert medians == {"published": 2.0, "derived": 20.0, "digitized": 200.0}
+    assert all(group.n_trials == group.n_observations == group.n_independent_units == 1
+               for group in result.groups)
+    # Source representations of one trial do not create three physical units.
+    assert profile_dataset(bundle).n_independent_units == 1
+    groups = {group.id: group for group in result.groups}
+    for point in result.points:
+        assert groups[point.group_id].conditions["observation_provenance"] == point.provenance
+    assert any("observation_provenance_split" in warning for warning in result.warnings)
 
 
-def test_rank_and_research_only_use_matching_stages(staged_data):
-    bundle = DatasetBundle.model_validate(staged_data)
-    ranking = RankingRequest(
-        target={"flow_velocity_cm_s": 12}, required_match=["flow_velocity_cm_s"], allow_synthetic=True,
-    )
-    request = ResearchRequest(question="Which evidence matches the required flow?", ranking=ranking)
-    response = asyncio.run(run_research(request, bundle, Settings(_env_file=None, ai_provider="demo")))
-    trial, = response.ranking.items
-    assert trial.scored_condition_id == "synthetic:stage-2"
-    assert trial.eligible_condition_ids == ["synthetic:stage-2"]
-    assert "condition_stage_rejected:synthetic:stage-1:required_condition_mismatch:flow_velocity_cm_s" in trial.reasons
-    assert [point.x for point in response.comparison.points] == [12]
-    assert {evidence.id for evidence in response.evidence} == {
-        "synthetic:evidence", "synthetic:stage-source-2",
-    }
-    oxygen = _rank(bundle, target={"oxygen_pct": 23}, required_match=["oxygen_pct"])
-    assert oxygen.excluded[0].eligibility == "indeterminate"
-    assert oxygen.excluded[0].coverage == 0
+def test_missing_derived_observation_does_not_borrow_published_value(science_bundle):
+    data = _artificial_mixed_source_bundle(science_bundle).model_dump()
+    data["observations"][1].update(value=None, status="not_extracted")
+    result = _compare(DatasetBundle.model_validate(data))
+    derived = next(group for group in result.groups
+                   if group.conditions["observation_provenance"] == "derived")
+    assert derived.n_observations == 0 and derived.median is None
+    assert not any(point.provenance == "derived" for point in result.points)
+    assert any("not_extracted" in warning for warning in derived.warnings)
 
 
-def test_comparison_rejects_stage_outside_selected_trials(staged_data):
-    bundle = DatasetBundle.model_validate(staged_data)
-    with pytest.raises(KeyError, match="unknown-stage"):
-        _compare(bundle, condition_ids=["synthetic:unknown-stage"])
+def test_comparison_is_stable_under_equivalent_input_order(science_bundle):
+    bundle = _clone_trial(science_bundle)
+    forward = _compare(bundle)
+    data = bundle.model_dump()
+    data["trials"].reverse()
+    data["observations"].reverse()
+    backward = _compare(DatasetBundle.model_validate(data),
+                        trial_ids=["synthetic:trial-2", "synthetic:trial-1", "synthetic:trial-2"])
+    assert backward.model_dump() == forward.model_dump()
+
+
+def test_three_observations_of_one_trial_are_not_three_replicates(science_bundle):
+    data = science_bundle.model_dump()
+    for index, value in [(2, 0.2), (3, 0.4)]:
+        data["observations"].append(dict(data["observations"][0],
+                                         id=f"synthetic:observation-{index}", value=value))
+    bundle = DatasetBundle.model_validate(data)
+    result = _compare(bundle)
+    group = result.groups[0]
+    assert len(result.points) == group.n_observations == 3
+    assert group.n_trials == group.n_independent_units == 1
+    assert group.median == 0.2 and group.interval is None
+    assert profile_dataset(bundle).n_independent_units == 1
+    # These are repeat observations at the same static X, not invented BASS segments.
+    assert {point.x for point in result.points} == {5}
+
+
+@pytest.mark.parametrize("scale", [1e-308, 1.0, 1e308])
+def test_common_weight_scaling_preserves_scores_and_missing_coverage(science_bundle, scale):
+    data = science_bundle.model_dump()
+    del data["trials"][0]["conditions"]["pressure_kpa"]
+    bundle = DatasetBundle.model_validate(data)
+    result = _rank(bundle, target={"flow_velocity_cm_s": 15, "pressure_kpa": 100},
+                   weights={"flow_velocity_cm_s": scale, "pressure_kpa": scale},
+                   minimum_coverage=0.4)
+    assert len(result.items) == 1
+    item = result.items[0]
+    assert item.coverage == 0.5
+    assert item.similarity == pytest.approx(0.9)
+    assert item.contributions[0].weight == scale
+
+
+def test_large_finite_weights_do_not_make_coverage_nan(science_bundle):
+    result = _rank(science_bundle, target={"material": "fictional_material", "oxygen_pct": 21},
+                   weights={"material": 1e308, "oxygen_pct": 1e308})
+    assert result.items[0].coverage == result.items[0].similarity == 1
+
+
+def test_tiny_known_weight_is_not_a_missing_condition(science_bundle):
+    data = science_bundle.model_dump()
+    del data["trials"][0]["conditions"]["pressure_kpa"]
+    result = _rank(DatasetBundle.model_validate(data),
+                   target={"material": "fictional_material", "pressure_kpa": 100},
+                   weights={"material": 1e-308, "pressure_kpa": 1e308}, minimum_coverage=0)
+    assert len(result.items) == 1
+    assert result.items[0].similarity == 1
+    # Float coverage rounds down, but known information is not falsely declared absent.
+    assert result.items[0].coverage == 0
+    assert "no_known_target_conditions" not in result.items[0].reasons
+
+
+@pytest.mark.parametrize("values,expected", [([1e308, 1e308], 1e308),
+                                            ([5e-324, 1e-323], 1e-323),
+                                            ([0, 2], 1)])
+def test_finite_median_avoids_intermediate_overflow_and_underflow(science_bundle, values, expected):
+    data = science_bundle.model_dump()
+    data["observations"][0]["value"] = values[0]
+    data["observations"].append(dict(data["observations"][0],
+                                     id="synthetic:observation-2", value=values[1]))
+    result = _compare(DatasetBundle.model_validate(data))
+    assert result.groups[0].median == expected
+    assert [point.y for point in result.points] == values
+
+
+def test_known_literal_and_missing_state_are_not_pooled(science_bundle):
+    data = _clone_trial(science_bundle).model_dump()
+    data["trials"][0]["conditions"]["geometry"]["value"] = "not_applicable"
+    data["trials"][1]["conditions"]["geometry"] = {"status": "not_applicable", "value": None}
+    result = _compare(DatasetBundle.model_validate(data))
+    assert len(result.groups) == 2
+    assert {group.conditions["geometry_status"] for group in result.groups} == {"known", "not_applicable"}
+
+
+@pytest.mark.parametrize("grade", ["", "   "])
+def test_blank_material_grade_cannot_prove_control_equivalence(science_bundle, grade):
+    data = _clone_trial(science_bundle).model_dump()
+    for trial in data["trials"]:
+        trial["material_grade"] = grade
+    result = _compare(DatasetBundle.model_validate(data))
+    assert len(result.groups) == 2
+    assert all("material_grade_unresolved" in group.warnings for group in result.groups)
+
+
+def test_missing_control_warning_identifies_variable_and_status(science_bundle):
+    data = science_bundle.model_dump()
+    data["trials"][0]["conditions"]["pressure_kpa"] = {"status": "not_measured", "value": None}
+    result = _compare(DatasetBundle.model_validate(data))
+    assert "control_unresolved:pressure_kpa:not_measured" in result.groups[0].warnings
+
+
+def test_equivalent_numeric_controls_keep_one_group(science_bundle):
+    data = _clone_trial(science_bundle).model_dump()
+    data["trials"][1]["conditions"]["oxygen_pct"]["value"] = 21.0
+    result = _compare(DatasetBundle.model_validate(data))
+    assert len(result.groups) == 1
+
+
+def test_unrepresentable_midpoint_is_explicit_instead_of_infinite(science_bundle):
+    data = science_bundle.model_dump()
+    huge = 10 ** 400
+    data["observations"][0]["value"] = huge
+    data["observations"].append(dict(data["observations"][0],
+                                     id="synthetic:observation-2", value=huge + 1))
+    result = _compare(DatasetBundle.model_validate(data))
+    assert [point.y for point in result.points] == [huge, huge + 1]
+    assert result.groups[0].median is None
+    assert any(warning.startswith("median_unrepresentable:") for warning in result.groups[0].warnings)
+
+
+def test_rounding_cannot_turn_incomplete_information_into_full_coverage(science_bundle):
+    data = science_bundle.model_dump()
+    del data["trials"][0]["conditions"]["pressure_kpa"]
+    result = _rank(DatasetBundle.model_validate(data),
+                   target={"material": "fictional_material", "pressure_kpa": 100},
+                   weights={"material": 1, "pressure_kpa": 1e-20}, minimum_coverage=1)
+    assert not result.items
+    assert result.excluded[0].coverage == 1  # Float display rounded; exact eligibility did not.
+    assert "coverage_below_minimum" in result.excluded[0].reasons
+    assert "coverage_rounded_to_threshold" in result.excluded[0].reasons
+
+
+@pytest.mark.parametrize("minimum,eligible", [(0.1, True), (0.10000000000000002, False)])
+def test_coverage_decimal_boundary_is_not_shifted_by_binary_threshold(science_bundle, minimum, eligible):
+    data = science_bundle.model_dump()
+    del data["trials"][0]["conditions"]["pressure_kpa"]
+    result = _rank(DatasetBundle.model_validate(data),
+                   target={"material": "fictional_material", "pressure_kpa": 100},
+                   weights={"material": 1, "pressure_kpa": 9}, minimum_coverage=minimum)
+    assert bool(result.items) is eligible

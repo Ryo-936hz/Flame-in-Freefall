@@ -1,76 +1,97 @@
-"""Conservative stratification and descriptive summaries of selected observations."""
+"""Conservative strata of observations with explicit, source-reported conditions."""
 
 import hashlib
 import json
-from statistics import median
+from fractions import Fraction
 
 from flamelab.domain.contracts import (
-    METRIC_STUDIES,
-    ComparisonGroup, ComparisonRequest, ComparisonResponse, DatasetBundle, PlotPoint,
-    TRIAL_ONLY_CONDITIONS,
+    METRIC_STUDIES, TRIAL_ONLY_CONDITIONS, ComparisonGroup, ComparisonRequest, ComparisonResponse,
+    DatasetBundle, PlotPoint,
 )
-from flamelab.science.common import CONDITION_KEYS, CONDITION_UNITS, METRIC_UNITS, effective_conditions
+from flamelab.science.common import CONDITION_KEYS, CONDITION_UNITS, METRIC_UNITS
 
-
-RUN_SUMMARY_FIELDS = {"oxygen_initial_pct", "oxygen_final_pct", "burn_duration_s"}
-CAMPAIGN_CONTROL_FIELDS = {
-    "test_end": {"psi:PSI-69", "psi:PSI-159"},
-    "test_configuration": {"psi:PSI-10", "psi:PSI-159"},
-    "aging_duration_s": {"psi:PSI-102"},
-    "ignition_power_w": {"psi:PSI-98"},
-    "ignition_duration_s": {"psi:PSI-98"},
+OPTIONAL_V11_CONTROLS = (TRIAL_ONLY_CONDITIONS - {"burn_duration_s"}) | {
+    "combustion_face", "burning_faces", "test_end", "test_configuration",
+    "aging_duration_s", "ignition_power_w", "ignition_duration_s",
 }
 
 
-def _stratum(trial, stage, effective, vary):
+def _stratum(trial, vary, provenance, effective, available_controls, segment=None, observation=None):
+    grade_unknown = not trial.material_grade or not trial.material_grade.strip()
     conditions = {
-        "study_id": trial.study_id, "material_grade": trial.material_grade or "not_reported",
-        "provenance": trial.provenance,
+        "study_id": trial.study_id,
+        "material_grade": "not_reported" if grade_unknown else trial.material_grade,
+        "provenance": trial.provenance, "observation_provenance": provenance,
     }
-    unknown = trial.material_grade is None
+    unresolved = ["material_grade_unresolved"] if grade_unknown else []
+    unassigned = bool(trial.segments and observation and segment is None)
+    if segment is not None:
+        conditions["condition_scope"] = "segment"
+    elif unassigned:
+        conditions["condition_scope"] = "trial_unassigned"
+        unresolved.append(f"segment_unassigned:{observation.id}")
     for key in CONDITION_KEYS:
-        if key in vary or key in RUN_SUMMARY_FIELDS:
+        if key in vary or key == "burn_duration_s" or (key in OPTIONAL_V11_CONTROLS and key not in available_controls):
             continue
-        if key in CAMPAIGN_CONTROL_FIELDS and key not in effective and trial.study_id not in CAMPAIGN_CONTROL_FIELDS[key]:
-            continue
-        if stage is None and key in TRIAL_ONLY_CONDITIONS and key not in effective:
-            continue
-        condition = effective.get(key)
+        # Endpoints describe the whole trial, never effective oxygen in a segment.
+        source = trial.conditions if key in TRIAL_ONLY_CONDITIONS else effective
+        condition = source.get(key)
+        if key in TRIAL_ONLY_CONDITIONS:
+            conditions[f"{key}_scope"] = "trial"
+        status = condition.status if condition else "not_reported"
+        conditions[f"{key}_status"] = status
         if condition is None or condition.status != "known":
-            status = condition.status if condition else "not_reported"
             conditions[key] = status
-            # Explicit not_applicable can match another not_applicable. Other missingness
-            # cannot demonstrate equivalent control conditions.
-            unknown = unknown or status != "not_applicable"
+            if status != "not_applicable":
+                unresolved.append(f"control_unresolved:{key}:{status}")
         else:
             value = condition.value
             if isinstance(value, (int, float)):
-                # Canonicalize 21 and 21.0 without rounding distinct control values.
                 conditions[key] = str(int(value)) if value == int(value) else repr(value)
             else:
                 conditions[key] = value
     key_conditions = dict(conditions)
-    if unknown:
+    if unresolved:
         key_conditions["unresolved_trial_id"] = trial.id
+        # Unknown controls in separate segments cannot establish compatibility,
+        # even when the measurements share a physical specimen.
+        if segment is not None:
+            key_conditions["unresolved_segment_id"] = segment.id
+        elif unassigned:
+            key_conditions["unassigned_observation_id"] = observation.id
     digest = hashlib.sha256(json.dumps(key_conditions, sort_keys=True).encode()).hexdigest()[:16]
-    return f"group:{digest}", conditions, unknown
+    return f"group:{digest}", conditions, unresolved
+
+
+def _median(values):
+    """Descriptive median with an exact midpoint before conversion to wire numbers."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[middle]
+    lower, upper = ordered[middle - 1], ordered[middle]
+    midpoint = (Fraction(lower) + Fraction(upper)) / 2
+    if isinstance(lower, int) and isinstance(upper, int) and midpoint.denominator == 1:
+        return midpoint.numerator
+    return float(midpoint)
 
 
 def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> ComparisonResponse:
     trials_by_id = {trial.id: trial for trial in bundle.trials}
-    selected_ids = list(dict.fromkeys(request.trial_ids))
+    selected_ids = sorted(set(request.trial_ids))
     for trial_id in selected_ids:
         if trial_id not in trials_by_id:
             raise KeyError(trial_id)
-    selected_stages = set(request.condition_ids)
-    relevant_stages = {
-        stage.id for trial_id in selected_ids for stage in trials_by_id[trial_id].condition_stages
-    }
-    if selected_stages - relevant_stages:
-        raise KeyError(sorted(selected_stages - relevant_stages)[0])
+    selected_segments = set(request.segment_ids)
+    available_segments = {segment.id for trial_id in selected_ids for segment in trials_by_id[trial_id].segments}
+    if unknown_segments := selected_segments - available_segments:
+        raise KeyError(min(unknown_segments))
     warnings = [
         "Groups are descriptive strata, not evidence of causal effects or physical equivalence.",
         "Intervals are not implemented; repeated observations are not independent replicates.",
+        "Independent-unit counts are per stratum; do not sum them across segments or source representations.",
     ]
     unit = METRIC_UNITS.get(request.metric, "unsupported")
     x_unit = CONDITION_UNITS.get(request.x_condition)
@@ -81,85 +102,133 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
         )
     if x_unit is None:
         warnings.append("categorical_x_axis_not_supported: x values remain null; use groups for categories")
-    if relevant_stages:
-        warnings.append("Successive conditions share their physical trial and independent unit. Changes across stages may also reflect elapsed burn time or other unmeasured conditions.")
-    study_status = {study.id: study.dataset_status for study in bundle.studies}
-    if any(study_status[trials_by_id[trial_id].study_id] == "unverified" for trial_id in selected_ids):
+    permitted = [trials_by_id[item] for item in selected_ids
+                 if request.allow_synthetic or trials_by_id[item].provenance != "synthetic"]
+    permitted_studies = {trial.study_id for trial in permitted}
+    if any(
+        study.dataset_status == "unverified" and study.id in permitted_studies
+        for study in bundle.studies
+    ):
         warnings.append("Selected evidence includes unverified data awaiting scientific review.")
+    # Legacy bundles with none of these optional v1.1 controls retain their strata.
+    # Once reported anywhere in the selection, missing counterparts are unresolved.
+    available_controls = {
+        key for trial in permitted
+        for source in [trial.conditions, *(segment.conditions for segment in trial.segments)]
+        for key in source if key in OPTIONAL_V11_CONTROLS
+    }
+    if any(trial.segments for trial in permitted):
+        available_controls.add("combustion_face")
+        warnings.extend([
+            "Segment sequence is source-reported order, not measured time or independent replication.",
+            "Segment conditions are explicit; trial conditions are not inherited.",
+        ])
     group_data = {}
     points = []
     observations_by_trial = {}
     for observation in bundle.observations:
-        if observation.metric == request.metric:
-            key = (observation.trial_id, observation.condition_id)
-            observations_by_trial.setdefault(key, []).append(observation)
+        observations_by_trial.setdefault(observation.trial_id, []).append(observation)
     for trial_id in selected_ids:
         trial = trials_by_id[trial_id]
-        if request.metric in METRIC_STUDIES and trial.study_id not in METRIC_STUDIES[request.metric]:
-            warnings.append(f"metric_outside_campaign:{trial_id}:{request.metric}")
-            continue
         if trial.provenance == "synthetic" and not request.allow_synthetic:
             warnings.append(f"synthetic_not_allowed:{trial_id}")
             continue
+        if request.metric in METRIC_STUDIES and trial.study_id not in METRIC_STUDIES[request.metric]:
+            warnings.append(f"metric_outside_campaign:{trial_id}:{request.metric}")
+            continue
         warnings.extend(f"source_note:{trial_id}:{note}" for note in trial.notes)
-        for stage in trial.condition_stages or [None]:
-            stage_id = stage.id if stage else None
-            if stage_id is not None and selected_stages and stage_id not in selected_stages:
+        segments = {segment.id: segment for segment in trial.segments}
+        matching = [item for item in observations_by_trial.get(trial.id, []) if item.metric == request.metric]
+        if selected_segments and segments:
+            matching = [item for item in matching if item.segment_id in selected_segments]
+            if not matching:
+                warnings.append(f"metric_not_reported_for_selected_segments:{trial_id}:{request.metric}")
                 continue
-            effective = effective_conditions(trial, stage)
-            group_id, conditions, unknown = _stratum(trial, stage, effective, request.vary)
+        matching.sort(key=lambda item: (
+            item.segment_id is None,
+            segments[item.segment_id].sequence if item.segment_id is not None else 0,
+            item.id,
+        ))
+        if len({item.provenance for item in matching}) > 1:
+            warnings.append(f"observation_provenance_split:{trial_id}")
+        for observation in matching or [None]:
+            segment = segments.get(observation.segment_id) if observation else None
+            effective = segment.conditions if segment is not None else trial.conditions
+            provenance = observation.provenance if observation else "not_reported"
+            group_id, conditions, unknown = _stratum(
+                trial, request.vary, provenance, effective, available_controls, segment, observation,
+            )
             group = group_data.setdefault(group_id, {
-                "conditions": conditions, "trials": {}, "stages": set(), "units": set(),
-                "unresolved": set(), "values": [], "warnings": [],
+                "conditions": conditions, "trials": set(), "units": set(), "segments": set(),
+                "unresolved_units": set(), "values": [], "warnings": [],
             })
-            group["trials"][trial.id] = None
-            if stage_id is not None:
-                group["stages"].add(stage_id)
+            group["trials"].add(trial.id)
+            if segment:
+                group["segments"].add(segment.id)
             if trial.independent_unit_status == "identified":
-                group["units"].add(trial.independent_unit_id)
+                group["units"].add((trial.study_id, trial.independent_unit_id))
             else:
-                group["unresolved"].add(trial.id)
+                group["unresolved_units"].add(trial.id)
                 group["warnings"].append("Some records have unresolved experimental independence.")
-            if unknown and not group["warnings"]:
-                group["warnings"].append("Incomplete control conditions; this trial is isolated, not pooled.")
-                if stage:
-                    warnings.append("Some stage comparisons have incomplete controls. Their physical trials are isolated for descriptive comparison.")
+            if unknown:
+                group["warnings"].append("Incomplete or unassigned controls; this condition scope is isolated, not pooled.")
+            group["warnings"].extend(unknown)
+            if observation and trial.segments and segment is None:
+                warnings.append(f"segment_unassigned:{observation.id}:explicit_trial_conditions_only")
             x_value = effective.get(request.x_condition)
+            if segment is not None and request.x_condition in TRIAL_ONLY_CONDITIONS:
+                x_value = None
+                warnings.append(
+                    f"trial_level_axis_not_available_for_segment:{observation.id}:{request.x_condition}"
+                )
             x = x_value.value if x_unit and x_value and x_value.status == "known" else None
             if x is None:
-                warnings.append(f"x_unavailable:{stage_id or trial_id}:{request.x_condition}")
-            matching = observations_by_trial.get((trial.id, stage_id), [])
-            if not matching:
-                group["warnings"].append(f"metric_not_reported:{stage_id or trial_id}:{request.metric}")
-            for observation in matching:
-                if observation.status != "known":
-                    group["warnings"].append(f"observation_missing:{observation.id}:{observation.status}")
-                    continue
-                if observation.unit != unit:
-                    group["warnings"].append(f"incompatible_unit:{observation.id}:{observation.unit}")
-                    continue
-                # Each point retains both the measurement and the axis source.
-                evidence_ids = list(dict.fromkeys(
-                    observation.evidence_ids + trial.evidence_ids + (x_value.evidence_ids if x_value else [])
-                ))
-                points.append(PlotPoint(
-                    trial_id=trial.id, observation_id=observation.id, condition_id=stage_id,
-                    independent_unit_id=trial.independent_unit_id,
-                    independent_unit_status=trial.independent_unit_status, x=x, y=observation.value,
-                    original_value=observation.original_value, original_unit=observation.original_unit,
-                    group_id=group_id, evidence_ids=evidence_ids, provenance=observation.provenance,
-                ))
-                group["values"].append(observation.value)
+                warnings.append(f"x_unavailable:{trial_id}:{request.x_condition}")
+                if observation and trial.segments:
+                    warnings.append(f"x_unavailable_for_observation:{observation.id}:{request.x_condition}")
+            if observation is None:
+                group["warnings"].append(f"metric_not_reported:{trial_id}:{request.metric}")
+                continue
+            if observation.status != "known":
+                group["warnings"].append(f"observation_missing:{observation.id}:{observation.status}")
+                continue
+            if observation.unit != unit:
+                group["warnings"].append(f"incompatible_unit:{observation.id}:{observation.unit}")
+                continue
+            if observation.provenance == "synthetic" and not request.allow_synthetic:
+                group["warnings"].append(f"synthetic_not_allowed:{observation.id}")
+                continue
+            # Include sources for both the measurement and controls, retaining the
+            # original values/units on the unchanged bundle rather than normalizing again.
+            sources = {key: value for key, value in effective.items() if key not in TRIAL_ONLY_CONDITIONS}
+            sources.update({key: trial.conditions[key] for key in TRIAL_ONLY_CONDITIONS if key in trial.conditions})
+            evidence_ids = sorted(set(
+                observation.evidence_ids + trial.evidence_ids
+                + (segment.evidence_ids if segment else [])
+                + [ref for value in sources.values() for ref in value.evidence_ids]
+            ))
+            points.append(PlotPoint(
+                trial_id=trial.id, observation_id=observation.id, segment_id=observation.segment_id,
+                independent_unit_id=trial.independent_unit_id, x=x, y=observation.value,
+                independent_unit_status=trial.independent_unit_status,
+                original_value=observation.original_value, original_unit=observation.original_unit,
+                group_id=group_id, evidence_ids=evidence_ids, provenance=observation.provenance,
+            ))
+            group["values"].append(observation.value)
     groups = []
     for group_id, group in sorted(group_data.items()):
+        try:
+            descriptive_median = _median(group["values"])
+        except OverflowError:
+            descriptive_median = None
+            group["warnings"].append("median_unrepresentable: midpoint exceeds the numeric response range")
         groups.append(ComparisonGroup(
-            id=group_id, conditions=group["conditions"], trial_ids=list(group["trials"]),
+            id=group_id, conditions=group["conditions"], trial_ids=sorted(group["trials"]),
             n_trials=len(group["trials"]), n_observations=len(group["values"]),
-            n_condition_stages=len(group["stages"]),
-            n_independent_units=len(group["units"]),
-            n_trials_with_unresolved_independence=len(group["unresolved"]),
-            median=median(group["values"]) if group["values"] else None,
-            interval=None, warnings=list(dict.fromkeys(group["warnings"])),
+            n_segments=len(group["segments"]),
+            n_trials_with_unresolved_independence=len(group["unresolved_units"]),
+            n_independent_units=len(group["units"]), median=descriptive_median,
+            interval=None, warnings=sorted(set(group["warnings"])),
         ))
     if not points:
         warnings.append("No supported known observations remain for comparison.")

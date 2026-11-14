@@ -27,12 +27,13 @@ def bass_bundle_path():
 
 def test_real_bass_import_research_sources_scenario_and_restart(bass_bundle_path, tmp_path):
     bundle = load_bundle(bass_bundle_path)
+    assert bundle.schema_version == "1.1"
     assert len(bundle.trials) == 20
     assert len({trial.independent_unit_id for trial in bundle.trials}) == 20
     assert len(bundle.observations) == 43
     assert sum(obs.status == "known" for obs in bundle.observations) == 39
     assert all(trial.provenance == "published" for trial in bundle.trials)
-    assert all(obs.condition_id for obs in bundle.observations)
+    assert all(obs.segment_id for obs in bundle.observations)
     assert all(obs.original_value is not None for obs in bundle.observations)
 
     url = "sqlite:///" + (tmp_path / "bass.db").as_posix()
@@ -42,6 +43,7 @@ def test_real_bass_import_research_sources_scenario_and_restart(bass_bundle_path
     filters = {
         "target": {"flow_velocity_cm_s": 6},
         "required_match": ["flow_velocity_cm_s"],
+        "condition_scope": "segment",
         "allow_synthetic": False,
         "limit": 50,
     }
@@ -59,7 +61,7 @@ def test_real_bass_import_research_sources_scenario_and_restart(bass_bundle_path
         assert run["status"] == "completed"
         assert run["comparison"]["points"]
         assert {point["x"] for point in run["comparison"]["points"]} == {6}
-        assert all(point["condition_id"] for point in run["comparison"]["points"])
+        assert all(point["segment_id"] for point in run["comparison"]["points"])
         assert any("awaiting scientific review" in warning.lower() for warning in run["warnings"])
         assert any("Figure 5.2" in warning for warning in run["warnings"])
         evidence = next(item for item in run["evidence"] if item["page"] == 65)

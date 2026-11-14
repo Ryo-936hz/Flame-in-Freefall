@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from flamelab.ai.provider import ProviderFailure, synthesize
 from flamelab.config import Settings
 from flamelab.domain.contracts import (
-    CONDITION_UNITS, METRIC_UNITS, ActivityEvent, Citation, Claim, ComparisonRequest, DatasetBundle, Hypothesis,
+    CONDITION_UNITS, METRIC_STUDIES, ActivityEvent, Citation, Claim, ComparisonRequest, DatasetBundle, Hypothesis,
     Panel, ResearchRequest, ResearchResponse,
 )
 from flamelab.science.comparison import compare_trials
@@ -23,7 +23,7 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
     event("plan", "Flujo determinista: perfil, filtros explícitos, ranking, comparación y revisión de referencias.")
     profile = profile_dataset(bundle)
     metric_trial_ids = None
-    if request.metric in METRIC_UNITS:
+    if request.metric in METRIC_STUDIES:
         metric_trial_ids = {item.trial_id for item in bundle.observations
                             if item.metric == request.metric and item.status == "known"}
     ranking = rank_trials(bundle, request.ranking, metric_trial_ids=metric_trial_ids)
@@ -36,7 +36,7 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
         numeric_vary = [key for key in request.ranking.vary if key in CONDITION_UNITS]
         comparison = compare_trials(bundle, ComparisonRequest(
             trial_ids=[item.trial_id for item in ranking.items], metric=request.metric,
-            condition_ids=[stage_id for item in ranking.items for stage_id in item.eligible_condition_ids],
+            segment_ids=[segment_id for item in ranking.items for segment_id in item.eligible_segment_ids],
             x_condition=numeric_vary[0] if numeric_vary else "flow_velocity_cm_s",
             vary=request.ranking.vary, allow_synthetic=request.ranking.allow_synthetic,
         ))

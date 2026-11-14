@@ -1,29 +1,31 @@
 # Modelos de contrato y autoridad ejecutable
 
-El contrato `1.0` existe localmente en `apps/api/src/flamelab/domain/contracts.py`. Ese archivo y su OpenAPI
+El contrato de corpus `1.1` existe localmente en `apps/api/src/flamelab/domain/contracts.py`. Ese archivo y su OpenAPI
 generado son la autoridad para campos y validación; esta guía explica las tablas procedentes de la propuesta
 documental. No hay una API desplegada.
 
-## Successive conditions (additive to 1.0)
+## Successive conditions in corpus 1.1
 
 | Model | Added fields and semantics |
 |---|---|
-| `ConditionStage` | An ID unique across the dataset, a contiguous 1-based `order`, and a condition map. The order records source sequence. It carries no timestamp. |
-| `Trial` | `condition_stages` defaults to `[]`. Stage values override shared trial values. An explicit missing stage value also overrides a shared value. |
-| `Observation` | `condition_id` is an optional ID and is required for a staged trial. It must reference a stage of that trial. Optional `original_value` and `original_unit` preserve the source text. |
-| `RankedTrial` | Optional `scored_condition_id` identifies the stage represented by the score and contributions. `eligible_condition_ids` lists all stages that passed eligibility and coverage in order. |
-| `ComparisonRequest` | `condition_ids` defaults to `[]`, meaning all stages of the selected trials. A supplied list restricts staged trials to the selected stages and keeps any selected legacy trials. Unknown or out-of-scope IDs give 404. |
-| `PlotPoint` | Optional `condition_id`, `original_value` and `original_unit` trace the stage and measurement. |
-| `ComparisonGroup`, `ProfileResponse` | `n_condition_stages` counts stages separately from trials and units. `missing_by_stage_condition` counts effective stage conditions in the profile. |
+| `ConditionSegment` | Dataset-wide unique ID, positive source `sequence` unique in the trial, explicit condition map and evidence IDs. Sequence can have gaps. |
+| `Trial` | `segments` defaults to `[]`. Segment conditions are resolved solely from its own map. |
+| `Observation` | Optional `segment_id` must reference a segment of the same trial. Optional `original_value` and `original_unit` retain the source text. |
+| `RankingRequest` | `condition_scope` defaults to `trial`. `segment` opts into filtering/scoring explicit segment conditions. |
+| `RankedTrial` | `scored_segment_id` identifies the segment underlying the score in segment mode. `eligible_segment_ids` gives the segments that passed eligibility and coverage. |
+| `ComparisonRequest` | Optional `segment_ids` limits the selection to specified segments for segmented trials. Unknown or out-of-scope IDs give 404. |
+| `PlotPoint` | Optional `segment_id`, `original_value` and `original_unit` trace the segment and measurement. |
+| `ComparisonGroup`, `ProfileResponse` | `n_segments` counts segments apart from trials and units. `missing_by_segment_condition` counts explicit segment conditions in the profile. |
 
 The trial-only keys `oxygen_initial_pct` and `oxygen_final_pct` use `%`,
 `burn_duration_s` uses `s`, and `burning_faces` is a positive integer with unit
-`count`. Keep the original basis and units in each `ConditionValue`. In particular,
-oxygen endpoints describe the physical test. Stage `oxygen_pct` must keep the
-appropriate missing status when no stage-specific measurement is available.
+`count`. The categorical `combustion_face` identifies a face and has no unit.
+Keep the original basis and units. Segment `oxygen_pct` keeps the appropriate
+missing status when no segment-specific measurement is available.
 
-New fields have defaults so previously stored runs and corpus snapshots load through
-the same models. Identical legacy corpus reimports remain idempotent.
+Older canonical unstaged bundles load through the same models. A storage-only reader
+loads historical P2 snapshots without rewriting them. Identical legacy corpus reimports
+remain idempotent.
 
 ## Ajustes aceptados en la primera implementación
 
@@ -132,7 +134,7 @@ de validadores a partir de la tabla. Un cambio futuro se coordina y genera junto
 
 | Campo | Tipo | Obligatorio | Restricciones o valor inicial |
 |---|---|---|---|
-| `schema_version` | '1.0' | No | {"default": "1.0"} |
+| `schema_version` | '1.0' o '1.1' | No | {"default": "1.1"} |
 | `dataset_id` | string | Sí | — |
 | `description` | string | Sí | — |
 | `studies` | lista de Study | No | — |

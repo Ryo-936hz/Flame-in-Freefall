@@ -4,6 +4,7 @@ import json
 from sqlalchemy.orm import Session
 
 from flamelab.domain.contracts import DatasetBundle, ResearchResponse
+from flamelab.storage.legacy_p2 import read_bundle, read_run
 from flamelab.storage.models import ActiveDataset, DatasetSnapshot, ResearchRun
 
 
@@ -23,7 +24,7 @@ class Repository:
         active = self.session.get(ActiveDataset, 1)
         if active is None:
             return DatasetBundle(dataset_id="system:empty", description="Empty corpus; no seed enabled")
-        return DatasetBundle.model_validate_json(self.session.get(DatasetSnapshot, active.digest).payload)
+        return read_bundle(self.session.get(DatasetSnapshot, active.digest).payload)
 
     def replace_bundle(self, bundle: DatasetBundle, allow_replace: bool = False) -> bool:
         # Revalidate even model instances before touching persistent state.
@@ -65,10 +66,10 @@ class Repository:
         row = self.session.get(ResearchRun, run_id)
         if row is None:
             raise KeyError(run_id)
-        return ResearchResponse.model_validate_json(row.payload)
+        return read_run(row.payload)
 
     def get_run_bundle(self, run_id: str) -> DatasetBundle:
         row = self.session.get(ResearchRun, run_id)
         if row is None:
             raise KeyError(run_id)
-        return DatasetBundle.model_validate_json(self.session.get(DatasetSnapshot, row.dataset_digest).payload)
+        return read_bundle(self.session.get(DatasetSnapshot, row.dataset_digest).payload)

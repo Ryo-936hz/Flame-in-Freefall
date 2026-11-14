@@ -4,6 +4,34 @@
 construcción local Windows; la última registra la publicación y CI remota.
 Ninguna de estas verificaciones equivale a validación científica.
 
+## P2 follow-up after P1/P3 review
+
+Branch `lujan`, starting commit `cfc0795`. Used P1's segment contract at `94989a7`
+and P3's scientific baseline at `8134b1c`. The shared bundle version is 1.1 and
+OpenAPI and TypeScript were regenerated from the consolidated model.
+
+- The exact P1 example in `docs/examples/sequential_conditions.json` validates.
+  It contains one physical trial, two segments and two linked observations.
+- Re-extracted the hash-verified BASS-II PDF and the full set of NASA sources in WSL.
+  The full corpus has 24 studies, 2,265 evidence entries, 1,058 trial/configuration
+  records and 1,673 observations (1,283 known). BASS-II retains 20 trials and 43
+  segments, with 39 known rates and four explicit absences. Checked every observation
+  against the previous extraction after the segment field rename. Values, units,
+  absence states and evidence references match.
+- Imports into `sqlite:///work/nasa-24-v11.db` returned `changed: true` and then
+  `changed: false`. Legacy P2 snapshots can be read without rewriting saved payloads.
+- `FLAMELAB_BASS_BUNDLE=data/processed/bass-table51-v11/bundle.json FLAMELAB_NASA_BUNDLE=data/processed/nasa-24-v11/bundle.json uv run --locked pytest -q`
+  passed **190 tests**, including both real-data integrations and the imported
+  P1/P3 regressions. The existing Starlette/httpx warning remains.
+- `uv run --locked python evals/science/run.py` and
+  `uv run --locked python evals/science/segment_run.py` passed all **9 P3 cases**.
+  The regressions cover absent segment flow, oxygen scopes, isolated controls,
+  observation provenance, finite large weights and finite large medians.
+- Ruff, OpenAPI/TypeScript drift checks, typecheck, all **6 client tests**, Vite
+  build, and the SQLite HTTP/restart smoke test passed. The smoke health response
+  reports contract 1.1. These are local checks. Review of the NASA interpretations
+  and integration into `main` remain pending.
+
 ## Extended NASA corpus on `lujan`
 
 - Built the 24-study corpus from `datasets/` in WSL using `extract-nasa` and the
