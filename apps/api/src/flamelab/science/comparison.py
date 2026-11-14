@@ -2,7 +2,7 @@
 
 import hashlib
 import json
-from statistics import median
+from fractions import Fraction
 
 from flamelab.domain.contracts import (
     ComparisonGroup, ComparisonRequest, ComparisonResponse, DatasetBundle, PlotPoint,
@@ -11,21 +11,26 @@ from flamelab.science.common import CONDITION_KEYS, CONDITION_UNITS, METRIC_UNIT
 
 
 def _stratum(trial, vary, observation_provenance):
+    grade_unknown = not trial.material_grade or not trial.material_grade.strip()
     conditions = {
-        "study_id": trial.study_id, "material_grade": trial.material_grade or "not_reported",
+        "study_id": trial.study_id, "material_grade": "not_reported" if grade_unknown else trial.material_grade,
         "provenance": trial.provenance, "observation_provenance": observation_provenance,
     }
-    unknown = trial.material_grade is None
+    unresolved = ["material_grade_unresolved"] if grade_unknown else []
     for key in CONDITION_KEYS:
         if key in vary:
             continue
         condition = trial.conditions.get(key)
+        status = condition.status if condition else "not_reported"
+        # Value and missingness are distinct, even for categorical literals that
+        # happen to spell "not_applicable". Both remain visible in the same map.
+        conditions[f"{key}_status"] = status
         if condition is None or condition.status != "known":
-            status = condition.status if condition else "not_reported"
             conditions[key] = status
             # Explicit not_applicable can match another not_applicable. Other missingness
             # cannot demonstrate equivalent control conditions.
-            unknown = unknown or status != "not_applicable"
+            if status != "not_applicable":
+                unresolved.append(f"control_unresolved:{key}:{status}")
         else:
             value = condition.value
             if isinstance(value, (int, float)):
@@ -34,10 +39,27 @@ def _stratum(trial, vary, observation_provenance):
             else:
                 conditions[key] = value
     key_conditions = dict(conditions)
-    if unknown:
+    if unresolved:
         key_conditions["unresolved_trial_id"] = trial.id
     digest = hashlib.sha256(json.dumps(key_conditions, sort_keys=True).encode()).hexdigest()[:16]
-    return f"group:{digest}", conditions, unknown
+    return f"group:{digest}", conditions, unresolved
+
+
+def _median(values):
+    """Descriptive median with an exact midpoint before conversion to wire numbers."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    middle = len(ordered) // 2
+    if len(ordered) % 2:
+        return ordered[middle]
+    lower, upper = ordered[middle - 1], ordered[middle]
+    midpoint = (Fraction(lower) + Fraction(upper)) / 2
+    if isinstance(lower, int) and isinstance(upper, int) and midpoint.denominator == 1:
+        return midpoint.numerator
+    # The caller reports an unrepresentable midpoint explicitly instead of
+    # turning huge integer inputs into infinity or an invented finite estimate.
+    return float(midpoint)
 
 
 def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> ComparisonResponse:
@@ -93,6 +115,7 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
             group["units"].add(trial.independent_unit_id)
             if unknown and not group["warnings"]:
                 group["warnings"].append("Incomplete control conditions; this trial is isolated, not pooled.")
+            group["warnings"].extend(unknown)
             if not observations:
                 group["warnings"].append(f"metric_not_reported:{trial_id}:{request.metric}")
             for observation in observations:
@@ -118,11 +141,16 @@ def compare_trials(bundle: DatasetBundle, request: ComparisonRequest) -> Compari
                 group["values"].append(observation.value)
     groups = []
     for group_id, group in sorted(group_data.items()):
+        try:
+            descriptive_median = _median(group["values"])
+        except OverflowError:
+            descriptive_median = None
+            group["warnings"].append("median_unrepresentable: midpoint exceeds the numeric response range")
         groups.append(ComparisonGroup(
             id=group_id, conditions=group["conditions"], trial_ids=group["trials"],
             n_trials=len(group["trials"]), n_observations=len(group["values"]),
             n_independent_units=len(group["units"]),
-            median=median(group["values"]) if group["values"] else None,
+            median=descriptive_median,
             interval=None, warnings=list(dict.fromkeys(group["warnings"])),
         ))
     if not points:

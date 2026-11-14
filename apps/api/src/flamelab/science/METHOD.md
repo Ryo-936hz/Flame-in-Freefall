@@ -18,6 +18,17 @@ La distancia numérica es `min(1, abs(objetivo-candidato)/escala)` y la categór
 0 para igualdad exacta, 1 para desigualdad. No se normalizan nombres libremente.
 La similitud es `1 - suma(peso*distancia)/suma(pesos conocidos)`; cobertura es
 `suma(pesos conocidos)/suma(pesos activos)`. Ausencia no equivale a coincidencia.
+Las sumas, distancias y cocientes intermedios se calculan con `Fraction` de la
+biblioteca estándar sobre los valores ya validados; solo el resultado se convierte
+a float. Esto conserva la fórmula v1 y evita desbordamiento al sumar pesos finitos
+grandes. Los pesos originales siguen visibles en las contribuciones. Un peso
+conocido diminuto no se clasifica como ausencia aunque la cobertura final pueda
+redondearse a cero por los límites de float. No se afirma precisión experimental
+adicional por utilizar aritmética racional para operaciones internas.
+La elegibilidad compara la cobertura interna con la representación decimal del
+umbral (por ejemplo 0.1 significa 1/10). Un peso positivo ausente impide cumplir
+el umbral 1.0 aunque el float de salida redondee a 1; en ese caso se añade
+`coverage_rounded_to_threshold` para explicar la diferencia de presentación.
 La cobertura por debajo del mínimo produce `indeterminate`, conservado en `excluded`.
 Solo los elegibles tienen similitud y aparecen en `items`; se ordenan por similitud,
 cobertura y finalmente ID para desempate estable.
@@ -51,6 +62,16 @@ serie se incluye explícitamente X en `vary`. Incógnitas de grado o control sep
 ensayos en grupos individuales; `not_applicable` explícito puede coincidir. Se evita
 agregar BASS-II y Saffire o sintético y publicado en un mismo grupo.
 
+Cada control incluido en el estrato expone además `<variable>_status` dentro del
+mapa `conditions` ya existente. El estado forma parte de la identidad del grupo:
+un literal categórico conocido llamado `not_applicable` no es igual a un control
+ausente con estado `not_applicable`. Los números equivalentes 21 y 21.0 conservan
+la misma identidad. Un grado material vacío o solo espacios se considera sin
+resolver, sin modificar el corpus de origen. Las advertencias detallan grado y
+variables ausentes (`material_grade_unresolved`, `control_unresolved:variable:estado`).
+Esta dimensión adicional cambia los IDs de nuevos grupos; no se recalculan los
+snapshots anteriores ni se añade ningún campo al contrato público.
+
 La estratificación incluye además la procedencia de **cada observación**, expuesta
 en `ComparisonGroup.conditions.observation_provenance`. El contrato permite que
 un ensayo publicado contenga observaciones publicadas, digitalizadas y derivadas;
@@ -79,6 +100,12 @@ La mediana describe las observaciones del grupo, sin ponderación inferencial. S
 por separado ensayos, observaciones y unidades independientes; pasos de una muestra no
 crean réplicas. Un grupo sin mediciones conocidas tiene mediana nula. `interval=null`
 siempre: no hay bootstrap ni incertidumbre inferida. IDs desconocidos lanzan `KeyError`.
+
+Para una cantidad par de observaciones, el punto medio se calcula racionalmente
+antes de convertirlo al tipo de salida: evita obtener infinito de dos valores
+finitos grandes. Un punto medio que no se puede representar como número de salida
+queda en null con `median_unrepresentable`, conservando puntos y conteos. Este
+aviso es un límite numérico, no un estado de ausencia de la medición original.
 
 ## Perfil
 

@@ -1,5 +1,7 @@
 """Explicit eligibility followed by weighted Gower similarity."""
 
+from fractions import Fraction
+
 from flamelab.domain.contracts import (
     DatasetBundle, RankedTrial, RankingContribution, RankingRequest, RankingResponse,
 )
@@ -15,7 +17,7 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest) -> RankingRespon
         "Eligibility checks the explicit required_match filters; it does not prove physical comparability.",
     ]
     active = {
-        key: request.weights.get(key, 1.0)
+        key: Fraction(request.weights.get(key, 1.0))
         for key in request.target
         if key not in request.vary and request.weights.get(key, 1.0) > 0
     }
@@ -42,8 +44,10 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest) -> RankingRespon
                 rejection = True
                 reasons.append(f"required_condition_mismatch:{key}")
         contributions = []
-        known_weight = 0.0
-        weighted_distance = 0.0
+        # Exact intermediate sums avoid inf/inf and preserve tiny known weights
+        # when a much larger weight belongs to an unavailable condition.
+        known_weight = Fraction(0)
+        weighted_distance = Fraction(0)
         for key, target in request.target.items():
             condition = trial.conditions.get(key)
             candidate = condition.value if condition and condition.status == "known" else None
@@ -57,34 +61,41 @@ def rank_trials(bundle: DatasetBundle, request: RankingRequest) -> RankingRespon
             elif candidate is None:
                 note = "missing_condition_reduces_coverage"
             else:
-                known_weight += weight
+                known_weight += active[key]
                 if key in GOWER_SCALES_V1:
-                    raw_distance = abs(float(target) - float(candidate)) / GOWER_SCALES_V1[key]
-                    distance = min(1.0, raw_distance)
+                    raw_distance = abs(Fraction(target) - Fraction(candidate)) / Fraction(GOWER_SCALES_V1[key])
+                    exact_distance = min(Fraction(1), raw_distance)
                     note = "fixed_numeric_scale_v1"
                     if raw_distance > 1.0:
                         note += ":distance_clipped_at_one"
                 else:
-                    distance = 0.0 if target == candidate else 1.0
+                    exact_distance = Fraction(0 if target == candidate else 1)
                     note = "categorical_equality"
-                weighted_distance += weight * distance
+                distance = float(exact_distance)
+                weighted_distance += active[key] * exact_distance
             contributions.append(RankingContribution(
                 variable=key, target=target, candidate=candidate, weight=weight,
                 distance=distance, note=note,
             ))
-        coverage = known_weight / total_weight if total_weight else 0.0
+        exact_coverage = known_weight / total_weight if total_weight else Fraction(0)
+        coverage = float(exact_coverage)
+        # Interpret the threshold's public decimal representation without letting
+        # output rounding make incomplete evidence satisfy full coverage.
+        minimum_coverage = Fraction(str(request.minimum_coverage))
         if not total_weight:
             indeterminate = True
             reasons.append("no_active_target_weights")
         elif not known_weight:
             indeterminate = True
             reasons.append("no_known_target_conditions")
-        elif coverage < request.minimum_coverage:
+        elif exact_coverage < minimum_coverage:
             indeterminate = True
             reasons.append("coverage_below_minimum")
+            if coverage >= request.minimum_coverage:
+                reasons.append("coverage_rounded_to_threshold")
         eligibility = "excluded" if rejection else "indeterminate" if indeterminate else "eligible"
         similarity = (
-            max(0.0, min(1.0, 1.0 - weighted_distance / known_weight))
+            float(1 - weighted_distance / known_weight)
             if eligibility == "eligible" else None
         )
         if eligibility == "eligible":

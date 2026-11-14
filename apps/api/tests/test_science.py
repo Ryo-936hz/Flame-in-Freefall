@@ -321,3 +321,117 @@ def test_three_observations_of_one_trial_are_not_three_replicates(science_bundle
     assert profile_dataset(bundle).n_independent_units == 1
     # These are repeat observations at the same static X, not invented BASS segments.
     assert {point.x for point in result.points} == {5}
+
+
+@pytest.mark.parametrize("scale", [1e-308, 1.0, 1e308])
+def test_common_weight_scaling_preserves_scores_and_missing_coverage(science_bundle, scale):
+    data = science_bundle.model_dump()
+    del data["trials"][0]["conditions"]["pressure_kpa"]
+    bundle = DatasetBundle.model_validate(data)
+    result = _rank(bundle, target={"flow_velocity_cm_s": 15, "pressure_kpa": 100},
+                   weights={"flow_velocity_cm_s": scale, "pressure_kpa": scale},
+                   minimum_coverage=0.4)
+    assert len(result.items) == 1
+    item = result.items[0]
+    assert item.coverage == 0.5
+    assert item.similarity == pytest.approx(0.9)
+    assert item.contributions[0].weight == scale
+
+
+def test_large_finite_weights_do_not_make_coverage_nan(science_bundle):
+    result = _rank(science_bundle, target={"material": "fictional_material", "oxygen_pct": 21},
+                   weights={"material": 1e308, "oxygen_pct": 1e308})
+    assert result.items[0].coverage == result.items[0].similarity == 1
+
+
+def test_tiny_known_weight_is_not_a_missing_condition(science_bundle):
+    data = science_bundle.model_dump()
+    del data["trials"][0]["conditions"]["pressure_kpa"]
+    result = _rank(DatasetBundle.model_validate(data),
+                   target={"material": "fictional_material", "pressure_kpa": 100},
+                   weights={"material": 1e-308, "pressure_kpa": 1e308}, minimum_coverage=0)
+    assert len(result.items) == 1
+    assert result.items[0].similarity == 1
+    # Float coverage rounds down, but known information is not falsely declared absent.
+    assert result.items[0].coverage == 0
+    assert "no_known_target_conditions" not in result.items[0].reasons
+
+
+@pytest.mark.parametrize("values,expected", [([1e308, 1e308], 1e308),
+                                            ([5e-324, 1e-323], 1e-323),
+                                            ([0, 2], 1)])
+def test_finite_median_avoids_intermediate_overflow_and_underflow(science_bundle, values, expected):
+    data = science_bundle.model_dump()
+    data["observations"][0]["value"] = values[0]
+    data["observations"].append(dict(data["observations"][0],
+                                     id="synthetic:observation-2", value=values[1]))
+    result = _compare(DatasetBundle.model_validate(data))
+    assert result.groups[0].median == expected
+    assert [point.y for point in result.points] == values
+
+
+def test_known_literal_and_missing_state_are_not_pooled(science_bundle):
+    data = _clone_trial(science_bundle).model_dump()
+    data["trials"][0]["conditions"]["geometry"]["value"] = "not_applicable"
+    data["trials"][1]["conditions"]["geometry"] = {"status": "not_applicable", "value": None}
+    result = _compare(DatasetBundle.model_validate(data))
+    assert len(result.groups) == 2
+    assert {group.conditions["geometry_status"] for group in result.groups} == {"known", "not_applicable"}
+
+
+@pytest.mark.parametrize("grade", ["", "   "])
+def test_blank_material_grade_cannot_prove_control_equivalence(science_bundle, grade):
+    data = _clone_trial(science_bundle).model_dump()
+    for trial in data["trials"]:
+        trial["material_grade"] = grade
+    result = _compare(DatasetBundle.model_validate(data))
+    assert len(result.groups) == 2
+    assert all("material_grade_unresolved" in group.warnings for group in result.groups)
+
+
+def test_missing_control_warning_identifies_variable_and_status(science_bundle):
+    data = science_bundle.model_dump()
+    data["trials"][0]["conditions"]["pressure_kpa"] = {"status": "not_measured", "value": None}
+    result = _compare(DatasetBundle.model_validate(data))
+    assert "control_unresolved:pressure_kpa:not_measured" in result.groups[0].warnings
+
+
+def test_equivalent_numeric_controls_keep_one_group(science_bundle):
+    data = _clone_trial(science_bundle).model_dump()
+    data["trials"][1]["conditions"]["oxygen_pct"]["value"] = 21.0
+    result = _compare(DatasetBundle.model_validate(data))
+    assert len(result.groups) == 1
+
+
+def test_unrepresentable_midpoint_is_explicit_instead_of_infinite(science_bundle):
+    data = science_bundle.model_dump()
+    huge = 10 ** 400
+    data["observations"][0]["value"] = huge
+    data["observations"].append(dict(data["observations"][0],
+                                     id="synthetic:observation-2", value=huge + 1))
+    result = _compare(DatasetBundle.model_validate(data))
+    assert [point.y for point in result.points] == [huge, huge + 1]
+    assert result.groups[0].median is None
+    assert any(warning.startswith("median_unrepresentable:") for warning in result.groups[0].warnings)
+
+
+def test_rounding_cannot_turn_incomplete_information_into_full_coverage(science_bundle):
+    data = science_bundle.model_dump()
+    del data["trials"][0]["conditions"]["pressure_kpa"]
+    result = _rank(DatasetBundle.model_validate(data),
+                   target={"material": "fictional_material", "pressure_kpa": 100},
+                   weights={"material": 1, "pressure_kpa": 1e-20}, minimum_coverage=1)
+    assert not result.items
+    assert result.excluded[0].coverage == 1  # Float display rounded; exact eligibility did not.
+    assert "coverage_below_minimum" in result.excluded[0].reasons
+    assert "coverage_rounded_to_threshold" in result.excluded[0].reasons
+
+
+@pytest.mark.parametrize("minimum,eligible", [(0.1, True), (0.10000000000000002, False)])
+def test_coverage_decimal_boundary_is_not_shifted_by_binary_threshold(science_bundle, minimum, eligible):
+    data = science_bundle.model_dump()
+    del data["trials"][0]["conditions"]["pressure_kpa"]
+    result = _rank(DatasetBundle.model_validate(data),
+                   target={"material": "fictional_material", "pressure_kpa": 100},
+                   weights={"material": 1, "pressure_kpa": 9}, minimum_coverage=minimum)
+    assert bool(result.items) is eligible
