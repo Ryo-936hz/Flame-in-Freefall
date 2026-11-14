@@ -39,4 +39,17 @@ en capacidades de esta base. El camino PostgreSQL configurado tampoco equivale a
 
 ## Añadir una decisión
 
+### D-21 — Reparto de la siguiente demo (14 de noviembre de 2026)
+
+Petición: preparar seis prompts concretos sin solapar programación. Se delimitan
+rutas, pruebas y criterios en [DEMO_COORDINATION](prompts/DEMO_COORDINATION.md).
+P1 mantiene contrato/API/persistencia, generados, dependencias y documentación
+global; P5 mantiene composición/cliente/estilos comunes; P6 trabaja en módulos
+aislados de escenarios/informe y E2E; P4 conserva el informe backend.
+Cada puesto escribe su propio relevo. SQLite basta para el cierre de demo:
+PostgreSQL continúa pendiente fuera del camino crítico. La alternativa de
+editar archivos compartidos desde los seis puestos aumentaría conflictos.
+Esta decisión organiza trabajo futuro y no modifica capacidades implementadas
+ni mueve el commit/tag común.
+
 Fecha, responsable, contexto, alternativas consideradas, decisión, consecuencias y archivos afectados. Para cambios estructurales usar un ADR. Los resultados de pruebas pertenecen a la entrega y al estado de implementación, no se inventan como motivo retrospectivo.

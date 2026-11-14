@@ -56,6 +56,12 @@ No colocar reglas de elegibilidad exclusivamente en React ni duplicar cálculos 
 
 ## Fronteras compartidas
 
+Para cerrar la demo, la [matriz de propiedad exclusiva](prompts/DEMO_COORDINATION.md)
+concreta esta estructura: P5 conserva App/cliente/estilos comunes; P6 crea sus
+paneles e informes de UI; P4 conserva el informe backend. Evaluaciones separadas
+en `evals/science`, `evals/ai` y `evals/demo`; estas rutas siguen propuestas
+hasta que se implemente cada entrega. P1 mantiene los documentos globales.
+
 P6 monta su experiencia a través de un punto acordado con P5, sin editar simultáneamente App o estilos globales. P4 solicita cambios de panel a P1/P5 mediante contratos, sin emitir código libre. P2 solicita cambios de modelo a P1 al detectar datos no representados. P3 acuerda semántica de unidades y grupos con P2 antes de alterar cálculos.
 
 El árbol real y el contrato ejecutable son la descripción de implementación. Si cambia una frontera, actualizar esta tabla y los paquetes afectados, conservando el registro de decisiones.

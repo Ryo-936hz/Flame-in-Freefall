@@ -132,12 +132,16 @@ cambiar un puerto sin coordinar también el proxy del cliente.
 
 ## 5. Reparto y primera entrega
 
+Para terminar la demo, usar los [seis prompts concretos](prompts/README.md) y la
+[matriz de propiedad exclusiva](prompts/DEMO_COORDINATION.md). Cada puesto tiene
+tarea, rutas y criterios ya definidos; P1 consolida los documentos globales.
+
 P1–P6 son puestos. Los TTS asignan nombres y usuarios GitHub; esta guía no presupone
 quién ocupa cada uno. Las ramas son ejemplos concretos para la primera tarea.
 
 | Puesto y rama | Primera entrega concreta | Rutas propias y coordinación | Criterio de aceptación y revisión | Contexto |
 |---|---|---|---|---|
-| **P1** `codex/p1-integracion` | Mantener el recorrido común y verificar migraciones/recuperación en PostgreSQL antes de habilitarlo al equipo. | `apps/api/src/flamelab/{domain,storage}`, `main.py`, `config.py`, `apps/api/alembic`, `scripts`, `.github/workflows`; contratos y lockfiles compartidos. | Prueba real del motor y conservación del informe, sin deriva del cliente; revisión P2/P4/P5. | [Paquete](team/P1_INTEGRATION.md) · [Prompt](prompts/P1_START.md) |
+| **P1** `codex/p1-integracion` | Acordar condiciones sucesivas con P2/P3 e integrar contrato, API, persistencia y consumidores de la demo. SQLite basta; PostgreSQL queda fuera del camino crítico. | `apps/api/src/flamelab/{domain,storage}`, `main.py`, `config.py`, `apps/api/alembic`, `scripts`, `.github/workflows`; contratos y lockfiles compartidos. | Informe/evidencia conservados tras reinicio y reimportación, sin deriva del cliente; revisión P2/P3/P4/P5. | [Paquete](team/P1_INTEGRATION.md) · [Prompt](prompts/P1_START.md) |
 | **P2** `codex/p2-datos-bass` | Preparar transcripción revisable de la tabla 5.1 BASS-II y resolver identidad, O2 inicial/final, caras, unidades y licencia. | `apps/api/src/flamelab/data`, `data/catalog`, pruebas de ingesta; originales en carpetas locales excluidas. | Cada cifra con original/unidad/localizador; ninguna meseta cuenta como réplica; revisión P3 y cambio de contrato con P1. | [Paquete](team/P2_DATA.md) · [Prompt](prompts/P2_START.md) |
 | **P3** `codex/p3-ciencia` | Acordar con P2 condiciones sucesivas y construir casos etiquetados para evaluar ranking/comparabilidad. | `apps/api/src/flamelab/science`, pruebas científicas; `evals` coordinado con P6. | Reglas reproducibles, ausencias y unidad experimental respetadas; evaluación separada de fixtures; revisión P1/P2/P4. | [Paquete](team/P3_SCIENCE.md) · [Prompt](prompts/P3_START.md) |
 | **P4** `codex/p4-ia` | Preparar evaluación de planificación y citas; ampliar el coordinador sin alterar cálculos deterministas. | `apps/api/src/flamelab/ai`, pruebas de proveedor/coordinador. | Mantener demo sin clave, rechazar citas falsas y medir fidelidad; llamadas reales solo con configuración/presupuesto acordados; revisión P1/P3/P5. | [Paquete](team/P4_AI.md) · [Prompt](prompts/P4_START.md) |

@@ -23,9 +23,13 @@ encabezados/unidades/configuración. No se validó IA real, PostgreSQL ni cienci
 
 ## Reparto
 
+El alcance concreto para cerrar la demo está en los [prompts de puesto](prompts/README.md)
+y su [matriz de propiedad](prompts/DEMO_COORDINATION.md). Los documentos globales
+los actualiza P1; cada puesto deja su propio relevo en `docs/handoffs/Px.md`.
+
 | Puesto | Primer incremento | Área | Criterio y revisores |
 |---|---|---|---|
-| P1 Integración | Mantener CI y verificar PostgreSQL. | Contratos, API, storage, migraciones, scripts/CI | Motor y recuperación reales, sin deriva; P2/P4/P5. |
+| P1 Integración | Integrar contrato de condiciones sucesivas y recorrido demo con SQLite. | Contratos, API, storage, migraciones, scripts/CI | Recuperación e integración sin deriva; P2/P3/P4/P5. PostgreSQL fuera del camino crítico. |
 | P2 Datos | Revisar tabla 5.1, identidad, O2 temporal, caras, licencias. | data/, flamelab/data | Cada cifra con original/unidad/localizador; P3. |
 | P3 Ciencia | Contrato de condiciones sucesivas con P2 y evaluación independiente. | science/, tests ciencia, evals | Sin pseudorreplicación ni métricas mezcladas; P1/P2/P4. |
 | P4 IA | Planificador/evaluación de síntesis con corpus autorizado. | ai/, pruebas proveedor | Citas pertinentes, presupuesto y fallos medidos; P3/P5. |
