@@ -3,6 +3,70 @@
 Los resultados vigentes aparecen primero; el resto conserva el historial.
 Ninguna prueba de software equivale a validación científica.
 
+## Cierre P6 — interfaz integrada y casos BASS-II — 14 noviembre 2026
+
+Código **`66934638e37c1396eeab638631d54a2159ab7930`**, rama `raul`, [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3).
+Base main/P2 `f8e6a01`, P6 `80ceba4` y host P5 `9f54700`; la actualización
+documental posterior no altera el código comprobado. [Guion](DEMO.md) y [relevo](handoffs/P6.md).
+
+### Puerta local y recorridos de navegador
+
+Windows, Python 3.12.14, Node 24.22.1, PowerShell 7.6.9. Ejecutado
+`scripts/check.ps1 -E2E` con ambos bundles científicos locales y el paquete BASS-II
+aprobado indicados explícitamente; proveedor `demo`, sin credenciales de IA.
+
+| Comprobación | Resultado observado |
+|---|---|
+| Python | 342 aprobadas, 1 omitida (PostgreSQL local); un aviso Starlette/httpx. |
+| Ciencia/IA | 6 casos heredados + 6 segmentos; disponibilidad aprobada; IA 18/18; corpus local 7/7. |
+| Contratos, cliente, build | Ruff y deriva OpenAPI/TypeScript correctos; 76 cliente, tipado y build aprobados. |
+| HTTP real | SQLite aislado, planes, tres casos, informe y reinicio correctos. |
+| Chromium con fixtures | 24 pasos y 58 comprobaciones, sin fallos. |
+| Chromium con paquete BASS-II 1.1.1 | 7 pasos y 44 comprobaciones, sin fallos. |
+
+El sintético comprueba A/B y evidencia antes de investigar, métrica/filtros/pregunta,
+literalidad de fuente/informe/descarga, recuperación tras reinicio, errores/reintento
+y respuestas tardías frente a Reset y una investigación nueva. Incluye ausencia de
+BASS-II real en fixtures. El recorrido real coteja diez puntos, siete muestras,
+segmentos/citas/M8, solicitudes exactas, caso lunar sin flujo, informe y recuperación.
+No hay mocks del backend de la prueba principal; las respuestas retenidas sirven
+solo para provocar carreras controladas. Capturas oscuro/claro/escritorio y móvil
+390 px inspeccionadas; no se afirma prueba con lector de pantalla o teléfono físico.
+
+Bundle real preparado con `python -m flamelab.data.p2_demo_release` desde la
+extracción revisada por P3; SHA-256 de **bundle del paquete 1.1.1**:
+`cb8b782fd73dbe4df0576b8047f3dea781a37d7c06c962ad2e978e607a00191d`.
+El runner verifica ese hash antes de abrir Chromium y nunca modifica el archivo.
+Los hashes base para ciencia siguen siendo BASS-II `a2779a6e3a2b335298408c2dc5184e4bef916ad29cf7821737e148c5e5920007`
+y NASA-24 `7dc69717b4bc6151025df2993d9cf66622db3a8b7242798a1d7bfe8b8e335781`.
+El paquete añade los avisos M8 y conserva datos/fuentes publicados; no se versiona.
+Las pruebas comprueban software e identidad de los casos, no validan todo el corpus.
+
+### Clon limpio y CI
+
+Nuevo clon sin `.env`, `.venv` ni `node_modules` iniciales; setup y check -E2E
+salida 0 en el SHA indicado. ROOT/sys.prefix apuntan al clon, dependencias propias,
+sin junctions y Git limpio. **340 Python aprobadas, 3 omitidas**, 76 cliente,
+evaluaciones y recorrido sintético correctos. Se comparten Windows/runtimes y
+caché de navegador, no las dependencias del proyecto. Los bundles no se distribuyen.
+
+[CI 43621040286](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43621040286) del mismo SHA: `completed/success`.
+
+| Job | Resultado |
+|---|---|
+| verify Windows y Linux | 340 Python/3 omisiones, 76 cliente, evaluaciones, contratos, build y HTTP/reinicio aprobados. |
+| postgres | Integración real PostgreSQL 17 aprobada: migración, reemplazo y recuperación histórica. No acredita pgvector. |
+| browser Windows y Linux | Recorrido sintético completo aprobado en ambos sistemas; capturas como artefactos del run. |
+
+No se ejecutó BASS-II real en CI público: su prueba es local opt-in. No se
+ejecutaron servicios de IA pagados ni validación física.
+
+Hito previo: `16d326c` pasó el clon limpio, 70 cliente y E2E sintético 22/49,
+con [CI 43618846780](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43618846780).
+Se corrigieron una dependencia opcional ausente en el lockfile, un desbordamiento
+móvil y la limpieza del runner antes de registrar ese éxito. El cierre de arriba
+repite las puertas después de añadir BASS-II y no reutiliza aquel resultado como prueba nueva.
+
 ## Cierre conjunto P1/P3/P4 — 14 noviembre 2026
 
 Rama `raul`, conservando P3 `321cc0b`, `main`/P2 `04baeee` y P4 `12555c1`

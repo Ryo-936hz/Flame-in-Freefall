@@ -7,8 +7,8 @@ Estas instrucciones se aplican al proyecto FlameLab SI. La petición vigente aut
 El usuario ha asignado conjuntamente **P1, P3 y P4** a este trabajo en `raul` para
 cerrar su parte de la demo. La integración P2 de `main` y la rama P4 se conservan
 mediante merge. P1/P3/P4 coordinan aquí contratos, ciencia e IA según ADR 0009.
-P2, P5 y P6 conservan sus rutas; no se da por terminado su trabajo por cerrar
-backend. Leer primero `docs/INTEGRATION_P134.md` para el incremento actual.
+P2 y P5 conservan sus rutas; no se da por terminado su trabajo por cerrar
+backend. `docs/INTEGRATION_P134.md` conserva el cierre anterior de esos tres puestos.
 `team-start-v1` es una referencia histórica congelada, no la base para deshacer
 avances. Las guías antiguas se interpretan con el estado vigente del código.
 

@@ -1,5 +1,10 @@
 # P6 Mission Lab hipótesis demo y coordinación QA
 
+Estado vigente y entrega: [relevo P6](../handoffs/P6.md), [guion](../DEMO.md)
+y [verificación](../VERIFICATION.md). Este paquete inferior conserva la asignación
+inicial; sus referencias a código futuro y a team-start-v1 son históricas.
+Para continuar usar la referencia actual de TEAM_HANDOFF, sin volver a la base antigua.
+
 ## Cuándo comenzar
 
 La base integrada ya existe. Sigue [TEAM_START](../TEAM_START.md), crea tu rama desde `origin/codex/team-start-v1` y comprueba el SHA común antes de comenzar. El prompt maestro y BUILD_ORDER conservan el proceso de construcción. Este paquete define las siguientes tareas del puesto; consulta IMPLEMENTATION_STATUS y VERIFICATION para distinguir lo ya ejecutado de lo pendiente.

@@ -1,21 +1,34 @@
 # Empieza aquí
 
-**Incremento actual:** [entrega conjunta P1/P3/P4](INTEGRATION_P134.md), rama `raul`.
-El catálogo opt-in de preguntas, plan público y disponibilidad por segmento están
-implementados. Los datos P2 están integrados y siguen sin revisión científica
-aprobada. Para estado vigente y pruebas, consultar IMPLEMENTATION_STATUS y VERIFICATION.
-La guía y referencias iniciales de abajo se conservan como historial de arranque.
+**P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
+informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
+la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II
+es local y opt-in; el CI utiliza datos sintéticos. Ver [relevo P6](handoffs/P6.md).
 
-FlameLab SI es la base compartida de Los TTS: API, SQLite, ingesta, ciencia,
-coordinación demo y cliente TypeScript con arnés React. Para clonar, arrancar y
-elegir tarea, usar [TEAM_START](TEAM_START.md). El frontend de producto sigue pendiente.
+**Incremento actual:** [demo de Mission Lab integrado](DEMO.md), rama `raul`,
+código `66934638e37c1396eeab638631d54a2159ab7930` y [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3). Incluye P1/P3/P4 y P2 de `main` `f8e6a01`,
+P6 `80ceba4` y la interfaz P5 `9f54700`. Leer [relevo P6](handoffs/P6.md),
+[estado vigente](IMPLEMENTATION_STATUS.md) y [pruebas](VERIFICATION.md).
+La PR aún no está fusionada en `main`; conservar ramas y cambios propios.
 
-## Estado local al 14 de noviembre de 2026
+La base conecta API, persistencia, ingesta, ciencia e IA demo con Evidence Canvas,
+Mission Lab, informe y recuperación. [README](../README.md) contiene los pasos para
+clonar desde `flamelab-p6-demo-2026-11-14` y arrancar; [DEMO](DEMO.md) añade el E2E con Chromium.
+`team-start-v1` y [TEAM_START](TEAM_START.md) son la referencia inicial, no una orden
+de deshacer avances. La [entrega P1/P3/P4](INTEGRATION_P134.md) conserva el historial.
 
-- Integración: `main` en GitHub; referencia de arranque para los seis: `origin/codex/team-start-v1`. Crear rama propia desde ella según [TEAM_START](TEAM_START.md).
-- The default demo uses 2 studies, 5 trials and 6 **synthetic** observations. The standalone catalog still contains 24 metadata-only investigations. The integrated P2 import covers six campaigns with outcomes, one with configurations and seventeen documentary studies; scientific status remains unverified. See [P2_NASA_24](P2_NASA_24.md).
-- SQLite y modo demo comprobados localmente y en CI GitHub Windows/Linux. Proveedor externo probado con HTTP simulado, sin llamadas reales. PostgreSQL base verificado en CI; pgvector pendiente; ejecuciones en [VERIFICATION](VERIFICATION.md).
-- [README](../README.md) y [SETUP_WINDOWS](SETUP_WINDOWS.md) contienen comandos reales; [VERIFICATION](VERIFICATION.md) conserva resultados, entorno y límites.
+## Estado comprobado al 14 de noviembre de 2026
+
+- Demo predeterminada: dos estudios, cinco ensayos y seis observaciones sintéticas.
+  No requiere claves ni originales NASA.
+- Interfaz P5/P6 montada y verificada: A/B, fuentes de expediente/corpus, informes,
+  replay y recuperación tras reinicio; 24 pasos y 58 comprobaciones de navegador.
+- Check con datos reales locales: 342 Python aprobadas y una omisión PostgreSQL;
+  76 pruebas cliente. Clon limpio: 340 Python y tres omisiones esperadas.
+- [CI](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43621040286) aprobado en Windows/Linux, PostgreSQL y navegador Windows/Linux.
+- Corpus P2: seis campañas con resultados, una de configuraciones y 17 documentales.
+  Diez puntos BASS-II tienen conformidad descriptiva de P3 con límites; el corpus
+  completo conserva `scientific_unverified`. No se usó un proveedor externo real.
 
 ## Primera lectura para cualquier asistente
 
@@ -52,4 +65,9 @@ P1–P6 son puestos, no personas identificadas. El equipo debe asignar sus nombr
 
 ## Datos antes de ampliar
 
-El ZIP de `C:\Users\user\Desktop\NASA\Documents` se ha inventariado sin modificar el original. Lee [DATA_INSPECTION](DATA_INSPECTION.md): existe una tabla BASS-II candidata con condiciones sucesivas, pero quedan cuestiones de unidades, asociación temporal e independencia por resolver. El inventario no equivale a validar observaciones científicas ni a autorizar redistribuir originales.
+El ZIP original se conserva intacto; [DATA_INSPECTION](DATA_INSPECTION.md)
+documenta el inventario. La tabla BASS-II ya está importada con segmentos y fuentes.
+El [dictamen P3](handoffs/P3_BASS_II_DECISION_DEMO.md) aprobó diez puntos para uso
+descriptivo; [P2_DEMO](handoffs/P2_DEMO.md) describe el paquete con aviso M8 y lunar
+corregido. No equivale a validar el corpus completo, atribuir causalidad al flujo,
+medir O₂ por segmento ni autorizar redistribuir todos los originales.

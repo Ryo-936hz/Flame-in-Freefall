@@ -42,3 +42,24 @@ No cambia el contrato HTTP ni se editan generados. `test:client` descubre todas 
 pruebas P5/P6; `check.ps1 -E2E` añade el navegador cuando está instalado.
 La verificación efectivamente ejecutada se registra en VERIFICATION; este ADR no
 acredita por sí solo compatibilidad ni aprobación científica de datos NASA.
+
+
+## Presets BASS-II aprobados, ampliación del mismo cierre
+
+El relevo P2 1.1.1 y el dictamen P3 ya permiten diez puntos descriptivos de
+BASS-II. El formulario general de P5 no representa selección de estudio/segmento;
+se añaden presets acotados dentro de P6 que consumen los JSON versionados, sin
+ampliar contratos ni duplicar controles de P5. No heredan filtros ajenos al caso.
+La narrativa aprobada solo acompaña respuestas coherentes con los puntos revisados;
+el corpus global sigue `scientific_unverified`.
+
+Un segundo recorrido de navegador, opt-in con el paquete local aprobado, comprueba
+los presets contra la API real y la recuperación de fuentes/informe. Reutiliza
+el aislamiento del runner, con una ruta explícita de entrada de solo lectura.
+El fixture sintético sigue siendo la prueba reproducible sin datos externos de CI.
+No se versionan el bundle, ZIP, bases ni extractos descargados.
+
+P5 publicó después `45edc50`/`8adec7a` (Ask SI y reorganización CSS). Es un incremento
+independiente, no una dependencia para P6; permanece en su rama. El host integrado
+en esta entrega es `9f54700`. El relevo P6 identifica cómo incorporar estos paneles
+y conservar el contexto histórico de las citas en esa evolución de P5.

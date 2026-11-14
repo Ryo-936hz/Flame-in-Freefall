@@ -2,7 +2,8 @@
 
 ## Base común
 
-Para el incremento actual P1/P3/P4 consultar [INTEGRATION_P134](INTEGRATION_P134.md).
+Para el incremento actual consultar [relevo P6](handoffs/P6.md) y [DEMO](DEMO.md).
+[INTEGRATION_P134](INTEGRATION_P134.md) conserva la entrega anterior de backend.
 La referencia de primera incorporación descrita abajo es histórica; los avances
 se integran desde la entrega vigente indicada en TEAM_HANDOFF.
 
