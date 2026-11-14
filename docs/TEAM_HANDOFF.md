@@ -7,9 +7,9 @@ rama de integración `main`. La referencia común de arranque es
 y elegir puesto. No se han cambiado permisos ni asignado personas ficticias.
 
 La construcción local anterior (`543c13b`, tag `flamelab-skeleton-2026-11-14`)
-se conserva en el equipo y bundle históricos. La publicación mediante el conector
-genera un nuevo historial remoto con el contenido verificado y la guía de equipo;
-no utilizar el SHA histórico local como base de nuevas PR del remoto.
+se conserva en el historial publicado y en el bundle histórico. La publicación
+mediante Git conserva los commits locales. Para la primera tarea usar la referencia
+común de TEAM_START, que añade la guía y el registro de publicación a aquella base.
 
 ## Terminado y pendiente
 

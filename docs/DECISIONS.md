@@ -31,7 +31,7 @@ pertenecen a VERIFICATION y la referencia común a TEAM_HANDOFF.
 | D-17 | Incluir evidencia de ensayo, condiciones y observaciones en cada resultado del ranking. | Permite citas legítimas de mediciones y rechaza fuentes vinculadas a otro ensayo seleccionado. | P1 + P3 + P4 |
 | D-18 | X totalmente ausente implica investigación insuficiente. | Conservar Y disponible no demuestra que exista un par cuantitativo para la variable solicitada; no producir hipótesis preparada en ese caso. | P1 + P3 |
 | D-19 histórica | Primera entrega local y referencia común. | Se conservan commit/bundle locales. La publicación posterior fue autorizada por el usuario en D-20. | P1 + equipo |
-| D-20 | Publicar en main y conservar codex/team-start-v1 como referencia común del equipo. | Git local carecía de credencial; se usa el conector GitHub para publicar el mismo contenido con nuevo historial remoto. No se reescribe el historial local. Todos crean su primera rama desde la referencia común; no moverla. TEAM_START documenta arranque y tareas. | P1 + equipo |
+| D-20 | Publicar en main y conservar codex/team-start-v1 como referencia común del equipo. | El conector rechazó escritura con 403. El usuario eligió autenticar Git local; Git Credential Manager completó la autenticación y permitió publicar conservando el historial. Todos crean su primera rama desde la referencia común; no moverla. TEAM_START documenta arranque y tareas. | P1 + equipo |
 
 La propuesta de matriz relacional por observación, el índice pgvector, planificación de lenguaje natural,
 diseño inverso validado y frontend de producto siguen pendientes. Su presencia en la visión no los convierte
