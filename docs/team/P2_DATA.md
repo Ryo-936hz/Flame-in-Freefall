@@ -6,7 +6,7 @@ La base integrada ya existe. Sigue [TEAM_START](../TEAM_START.md), crea tu rama 
 
 ## Resultado del puesto
 
-El ZIP ya se inspeccionó y la extracción 1.1 contiene un catálogo de 24 estudios con datos o configuraciones estructurados en siete campañas. El [relevo P2 de la demo](../handoffs/P2_DEMO.md) documenta los casos BASS-II cotejados con el original y el contraste Saffire. La conformidad científica de P3 sobre el guion sigue pendiente.
+El ZIP ya se inspeccionó y la extracción 1.1 contiene un catálogo de 24 estudios con datos o configuraciones estructurados en siete campañas. El [relevo P2 de la demo](../handoffs/P2_DEMO.md) documenta los diez puntos BASS-II aprobados por P3 para el guion descriptivo, el aviso M8, el caso lunar y el contraste Saffire.
 
 Este puesto se asigna a una persona del equipo. No presupone un usuario GitHub ni habilita a enviar mensajes en su nombre.
 

@@ -32,8 +32,8 @@
     "ranking": {
       "study_ids": ["psi:PSI-25"],
       "condition_scope": "segment",
-      "target": { "gravity_regime": "lunar", "flow_velocity_cm_s": 6 },
-      "required_match": ["gravity_regime", "flow_velocity_cm_s"],
+      "target": { "gravity_regime": "lunar" },
+      "required_match": ["gravity_regime"],
       "allow_synthetic": false,
       "limit": 20
     }

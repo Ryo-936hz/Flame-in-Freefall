@@ -1,0 +1,5 @@
+{
+  "bass_comparison": "Al cambiar la consulta de 6 a 5 cm/s, FlameLab recupera cuatro y seis observaciones publicadas de BASS-II: en conjunto corresponden a siete muestras, con M7, M8 y M13 presentes en ambos casos. Mostramos cómo cambia la evidencia recuperada; estos registros no permiten atribuir las diferencias de tasa únicamente al flujo, porque también evolucionan el oxígeno y la muestra durante cada ensayo.",
+  "lunar_insufficient": "En el corpus BASS-II importado no se recuperan observaciones de tasa de propagación con gravedad lunar. La evidencia disponible no permite responder sobre ese régimen.",
+  "m8_notice": "Valor publicado en la Tabla 5.1. La Figura 5.2 presenta un ajuste diferente: 0.0557 mm/s a 6 cm/s y 0.0391 mm/s a 5 cm/s. Se conserva la discrepancia; no se ha resuelto mediante reanálisis."
+}

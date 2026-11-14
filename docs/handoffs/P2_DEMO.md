@@ -1,19 +1,19 @@
-# Relevo P2 para P1 y P3 · FlameLab Demo 1.1.0
+# Relevo P2 para P1 y P3 · FlameLab Demo 1.1.1
 
 - Rama `lujan`. Base del extractor `04baeeee1f0bf3f75d957f7ed845c890efc2a3ec`.
-- Artefacto `flamelab-p2-demo-v1.1.0.zip`. Contiene `bundle.json`, `quality.json`, `cases.json`, este relevo y `SHA256SUMS`. Destino acordado en esta entrega: traspaso interno a P1.
-- Contrato de datos `1.1`, `dataset_id: psi:nasa-local-corpus-v1`. Se conservan los identificadores del corpus existente. `1.1.0` identifica esta entrega y sus casos, y los SHA-256 fijan los bytes del corpus.
+- Artefacto `flamelab-p2-demo-v1.1.1.zip`. Contiene `bundle.json`, `quality.json`, `cases.json`, `demo-copy.json`, este relevo, el [dictamen de P3](P3_BASS_II_DECISION_DEMO.md) y `SHA256SUMS`. Destino: traspaso interno a P1.
+- Contrato de datos `1.1`, `dataset_id: psi:nasa-local-corpus-v1`. La revisión `1.1.1` del paquete añade el aviso a dos evidencias M8 y actualiza el caso lunar y el guion. Los SHA-256 de la extracción base y los del paquete tienen ámbitos distintos.
 - Corpus de 24 estudios, 2.265 evidencias, 1.058 registros de ensayo o configuración y 1.673 observaciones. El guion cuantitativo se limita a BASS-II (`psi:PSI-25`). La API lo identifica como `scientific_unverified`.
 
 ## P1 · Cargar y comprobar
 
-Extraer el paquete en `work/flamelab-p2-demo-v1.1.0` dentro del clon. Los comandos se ejecutan desde la raíz con las dependencias fijadas de FlameLab. Para cargar el bundle basta su JSON, sin descargar los originales ni instalar el extractor.
+Extraer el paquete en `work/flamelab-p2-demo-v1.1.1` dentro del clon. Los comandos se ejecutan desde la raíz con las dependencias fijadas de FlameLab. Para cargar el bundle basta su JSON, sin descargar los originales ni instalar el extractor.
 
 ```bash
-(cd work/flamelab-p2-demo-v1.1.0 && sha256sum -c SHA256SUMS)
-uv run --locked python -m flamelab.data.cli validate work/flamelab-p2-demo-v1.1.0/bundle.json
-uv run --locked python -m flamelab.data.cli import work/flamelab-p2-demo-v1.1.0/bundle.json --database-url sqlite:///work/flamelab-demo-v1.1.0.db
-FLAMELAB_DATABASE_URL=sqlite:///work/flamelab-demo-v1.1.0.db FLAMELAB_SEED_DEMO=false FLAMELAB_AI_PROVIDER=demo \
+(cd work/flamelab-p2-demo-v1.1.1 && sha256sum -c SHA256SUMS)
+uv run --locked python -m flamelab.data.cli validate work/flamelab-p2-demo-v1.1.1/bundle.json
+uv run --locked python -m flamelab.data.cli import work/flamelab-p2-demo-v1.1.1/bundle.json --database-url sqlite:///work/flamelab-demo-v1.1.1.db
+FLAMELAB_DATABASE_URL=sqlite:///work/flamelab-demo-v1.1.1.db FLAMELAB_SEED_DEMO=false FLAMELAB_AI_PROVIDER=demo \
   uv run --locked uvicorn flamelab.main:app --host 127.0.0.1 --port 8000
 ```
 
@@ -25,9 +25,15 @@ Enviar los objetos `bass_6`, `bass_5` y `lunar` de `cases.json` individualmente 
 | --- | --- |
 | `bass_6` | `completed`, cuatro puntos de cuatro ensayos. |
 | `bass_5` | `completed`, seis puntos de seis ensayos. En A/B respecto a `bass_6`, entran M4/M16/M17, sale M19 y se mantienen M7/M8/M13 con otro segmento. |
-| `lunar` | `insufficient_evidence`, cero ensayos seleccionados y comparación nula para los filtros del caso. |
+| `lunar` | `insufficient_evidence`, cero ensayos seleccionados y comparación nula. El caso explora BASS-II bajo gravedad lunar a cualquier velocidad del aire. |
 
 Los filtros exactos dejan las coincidencias empatadas en similitud. El orden de desempate por ID carece de interpretación como ranking de peligro. Al abrir un punto, usar el ID de la evidencia de su segmento con `GET /api/v1/evidence/{evidence_id}?research_id={run_id}`. El informe se puede recuperar por `GET /api/v1/research/{run_id}/report`.
+
+Para P5 y P6, `demo-copy.json` contiene los textos aprobados de comparación e insuficiencia lunar para usar en estos presets del guion. En ambos puntos M8 el texto de la evidencia devuelta por la API ya contiene el aviso exacto. Al integrarlos, conservar el aviso en el visor de evidencia y usar el mensaje lunar del preset cuando el resultado sea `insufficient_evidence`.
+
+> Al cambiar la consulta de 6 a 5 cm/s, FlameLab recupera cuatro y seis observaciones publicadas de BASS-II: en conjunto corresponden a siete muestras, con M7, M8 y M13 presentes en ambos casos. Mostramos cómo cambia la evidencia recuperada; estos registros no permiten atribuir las diferencias de tasa únicamente al flujo, porque también evolucionan el oxígeno y la muestra durante cada ensayo.
+
+> En el corpus BASS-II importado no se recuperan observaciones de tasa de propagación con gravedad lunar. La evidencia disponible no permite responder sobre ese régimen.
 
 ## P3 · Cotejo de los puntos del guion
 
@@ -49,7 +55,7 @@ P2 cotejó los 43 pares de flujo y tasa o ausencia con la Tabla 5.1. Esta tabla 
 - **Unidad experimental.** Los cuatro y los seis puntos corresponden a siete ensayos distintos al considerar los dos presets juntos. Los segmentos repetidos de M7/M8/M13 pertenecen a la misma muestra física en ambos lados. La secuencia conserva el orden publicado. El guion describe el cambio de evidencia recuperada. Las diferencias de espesor, ancho, caras y atmósfera limitan la interpretación causal.
 - **Ausencias.** M6 (segmentos 1/2, 10/8 cm/s) y M12 (segmentos 1/2, 12/10 cm/s) conservan cuatro tasas `null` con `not_measured` y `Not tracked` original. Los 43 segmentos conservan O₂ sin medir como `null`. Los extremos de O₂ permanecen en el ensayo. Se conoce el número de caras que ardieron y la identidad de la cara queda `not_reported`.
 - **Discrepancias.** Los valores expuestos para M8 corresponden a la Tabla 5.1. La Figura 5.2 reporta pendientes de 0.0557 y 0.0391 mm/s a 6 y 5 cm/s respectivamente. `quality.json` conserva ambas referencias y las diferencias de ancho nominal y lecturas operativas. [Auditoría de fuentes](https://github.com/Ryo-936hz/Flame-in-Freefall/blob/04baeee/docs/P2_SOURCE_AUDIT.md) · [Método O₂, p. 68 del PDF](https://ntrs.nasa.gov/api/citations/20210011385/downloads/TM-20210011385.pdf#page=68)
-- **Revisión P3 pendiente.** Confirmar por escrito los diez puntos y la interpretación descriptiva del guion. Se aplicaron los criterios publicados por P3 sobre independencia, alcance temporal y comparación entre campañas. Los estados `unverified` y `reviewed=false` reflejan que falta esa conformidad. [Matriz P3](https://github.com/Ryo-936hz/Flame-in-Freefall/blob/04baeee/evals/science/NASA_24_REVIEW.md)
+- **Conformidad P3 del 14 de noviembre de 2026.** P3 confirma los diez puntos y su uso descriptivo, con aviso M8 y corrección del caso lunar. Esta conformidad no valida el corpus completo. El dictamen identifica los diez IDs, el commit revisado `10e58007b5a5dd95e4d697a7b3ed6bfb5389bdbe` y los hashes de sus fuentes y de la extracción base. El estado global se conserva como `scientific_unverified`. [Dictamen de P3](P3_BASS_II_DECISION_DEMO.md)
 
 ## Tarjeta Saffire para el guion
 
@@ -63,18 +69,21 @@ Texto para el guion: «Saffire aporta contexto a otra escala, con materiales y c
 
 ## Regeneración y condiciones de uso
 
-En el commit base, con los originales en `datasets/` según el inventario versionado:
+Desde el clon de P2, con los originales en `datasets/` según el inventario versionado:
 
 ```bash
 uv run --locked --with pymupdf==2.1 python -m flamelab.data.cli extract-nasa datasets --output-dir work/p2-demo-regenerated
 sha256sum work/p2-demo-regenerated/{bundle,quality}.json
+uv run --locked python -m flamelab.data.p2_demo_release work/p2-demo-regenerated work/flamelab-p2-demo-v1.1.1.zip
 ```
 
-| Archivo | SHA-256 |
+| Archivo de la extracción base revisada por P3 | SHA-256 |
 | --- | --- |
 | `bundle.json` | `7dc69717b4bc6151025df2993d9cf66622db3a8b7242798a1d7bfe8b8e335781` |
 | `quality.json` | `8b44ddd333912f4b4849b82c5d2df29ec1b1d38de6bf8d5191ef9e8afbd57ee9` |
 
 Las dos regeneraciones del corpus completo y las dos de BASS-II aislado coincidieron byte a byte con las extracciones ya existentes. Se validó el bundle, se importó dos veces en una base dedicada y se recorrieron los tres casos por API en modo determinista. Se comprobaron las diez citas de puntos, los 24 estudios, ambas comparaciones A/B y la recuperación del informe al reabrir la API.
+
+El empaquetador verifica esos dos hashes antes de añadir el aviso M8. Los hashes de los archivos entregados están en el `SHA256SUMS` incluido en el ZIP. El extracto científico original y `quality.json` se conservan. En 1.1.1 se comprobó la importación idempotente en SQLite, las diez observaciones y sus citas, el texto del aviso en las dos evidencias de M8, el caso lunar sin filtro de velocidad y la recuperación del informe. Las comprobaciones se ejecutaron con el proveedor determinista.
 
 El paquete interno contiene extracciones y referencias. PSI-25 identifica la investigación como `CC0-1.0` en la auditoría de fuentes. El memorando NTRS es de distribución pública y muestra una nota de derechos distinta. P1 debe usar las citas originales y consultar las condiciones aplicables por fuente antes de redistribuir públicamente el corpus completo o exponer sus extractos. El paquete conserva esas referencias para la comprobación. [Auditoría y alcance de licencias](https://github.com/Ryo-936hz/Flame-in-Freefall/blob/04baeee/docs/P2_SOURCE_AUDIT.md) · [Registro NTRS](https://ntrs.nasa.gov/citations/20210011385)
