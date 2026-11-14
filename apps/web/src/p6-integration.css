@@ -1,0 +1,12 @@
+/* The existing P5 workspace hosts the P6 panels and keeps the P2 catalog reachable. */
+.p6-slot { display: grid; gap: 12px; min-width: 0; container-type: inline-size; container-name: mission-slot; }
+.p6-catalog { min-width: 0; }
+.p6-catalog > details > summary { padding: 14px 18px; cursor: pointer; font-weight: 600; }
+.p6-catalog summary:focus-visible { outline: 2px solid var(--signal); outline-offset: -3px; }
+.p6-catalog label { display: grid; gap: 6px; }
+.p6-catalog select { max-width: 100%; width: 100%; padding: 8px; color: var(--ink); background: var(--surface); border: 1px solid var(--rule-strong); }
+.p6-catalog pre { max-height: 320px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.p6-catalog li, .p6-catalog button, .p6-catalog code { overflow-wrap: anywhere; }
+.p6-catalog button { color: var(--ink); background: var(--surface); border: 1px solid var(--rule-strong); margin: 3px; padding: 5px; }
+.p6-catalog details { min-width: 0; }
+.p6-catalog h2 { font-size: 1.1rem; }

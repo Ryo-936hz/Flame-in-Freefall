@@ -3,6 +3,84 @@
 Los resultados vigentes aparecen primero; el resto conserva el historial.
 Ninguna prueba de software equivale a validación científica.
 
+## Integración concurrente de favicon — 14 noviembre 2026
+
+Después del cierre funcional, `main` añadió `9f22d21`, una línea de favicon.
+Se integró mediante merge **`576e60827f44bbc80e48f26022b589a6f60175c1`**,
+conservando el HTML P5/P6. La única diferencia de aplicación frente a `6693463`
+es `<link rel="icon" href="data:," />` en `apps/web/index.html`.
+
+Build y recorrido Chromium sintético repetidos después del merge: salida 0,
+**24 pasos / 58 comprobaciones**, sin fallos. No cambiaron cálculos, API,
+persistencia, presets ni dependencias; los resultados completos anteriores
+mantienen su SHA explícito abajo. La etiqueta común de esta integración es
+`flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta se conserva sin mover.
+El CI del head final puede consultarse en la PR #3.
+
+## Cierre P6 — interfaz integrada y casos BASS-II — 14 noviembre 2026
+
+Código **`66934638e37c1396eeab638631d54a2159ab7930`**, rama `raul`, [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3).
+Base main/P2 `f8e6a01`, P6 `80ceba4` y host P5 `9f54700`; la actualización
+documental posterior no altera el código comprobado. [Guion](DEMO.md) y [relevo](handoffs/P6.md).
+
+### Puerta local y recorridos de navegador
+
+Windows, Python 3.12.14, Node 24.22.1, PowerShell 7.6.9. Ejecutado
+`scripts/check.ps1 -E2E` con ambos bundles científicos locales y el paquete BASS-II
+aprobado indicados explícitamente; proveedor `demo`, sin credenciales de IA.
+
+| Comprobación | Resultado observado |
+|---|---|
+| Python | 342 aprobadas, 1 omitida (PostgreSQL local); un aviso Starlette/httpx. |
+| Ciencia/IA | 6 casos heredados + 6 segmentos; disponibilidad aprobada; IA 18/18; corpus local 7/7. |
+| Contratos, cliente, build | Ruff y deriva OpenAPI/TypeScript correctos; 76 cliente, tipado y build aprobados. |
+| HTTP real | SQLite aislado, planes, tres casos, informe y reinicio correctos. |
+| Chromium con fixtures | 24 pasos y 58 comprobaciones, sin fallos. |
+| Chromium con paquete BASS-II 1.1.1 | 7 pasos y 44 comprobaciones, sin fallos. |
+
+El sintético comprueba A/B y evidencia antes de investigar, métrica/filtros/pregunta,
+literalidad de fuente/informe/descarga, recuperación tras reinicio, errores/reintento
+y respuestas tardías frente a Reset y una investigación nueva. Incluye ausencia de
+BASS-II real en fixtures. El recorrido real coteja diez puntos, siete muestras,
+segmentos/citas/M8, solicitudes exactas, caso lunar sin flujo, informe y recuperación.
+No hay mocks del backend de la prueba principal; las respuestas retenidas sirven
+solo para provocar carreras controladas. Capturas oscuro/claro/escritorio y móvil
+390 px inspeccionadas; no se afirma prueba con lector de pantalla o teléfono físico.
+
+Bundle real preparado con `python -m flamelab.data.p2_demo_release` desde la
+extracción revisada por P3; SHA-256 de **bundle del paquete 1.1.1**:
+`cb8b782fd73dbe4df0576b8047f3dea781a37d7c06c962ad2e978e607a00191d`.
+El runner verifica ese hash antes de abrir Chromium y nunca modifica el archivo.
+Los hashes base para ciencia siguen siendo BASS-II `a2779a6e3a2b335298408c2dc5184e4bef916ad29cf7821737e148c5e5920007`
+y NASA-24 `7dc69717b4bc6151025df2993d9cf66622db3a8b7242798a1d7bfe8b8e335781`.
+El paquete añade los avisos M8 y conserva datos/fuentes publicados; no se versiona.
+Las pruebas comprueban software e identidad de los casos, no validan todo el corpus.
+
+### Clon limpio y CI
+
+Nuevo clon sin `.env`, `.venv` ni `node_modules` iniciales; setup y check -E2E
+salida 0 en el SHA indicado. ROOT/sys.prefix apuntan al clon, dependencias propias,
+sin junctions y Git limpio. **340 Python aprobadas, 3 omitidas**, 76 cliente,
+evaluaciones y recorrido sintético correctos. Se comparten Windows/runtimes y
+caché de navegador, no las dependencias del proyecto. Los bundles no se distribuyen.
+
+[CI 43621040286](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43621040286) del mismo SHA: `completed/success`.
+
+| Job | Resultado |
+|---|---|
+| verify Windows y Linux | 340 Python/3 omisiones, 76 cliente, evaluaciones, contratos, build y HTTP/reinicio aprobados. |
+| postgres | Integración real PostgreSQL 17 aprobada: migración, reemplazo y recuperación histórica. No acredita pgvector. |
+| browser Windows y Linux | Recorrido sintético completo aprobado en ambos sistemas; capturas como artefactos del run. |
+
+No se ejecutó BASS-II real en CI público: su prueba es local opt-in. No se
+ejecutaron servicios de IA pagados ni validación física.
+
+Hito previo: `16d326c` pasó el clon limpio, 70 cliente y E2E sintético 22/49,
+con [CI 43618846780](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43618846780).
+Se corrigieron una dependencia opcional ausente en el lockfile, un desbordamiento
+móvil y la limpieza del runner antes de registrar ese éxito. El cierre de arriba
+repite las puertas después de añadir BASS-II y no reutiliza aquel resultado como prueba nueva.
+
 ## Cierre conjunto P1/P3/P4 — 14 noviembre 2026
 
 Rama `raul`, conservando P3 `321cc0b`, `main`/P2 `04baeee` y P4 `12555c1`
@@ -285,3 +363,49 @@ El incremento P1 desde `422f6b03f410c6ac049b699e13fc204a3af67743` añade un job 
 ## Contrato 1.1 de condiciones sucesivas
 
 Verificado en el incremento P1: `apps/api/tests/test_contracts.py` y `test_science.py` (45 passed), Ruff de API/scripts, export OpenAPI `--check`, TypeScript generado `--check`, typecheck de cliente y 6 pruebas cliente. La suite Python completa no finalizo en este entorno: pytest no pudo crear temporales en el directorio de sistema y la reejecucion con `--basetemp work/pytest-p1` se interrumpio tras quedar sin salida. El ejemplo es totalmente sintetico. La comparacion extrae X y el `segment_id` enlazado, pero la estratificacion cientifica P3 completa sigue pendiente; PostgreSQL tampoco se verifico.
+
+## P6 · Mission Lab A/B, hipótesis y guion (14 nov 2026, Linux)
+
+Rama `claude/cool-edison-2okpmp`, partida `422f6b0` (`codex/team-start-v1`). Entorno
+Linux del contenedor de trabajo: Python 3.13 (uv), Node 22.23; proveedor `demo`, SQLite
+temporal con semilla sintética. No es una ejecución de CI ni de Windows.
+
+- Ruff aprobado; **112 pruebas Python**; OpenAPI/TS sin deriva; typecheck y build correctos.
+- `npm run test:client`: **15 pruebas** (6 existentes + 9 de `mission-lab.test.ts`).
+- `scripts/smoke.py` aprobado con reinicio.
+- Recorrido en Chromium (Playwright) comparado con un worktree del commit base: el
+  recorrido de TEAM_START §4 da los mismos resultados; presets A/B, consulta sin
+  evidencia, panel de hipótesis, API caída, teclado y 390 px sin desbordamiento revisados.
+- Cifras de DEMO.md contrastadas con la API demo. Todos los datos son fixtures sintéticos.
+
+Cambio compartido: el script `test:client` de `package.json` añade el nuevo archivo de
+pruebas (coordinar con P1). Sin cambios de contrato, API ni `packages/contracts`.
+
+## P6 · Montaje P5, recorrido E2E e informe (14 nov 2026, Linux)
+
+Rama `codex/p6-mission-lab`, HEAD `c6c2c1d` (merge de `main` en `1041ff2`; partida `44a8d8e`) con el incremento
+P6 sin commit en el árbol. Linux del contenedor de trabajo, Node 22, Python con uv, Playwright/Chromium instalado
+globalmente (no es dependencia del proyecto). Proveedor `demo`, SQLite temporal con semilla sintética. No es CI ni Windows.
+
+En `/home/user/Flame-in-Freefall` (arnés de esta rama):
+
+- `npm run typecheck` sin errores; `npm run build` correcto; `npm run check:types` «TypeScript contract matches OpenAPI.»
+- `npm run test:client`: **43 aprobadas** (client, mission-lab, mission-lab-state, mission-lab-panel, report).
+- `uv run pytest -q`: 211 aprobadas, 3 omitidas; `uv run ruff check apps/api scripts` sin avisos.
+- `uv run python scripts/smoke.py`: `"points": 4`, `"restart_persistence": "passed"`.
+- `node apps/web/tests/e2e/p6-walkthrough.mjs --host=harness`: **12/12 pasos, 23 comprobaciones**. Incluye evidencia
+  `record` con `research_id` y `corpus` sin él, A/B marcado como anterior al cambiar filtros, consulta
+  `insufficient_evidence`, informe mostrado == `GET /report` == descargado, recarga + reinicio de API con
+  recuperación del mismo informe, 404 y API parada ⇒ alerta con Retry que funciona al volver la API.
+- Una ejecución con host equivocado (`--host=p5` sobre el arnés) terminó con código 1 y resumen de fallo.
+
+Integración con P5 en worktree temporal (`HEAD` + merge sin commit de `origin/codex/p5-evidence-canvas` `c71fa13`,
+App.tsx de P5, `InterimMissionTools` sustituido por los paneles P6; worktree eliminado después):
+
+- typecheck y build correctos; `npm run test:client` 43 aprobadas; `npx tsx --test apps/web/tests/evidence/*.test.ts` 10 aprobadas.
+- `p6-walkthrough.mjs --host=p5`: **12/12 pasos, 23 comprobaciones**. Capturas revisadas en tema oscuro: tras tokenizar
+  `mission-lab.css` el panel es legible; la tabla A/B queda estrecha en la columna central de P5.
+- El parche `docs/handoffs/P6-mount-for-P5.patch` se aplica limpiamente (`git apply --check`) sobre los archivos de `c71fa13`.
+
+Todos los datos son fixtures sintéticos, no mediciones NASA. Sin cambios de contrato, API ni `packages/contracts`.
+Cambio compartido: `test:client` en `package.json` añade `mission-lab-state`, `mission-lab-panel` y `report` (anotar P1).

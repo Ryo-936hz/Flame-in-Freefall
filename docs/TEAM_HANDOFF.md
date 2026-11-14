@@ -1,4 +1,51 @@
-# Relevo vigente — integración P1/P3/P4
+# Relevo vigente — P6 integrado con P5
+
+**Integración posterior de main:** se conservó el cambio de favicon `9f22d21`
+mediante merge `576e608`, manteniendo el HTML y las funciones de P5/P6.
+La referencia común actual es `flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta
+se conserva sin mover. El código funcional y sus pruebas completas son los
+registrados abajo; la única diferencia de aplicación posterior es esa línea de favicon.
+
+**P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
+informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
+la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II
+es local y opt-in; el CI utiliza datos sintéticos. Ver [relevo P6](handoffs/P6.md).
+
+El usuario asignó P6 después del cierre P1/P3/P4. Entrega en `raul`, código
+`66934638e37c1396eeab638631d54a2159ab7930`, [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3) abierta y todavía no fusionada en `main`.
+Base `main` `f8e6a01`; se conservan P6 `80ceba4` y P5 `9f54700` mediante merge.
+[Guion/arranque](DEMO.md), [relevo P6](handoffs/P6.md), [estado](IMPLEMENTATION_STATUS.md)
+y [verificación](VERIFICATION.md).
+
+Mission Lab, informe y recuperación están montados en Evidence Canvas. A/B y
+consulta genéricos usan la métrica seleccionada; los presets BASS-II fijan tasa de propagación; los resultados anteriores se distinguen
+al cambiar entradas. Las fuentes separan snapshot y corpus, y Reset/una consulta
+nueva impiden que una respuesta tardía reabra el expediente anterior.
+
+**Pruebas:** puerta original 342 Python/1 omisión y corpus 7/7; clon limpio
+340 Python/3 omisiones; 76 cliente, E2E 24 pasos/58 checks. [CI](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43621040286) aprobado
+en Windows/Linux, PostgreSQL y navegador en ambos sistemas. Los avisos y límites
+se detallan en VERIFICATION, sin convertir tests en validación científica.
+
+| Puesto | Continuidad después de esta entrega |
+|---|---|
+| P1/P3/P4 | Revisar e integrar la PR; mantener contratos, puertas de pruebas y límites de interpretación. |
+| P2/P3 | Conservar la aprobación descriptiva de los diez puntos BASS-II, aviso M8 y lunar corregido; ampliar revisión solo con fuentes. El corpus global sigue sin validación. |
+| P5 | Integrar la PR #3 conservando sus cambios posteriores de AskSI/CSS; revisar citas históricas y guardas de AskSI. El host acreditado aquí es `9f54700`. |
+| P6 | Mantener los presets y los dos recorridos de aceptación; la entrega no tiene bloqueos de implementación P6; lector de pantalla y móvil físico no se presuponen probados. |
+
+Para un clon nuevo seguir README desde la etiqueta
+`flamelab-p6-demo-2026-11-14-r2`, que fija código y documentación para los seis. Para incorporar en una rama existente: guardar cambios, `git fetch origin`,
+revisar el diff y hacer `git merge origin/raul`; después setup y check con E2E.
+Una vez fusionada la PR, usar `origin/main` como referencia compartida. No reset
+ni force push. No se movieron las referencias iniciales ni se enviaron mensajes
+en nombre del equipo.
+
+## Historial de la entrega P1/P3/P4
+
+La PR #2 descrita a continuación ya se fusionó en `main` como `8fffddc`.
+Sus pendientes de montaje P5/P6 pertenecen a aquel momento y quedan superados por
+la entrega vigente de arriba; sus resultados de backend siguen siendo históricos.
 
 El usuario asume P1/P3/P4. Entrega publicada en `raul`, [PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2).
 Código verificado `fd83a84aa24511e573a1b5f27cc859bcdddbf638`; las anotaciones posteriores solo documentan pruebas. [Guía reproducible](INTEGRATION_P134.md),

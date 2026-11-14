@@ -1,56 +1,81 @@
 # Estado real de FlameLab SI
 
-Actualizado: 14 de noviembre de 2026. Entrega conjunta P1/P3/P4 en `raul`, basada
-en `main` `04baeee`, P3 `321cc0b` y P4 `12555c1`. El usuario asume estos tres
-puestos. [Guía de entrega](INTEGRATION_P134.md) y [verificación](VERIFICATION.md).
+**Integración posterior de main:** se conservó el cambio de favicon `9f22d21`
+mediante merge `576e608`, manteniendo el HTML y las funciones de P5/P6.
+La referencia común actual es `flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta
+se conserva sin mover. El código funcional y sus pruebas completas son los
+registrados abajo; la única diferencia de aplicación posterior es esa línea de favicon.
+
+**P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
+informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
+la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II
+es local y opt-in; el CI utiliza datos sintéticos. Ver [relevo P6](handoffs/P6.md).
+
+Actualizado: 14 de noviembre de 2026. P6 integrado en `raul` sobre `main`
+`f8e6a01`, conservando las ramas P6 `80ceba4` y P5 `9f54700` mediante merge.
+Código verificado **`66934638e37c1396eeab638631d54a2159ab7930`**, [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3) abierta para integración;
+este incremento todavía no está en `main`. [Guion](DEMO.md),
+[relevo P6](handoffs/P6.md) y [verificación](VERIFICATION.md).
 
 ## Implementado para la demo
 
 | Área | Capacidad comprobable |
 |---|---|
 | Contrato/API | Pydantic estricto, corpus 1.1 con lectura 1.0, OpenAPI/TypeScript generados, plan público previsualizable y persistido. |
-| Ciencia | Condiciones efectivas, Gower/cobertura separados, disponibilidad de métrica antes del límite, controles/procedencia por estrato, cuentas de segmentos y unidades identificadas. |
-| IA demo | Catálogo determinista opt-in; modo explícito compatible; conflictos/ambigüedades visibles; cálculos ejecutados por herramientas, citas y propuestas etiquetadas. |
-| Proveedor opcional | Transporte acotado y errores explícitos; resumen del programa y afirmaciones numéricas verificadas contra campo/ensayo/fuente. Probado con mocks, sin llamadas reales. |
-| Persistencia | SQLite de archivo, Alembic, ingesta idempotente y snapshots; informes, planes y fuentes históricas sobreviven a reemplazo/reinicio. |
-| Datos P2 | 24 estudios, 1.058 registros, 1.673 observaciones, 1.283 conocidas; corpus local separado de fixtures. BASS 20 ensayos/43 segmentos/39 tasas conocidas. |
-| Cliente | Tipos compartidos regenerados y arnés técnico compatible. P5/P6 mantienen el trabajo de interfaz. |
-| Check/CI | Ruff, Python, suites ciencia/IA, deriva de contratos, tipado, cliente, build y HTTP real con reinicio. Corpus real opt-in. |
+| Ciencia | Condiciones efectivas, Gower/cobertura separados, disponibilidad de métrica antes del límite, controles/procedencia por estrato y cuentas sin crear réplicas de segmentos. |
+| IA demo | Catálogo determinista opt-in y modo explícito compatible; cálculos en herramientas, bloqueos y citas. Proveedor opcional probado con mocks, sin llamadas reales. |
+| Persistencia | SQLite de archivo y PostgreSQL verificados; informes, planes y fuentes históricas sobreviven a reemplazo/reinicio. |
+| Datos P2/P3 | 24 estudios, 1.058 registros, 1.673 observaciones y 1.283 valores conocidos. BASS-II conserva 20 ensayos/43 segmentos/39 tasas conocidas; diez puntos aprobados para uso descriptivo limitado. |
+| Interfaz P5 integrada | Evidence Canvas, tabla/gráfico/selección/fuentes, filtros explícitos y catálogo P2. Ilustración conceptual rotulada. |
+| Mission Lab P6 | A/B con métrica explícita, segmentos y motivos; vigencia ante cambios; hipótesis etiquetadas y consulta insuficiente con plan guardado. |
+| Presets BASS-II P6 | Tres consultas exactas y A/B 6→5; texto aprobado condicionado a IDs, valores, muestras y fuentes; M8 literal y lunar sin flujo. |
+| Informe/recuperación P6 | Texto literal del backend y descarga idéntica, replay, recuperación por ID/recientes; guardas compartidas ante Reset o una investigación posterior. |
+| Check/CI | Ciencia/IA, contratos, 76 pruebas cliente, HTTP/reinicio y E2E real aislado con Chromium fijado por lockfile. |
 
-## Verificación de esta entrega
+La interfaz no interpreta texto libre ni ofrece un formulario de previsualización
+del catálogo: el catálogo acotado y su previsualización están disponibles por API. P6 muestra el plan
+persistido de su consulta. El recorrido visual usa el modo explícito.
 
-Windows: **342 pruebas Python aprobadas, 1 omitida(s)**
-por PostgreSQL sin servidor local; seis pruebas cliente, tipos/build y recorrido
-HTTP/SQLite correctos. Evaluaciones: seis legacy, seis de segmentos, diagnóstico
-de disponibilidad aprobado, 18 casos IA y siete checks sobre el corpus real local.
-El resultado completo, clon limpio y CI se registran en VERIFICATION con sus SHA.
+## Verificación ejecutada
 
-Clon limpio del código `fd83a84aa24511e573a1b5f27cc859bcdddbf638`: setup/check correctos,
-340 Python aprobadas y tres omisiones esperadas sin datos reales/PostgreSQL local.
-CI de la [PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2) aprobado en Windows, Linux y PostgreSQL 17:
-[ejecución 43614900736](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43614900736). PostgreSQL comprobó reemplazo de corpus y
-recuperación histórica; no se valida pgvector. La documentación posterior conserva
-este SHA de código verificado.
+- Puerta Windows con ambos bundles reales: **342 Python aprobadas, 1 omitida**
+  (PostgreSQL sin servidor local), **76 cliente**, tipos/build y HTTP/reinicio correctos.
+  Ciencia 6+6 casos y disponibilidad; IA 18; corpus real 7/7.
+- Clon nuevo del código indicado, con `.venv` y `node_modules` propios:
+  `setup.ps1` y `check.ps1 -E2E` con salida 0; **340 Python aprobadas, 3 omitidas**
+  (dos bundles locales y PostgreSQL), 76 cliente y **24 pasos / 58 checks E2E**.
+  Se utilizó el mismo Windows con runtimes y caché Chromium compartibles.
+- [CI 43621040286](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43621040286) completado con éxito: Windows/Linux, PostgreSQL 17 y
+  navegador Windows/Linux. No se infiere validación de pgvector por usar ese contenedor.
 
-## Lo que requiere trabajo de otros puestos o validación externa
+Un aviso Starlette/httpx permanece. Los detalles y límites de cada ejecución se
+conservan en VERIFICATION. El E2E de CI usa fixtures sintéticos; el recorrido local
+BASS-II usa el paquete real aprobado y pasó 7 pasos / 44 comprobaciones.
 
-- **P2:** revisión de discrepancias M8/anchuras/O₂ y definiciones de métricas,
-  censura, identidad experimental y derechos de fuentes. Todos los datos importados
-  siguen `unverified`; las evidencias mantienen `reviewed=false`.
-- **P5/P6:** presentar plan y bloqueos, conectar tabla/gráfico/fuentes y A/B/informe,
-  integrar sus ramas y ejecutar el recorrido visual conjunto. El arnés no es frontend final.
-- **Validación futura:** calidad/coste de un proveedor real con autorización,
-  consultas científicas revisadas de forma independiente y despliegue con controles
-  de acceso. No se necesitan para ejecutar esta demo local sin credenciales.
+## Datos y pendientes externos
+
+- **BASS-II:** el [dictamen P3](handoffs/P3_BASS_II_DECISION_DEMO.md) confirma diez
+  observaciones (siete muestras) para comparación descriptiva. El [paquete P2 1.1.1](handoffs/P2_DEMO.md)
+  incorpora el aviso M8 y elimina el filtro de velocidad del caso lunar. La discrepancia
+  tabla/figura no se ha resuelto mediante reanálisis; el O₂ de segmento sigue sin medirse.
+- **Corpus global:** mantiene `scientific_unverified`; no se marcan todas sus evidencias
+  como revisadas. Continúan las cuestiones de métricas, censura, independencia,
+  comparabilidad y condiciones de redistribución fuera del alcance aprobado.
+- **P5 posterior:** el host integrado es `9f54700`. AskSI/CSS posteriores (`45edc50`/`8adec7a`)
+  siguen en la rama P5 y no están acreditados por este E2E. P5 debe incorporar la PR #3
+  conservando sus avances y revisar citas históricas/guardas antes de cerrar AskSI.
+- **Producto/validación:** quedan una revisión con lector de pantalla y móvil físico,
+  evaluación de proveedor real y despliegue con controles de acceso. No se necesitan
+  para esta demo local. El montaje P5/P6, A/B genérico, informe, recuperación y recorrido sintético están comprobados. Los presets BASS-II exactos también pasaron el recorrido local: 7 pasos / 44 comprobaciones con el paquete P2 1.1.1.
 
 No implementados: lenguaje natural general, extracción PDF/LLM general, RAG
 multimodal, embeddings, bootstrap, regresión física validada, visión de vídeo,
-CFD, diseño inverso ni autonomía experimental. No son tareas pendientes ocultas
-en un esqueleto de P1/P3/P4: quedan fuera del alcance concreto de esta demo.
+CFD, diseño inverso ni autonomía experimental.
 
 ## Historial y continuidad
 
-Las entregas previas y sus resultados están en VERIFICATION y los relevos
-[P1](handoffs/P1.md), [P3](handoffs/P3.md), [P4](handoffs/P4.md).
-La referencia inicial `codex/team-start-v1` permanece congelada. Para el incremento
-actual usar el commit de la entrega, sin reset ni borrar ramas de compañeros.
+P1/P3/P4 se integró mediante [PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2),
+merge `8fffddc`; su código probado fue `fd83a84`. La [guía de backend](INTEGRATION_P134.md)
+conserva esos antecedentes. Los resultados previos y relevos no sustituyen esta
+entrega P6. `codex/team-start-v1` permanece congelada; usar la referencia vigente
+sin reset ni borrar ramas de compañeros.

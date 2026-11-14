@@ -19,3 +19,5 @@ IMPLEMENTATION_STATUS y VERIFICATION.
 Para una nueva decisión: siguiente número, fecha, estado, problema concreto, alternativas, decisión, consecuencias y rutas afectadas. Una preferencia de herramienta no necesita un ADR si no cambia una frontera o compromiso del sistema.
 
 - [0009 Plan visible, métricas y síntesis acotada](0009-visible-plans-and-metric-availability.md)
+
+- [0010 Mission Lab integrado y pruebas de navegador](0010-mission-lab-integration-and-browser-checks.md)

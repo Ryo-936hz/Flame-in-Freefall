@@ -18,7 +18,7 @@ export class ApiError extends Error {
 
   constructor(status: number, body: unknown) {
     const error = body && typeof body === "object" ? body as Record<string, unknown> : {};
-    super(typeof error.message === "string" ? error.message : `La API respondió HTTP ${status}.`);
+    super(typeof error.message === "string" ? error.message : `The API responded with HTTP ${status}.`);
     this.name = "ApiError";
     this.status = status;
     this.code = typeof error.code === "string" ? error.code : "http_error";
@@ -28,7 +28,7 @@ export class ApiError extends Error {
 
 function unwrap<T>(result: { data?: T; error?: unknown; response: Response }): T {
   if (!result.response.ok) throw new ApiError(result.response.status, result.error);
-  if (result.data === undefined) throw new ApiError(502, { code: "empty_response", message: "Respuesta vacía inesperada." });
+  if (result.data === undefined) throw new ApiError(502, { code: "empty_response", message: "Unexpected empty response." });
   return result.data;
 }
 
@@ -55,6 +55,8 @@ export function createApi(baseUrl = "", fetcher: typeof fetch = fetch) {
     events: async (id: string) => unwrap(await client.GET("/api/v1/research/{run_id}/events", { params: { path: { run_id: id } }, parseAs: "text" }))
   };
 }
+
+export type Api = ReturnType<typeof createApi>;
 
 export function sourceLink(value: string | null | undefined): string | null {
   if (!value) return null;

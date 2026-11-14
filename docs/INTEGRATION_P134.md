@@ -1,13 +1,36 @@
-# Entrega conjunta P1/P3/P4 — demo de backend
+# Integración de backend P1/P3/P4 y continuación P6
+
+**Integración posterior de main:** se conservó el cambio de favicon `9f22d21`
+mediante merge `576e608`, manteniendo el HTML y las funciones de P5/P6.
+La referencia común actual es `flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta
+se conserva sin mover. El código funcional y sus pruebas completas son los
+registrados abajo; la única diferencia de aplicación posterior es esa línea de favicon.
+
+**P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
+informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
+la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II
+es local y opt-in; el CI utiliza datos sintéticos. Ver [relevo P6](handoffs/P6.md).
+
+**Entrega verificada:** P6 montado en la interfaz P5, código `66934638e37c1396eeab638631d54a2159ab7930`,
+publicado en `raul` mediante [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3), aún sin fusionar. Conserva `main`
+`f8e6a01`, P6 `80ceba4` y P5 `9f54700`. El [guion](DEMO.md),
+[relevo P6](handoffs/P6.md) y [estado](IMPLEMENTATION_STATUS.md) describen el recorrido
+actual. Clon limpio y [CI Windows/Linux/PostgreSQL/navegador](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43621040286) aprobados;
+76 pruebas cliente y E2E 24 pasos/58 checks. VERIFICATION separa cada entorno.
+
+## Antecedente P1/P3/P4
+
+La PR #2 se fusionó en `main` como `8fffddc`. La descripción siguiente conserva
+su entrega de backend; los comandos de arranque ya apuntan al incremento actual.
 
 El usuario asume conjuntamente integración, ciencia y coordinación de IA. Esta
-entrega se trabaja en `raul`, preservando la integración P2 de `main` (`04baeee`)
+entrega se trabajó en `raul`, preservando la integración P2 de `main` (`04baeee`)
 y la rama P4 (`12555c1`). La referencia inicial `codex/team-start-v1` no se mueve.
 Código verificado: `fd83a84aa24511e573a1b5f27cc859bcdddbf638` ([PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2)).
 La documentación de verificación posterior no cambia ese código; `git rev-parse HEAD`
 permite comprobar la referencia utilizada.
 
-## Qué está cerrado
+## Capacidades de backend conservadas
 
 - API y contrato canónico con plan previsualizable, modo explícito compatible y
   catálogo determinista de preguntas. Plan guardado en el expediente y el informe.
@@ -31,7 +54,8 @@ red para paquetes fijados por lockfiles. No hacen falta claves, ZIP NASA ni Dock
 ```powershell
 git clone https://github.com/Ryo-936hz/Flame-in-Freefall.git
 Set-Location .\Flame-in-Freefall
-git switch --no-track -c mi-demo fd83a84aa24511e573a1b5f27cc859bcdddbf638
+git fetch origin --tags
+git switch --no-track -c mi-demo flamelab-p6-demo-2026-11-14-r2
 git rev-parse HEAD
 .\scripts\setup.ps1
 .\scripts\check.ps1
@@ -42,7 +66,7 @@ git rev-parse HEAD
 Si necesitáis el mismo estado exacto, comparad el SHA completo con la entrega,
 en lugar de asumir que una rama no ha avanzado.
 
-API y arnés se arrancan en dos terminales de la raíz:
+API e interfaz integrada se arrancan en dos terminales de la raíz:
 
 ```powershell
 .\scripts\dev-api.ps1
@@ -52,7 +76,7 @@ API y arnés se arrancan en dos terminales de la raíz:
 .\scripts\dev-web.ps1
 ```
 
-API: http://127.0.0.1:8000/docs. Arnés: http://127.0.0.1:5173.
+API: http://127.0.0.1:8000/docs. Interfaz: http://127.0.0.1:5173.
 Setup conserva `.env` existente. La semilla es explícitamente sintética y solo
 se añade si el almacén está vacío; nunca sustituye un corpus ya importado.
 
@@ -82,30 +106,46 @@ Cambiar únicamente el nombre del archivo para los otros dos ejemplos:
 visible y reinicia su API/SQLite temporal. El check lo incluye. No es simulación
 de combustión: cambiar la pregunta selecciona evidencia distinta.
 
-## Integración P5/P6
+## Interfaz P5/P6 integrada
 
 Consumir los tipos regenerados, sin copiar modelos. `planning_mode=explicit`
 mantiene el formulario actual; `catalog` habilita las frases de [AI_SYSTEM](AI_SYSTEM.md).
-Mostrar el plan previsualizado y sus filtros/métrica/eje/límites. Si `blocked=true`,
-pedir aclaración; no dibujar resultados de un análisis no ejecutado. En históricos,
-`plan=null` significa que no se guardó un plan, no que deba reconstruirse.
+La previsualización del catálogo está disponible por API; el formulario actual
+mantiene filtros explícitos. P6 muestra el plan persistido de su consulta y sus
+límites. Una futura interfaz de catálogo debe mostrar `blocked=true` sin dibujar
+resultados de un análisis no ejecutado. En históricos, `plan=null` significa que
+no se guardó un plan, no que deba reconstruirse.
 
 Para A/B con resultados de una métrica, enviar `metric` además de ambos rankings.
 Conservar selección por IDs y `segment_id`, originales, unidades y procedencia.
 No sumar unidades de estratos como réplicas globales; no trazar X nula como par
 cuantitativo. Los eventos siguen siendo replay, no streaming en vivo.
 
-P5/P6 mantienen la interfaz, el montaje conjunto y el recorrido visual. Esta rama
-integra backend y arnés técnico; no incorpora ni declara terminadas sus ramas visuales.
-El diseño documentado en DESIGN_ANDURIL se conserva.
+La entrega actual incorpora Evidence Canvas de P5 y Mission Lab/ReportPanel de
+P6. A/B envía la métrica, conserva contexto de segmentos y detecta resultados
+anteriores. Informe literal, descarga, replay y recuperación se prueban con API
+y SQLite reales; las respuestas tardías no sobreviven a Reset. El guion completo
+y sus límites están en [DEMO](DEMO.md). Para ejecutarlo:
+
+```powershell
+node node_modules/playwright/cli.js install chromium
+.\scripts\check.ps1 -E2E
+```
+
+Se conserva el diseño de DESIGN_ANDURIL. No se ha evaluado con lector de pantalla
+ni móvil físico; la llama conceptual no representa una simulación científica.
 
 ## Datos y límites externos a este cierre
 
 P2 está integrado: 24 estudios; seis campañas con resultados, una con configuraciones
-y 17 documentales. Las 2.265 evidencias siguen sin revisión científica aprobada;
-1.038 registros conservan independencia sin resolver. La demo predeterminada es
-sintética. [Auditoría P2](../evals/science/P2_INTEGRATION_REVIEW.md) contiene dudas
-de M8, anchura, O₂, unidades experimentales, censura y significado de métricas.
+y 17 documentales. El [dictamen P3](handoffs/P3_BASS_II_DECISION_DEMO.md) aprobó
+diez puntos BASS-II para lectura descriptiva, conservando siete muestras y el
+aviso M8. El [paquete P2 1.1.1](handoffs/P2_DEMO.md) incorpora ese aviso y el caso
+lunar corregido. Esta aprobación no cambia el estado global `scientific_unverified`
+ni marca las 2.265 evidencias como revisadas. 1.038 registros mantienen independencia
+sin resolver; no se atribuye causalidad al flujo ni O₂ medido por segmento.
+La demo predeterminada y el E2E siguen siendo sintéticos. La [auditoría P2](../evals/science/P2_INTEGRATION_REVIEW.md)
+conserva los límites científicos generales, junto al dictamen específico posterior.
 
 Los bundles reales locales se prueban opt-in con `FLAMELAB_BASS_BUNDLE` y
 `FLAMELAB_NASA_BUNDLE`; no se distribuyen fuentes ni licencias por pasar un test.

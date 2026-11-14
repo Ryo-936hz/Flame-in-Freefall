@@ -71,3 +71,33 @@ jobs:
           version: '0.9.5'
       - run: uv sync --locked --extra postgres
       - run: uv run pytest -q apps/api/tests/test_postgres_integration.py
+  browser:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.9.5'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: uv sync --locked
+      - run: npm ci --ignore-scripts
+      - run: node node_modules/playwright/cli.js install --with-deps chromium
+      - run: npm run test:e2e:p6 -- --screenshots=work/p6-e2e
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: p6-browser-${{ matrix.os }}
+          path: work/p6-e2e
+          if-no-files-found: ignore
+          retention-days: 7

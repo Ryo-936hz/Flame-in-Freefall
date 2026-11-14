@@ -1,30 +1,43 @@
 # FlameLab SI — base integrada 0.1
 
+**Integración posterior de main:** se conservó el cambio de favicon `9f22d21`
+mediante merge `576e608`, manteniendo el HTML y las funciones de P5/P6.
+La referencia común actual es `flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta
+se conserva sin mover. El código funcional y sus pruebas completas son los
+registrados abajo; la única diferencia de aplicación posterior es esa línea de favicon.
+
+**P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
+informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
+la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II
+es local y opt-in; el CI utiliza datos sintéticos. Ver [relevo P6](docs/handoffs/P6.md).
+
 Los TTS · 14 de noviembre de 2026.
 
 [![Verificación Windows y Linux](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/workflows/verify.yml)
 
-Esqueleto local conectado: FastAPI/Pydantic, SQLite con migraciones y snapshots,
-ingesta CLI, perfil, ranking Gower, comparación, coordinador determinista, adaptador
-externo configurable y cliente React/TypeScript generado desde OpenAPI.
-El frontend entregado es un **arnés técnico**, no el diseño final.
+Demo integrada: FastAPI/Pydantic, SQLite con migraciones y snapshots, ingesta,
+ranking y comparación científica, coordinación determinista y cliente React/TypeScript.
+La interfaz de P5 monta **Mission Lab, informe y recuperación de P6**, con tabla,
+gráfico y fuentes conectados por identificadores.
 
-**Entrega actual P1/P3/P4: [arranque, ejemplos y contratos](docs/INTEGRATION_P134.md).**
-La [guía inicial de los seis puestos](docs/TEAM_START.md) conserva la primera referencia. La base
-compartida se publica en [GitHub](https://github.com/Ryo-936hz/Flame-in-Freefall).
-`main` integra cambios; `codex/team-start-v1` conserva el punto de partida común.
-Para este incremento, crear la rama propia desde el commit entregado de `raul`; la referencia inicial no se mueve.
+**Entrega P6 verificada:** [guion y arranque](docs/DEMO.md), [relevo](docs/handoffs/P6.md)
+y [estado real](docs/IMPLEMENTATION_STATUS.md). Código verificado `66934638e37c1396eeab638631d54a2159ab7930`,
+publicado en `raul` y propuesto en la [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3); aún no fusionado en `main`.
+Conserva `main` `f8e6a01`, P6 `80ceba4` y P5 `9f54700` mediante merge.
+La [entrega de backend P1/P3/P4](docs/INTEGRATION_P134.md) y la referencia inicial
+`codex/team-start-v1` se conservan como antecedentes; no se reinicia desde ellas.
 
-La demo predeterminada usa **datos sintéticos**, no mediciones NASA. P2 incorpora
-un corpus local de 24 estudios: seis campañas con resultados, una con configuraciones
-y 17 documentales. Los datos siguen `unverified`; las fuentes no se marcan revisadas
-por pasar pruebas. [Importación](docs/P2_NASA_24.md) y
-[auditoría P3](evals/science/P2_INTEGRATION_REVIEW.md).
+La demo predeterminada y el CI usan **datos sintéticos**, no mediciones NASA. El corpus local
+P2 contiene 24 estudios: seis campañas con resultados, una con configuraciones
+y 17 documentales. P3 aprobó el uso **descriptivo de diez puntos BASS-II** (siete
+muestras), conservando el aviso M8 y el caso lunar corregido. Esta conformidad
+limitada no valida el corpus completo ni cambia su estado `scientific_unverified`.
+Ver [paquete P2](docs/handoffs/P2_DEMO.md) y [dictamen P3](docs/handoffs/P3_BASS_II_DECISION_DEMO.md).
 
-El backend conecta pregunta/filtros → plan visible → herramientas científicas →
-fuentes e informe persistido. `planning_mode=explicit` conserva los filtros actuales;
-`catalog` interpreta tres intenciones acotadas y bloquea conflictos/no soportado.
-El proveedor externo es opcional; no se necesitan credenciales para este recorrido.
+El recorrido conecta filtros y métrica → herramientas científicas → evidencia,
+A/B e informe persistido. La interfaz usa filtros explícitos y presets BASS-II fijos; la API también
+ofrece el catálogo acotado de preguntas y la previsualización de planes.
+Mission Lab muestra el plan guardado de su consulta. No hacen falta credenciales.
 
 ## Arrancar en Windows
 
@@ -36,7 +49,8 @@ para la primera instalación. `setup.ps1` utiliza los lockfiles; si falta uv ins
 git clone https://github.com/Ryo-936hz/Flame-in-Freefall.git
 Set-Location Flame-in-Freefall
 # Clon nuevo; comprobar el SHA con la entrega compartida.
-git switch --no-track -c mi-demo origin/raul
+git fetch origin --tags
+git switch --no-track -c mi-demo flamelab-p6-demo-2026-11-14-r2
 git rev-parse HEAD
 .\scripts\setup.ps1
 .\scripts\check.ps1
@@ -50,7 +64,7 @@ Set-Location 'C:\ruta\de\tu\clon\Flame-in-Freefall'
 .\scripts\dev-web.ps1
 ```
 
-Abrir [arnés](http://127.0.0.1:5173), [salud](http://127.0.0.1:8000/api/v1/health)
+Abrir [interfaz integrada](http://127.0.0.1:5173), [salud](http://127.0.0.1:8000/api/v1/health)
 y [documentación HTTP](http://127.0.0.1:8000/docs). Ctrl+C detiene cada servidor.
 Detener Vite antes de repetir setup: Windows bloquea su módulo nativo mientras
 se ejecuta. No hace falta ejecutar como administrador.
@@ -67,16 +81,27 @@ Sin esa configuración, la API arranca con corpus vacío. Se permiten parámetro
 .\.venv\Scripts\python.exe scripts/smoke.py
 ```
 
+Para comprobar además el navegador real, instalar Chromium una vez y ejecutar:
+
+```powershell
+node node_modules/playwright/cli.js install chromium
+.\scripts\check.ps1 -E2E
+```
+
+El E2E usa Playwright fijado por el lockfile, puertos libres y una base desechable;
+no requiere API/Vite previamente abiertos. El [guion](docs/DEMO.md) explica las
+24 etapas, la recuperación tras reinicio y el respaldo sintético.
+
 La prueba HTTP inicia una API temporal con SQLite aislado: consulta, ranking,
 investigación, evidencia, A/B, insuficiencia lunar, informe y eventos. Reinicia el
 servidor y comprueba el mismo informe. No modifica la base del usuario ni llama a
 IA externa. Resultado: `work/smoke-result.json`.
 
-En el arnés: **Investigar**, abrir referencia, informe y eventos guardados; comparar
-A/B cambiando gravedad. Desactivar `allow_synthetic` demuestra ausencia de evidencia.
-El arnés conserva filtros explícitos. La API ofrece el catálogo y preview de plan
-para integrar en P5/P6; los tres ejemplos se ejecutan por HTTP en el smoke.
-Ver [guía de entrega](docs/INTEGRATION_P134.md).
+En la interfaz: **Investigate**, abrir una fuente desde tabla/gráfico/hipótesis,
+comparar A/B y ejecutar el caso sin evidencia. Los cambios de filtros o métrica
+marcan el resultado anterior. «Report and recovery» descarga el informe recibido,
+reproduce eventos guardados y recupera expedientes. «Reset» descarta respuestas
+pendientes sin borrar la base. La ilustración de llama es conceptual, no una simulación.
 
 ## Ingesta local
 
@@ -108,17 +133,23 @@ Repetir observaciones no crea réplicas independientes.
 [Windows](docs/SETUP_WINDOWS.md), [seis puestos](docs/TEAM_HANDOFF.md) y [ADR de
 inspección](docs/adr/0007-inspection-and-integrated-base.md).
 
-SQLite y demo comprobados. Adaptador externo probado con HTTP simulado, sin llamadas
-reales ni claves. PostgreSQL pasó en el CI de `main` `04baeee`; los resultados de cada
-incremento se registran en VERIFICATION. pgvector no está implementado. La revisión
-científica del corpus y la interfaz P5/P6 permanecen separadas del cierre de backend.
-El catálogo no es interpretación general de lenguaje natural ni predicción física.
+Código `66934638e37c1396eeab638631d54a2159ab7930` comprobado en Windows: **342 pruebas Python aprobadas**
+con los bundles reales locales y una omisión PostgreSQL; **76 pruebas cliente**,
+tipos/build, ciencia/IA, auditoría del corpus 7/7 y HTTP/reinicio correctos.
+Clon limpio sin bundles: **340 Python aprobadas, 3 omisiones esperadas**,
+setup/check correctos y E2E **24 pasos / 58 comprobaciones**. El recorrido BASS-II local añade
+**7 pasos / 44 comprobaciones** con el paquete aprobado 1.1.1.
 
-Código compartido en GitHub; comprobar las ejecuciones de [Actions](https://github.com/Ryo-936hz/Flame-in-Freefall/actions)
-y VERIFICATION antes de atribuir un resultado a CI. El historial de construcción
-local y su bundle se conservan como referencia histórica. Documents y el paquete
-original permanecen intactos. No necesitas el ZIP para arrancar la demo.
-[Dirección visual](docs/DESIGN_ANDURIL.md).
+[CI de esta entrega](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43621040286) aprobado: comprobaciones generales Windows/Linux,
+PostgreSQL 17 y navegador Chromium en Windows/Linux. El registro por entorno y
+SHA está en [VERIFICATION](docs/VERIFICATION.md). Estos resultados corresponden al SHA indicado; los cambios posteriores requieren
+su propia verificación.
+
+El proveedor externo se probó con HTTP simulado, sin llamadas reales ni claves.
+Quedan fuera de esta demo la validación científica global, pgvector, CFD, diseño
+inverso y despliegue público. El catálogo no interpreta lenguaje natural general.
+La [dirección visual](docs/DESIGN_ANDURIL.md) se conserva; no se ha evaluado con
+lector de pantalla ni móvil físico. No necesitas el ZIP NASA para arrancar.
 
 ## Comprobación de integración PostgreSQL
 

@@ -1,0 +1,157 @@
+# Historial anterior al cierre P6
+
+El estado vigente está en [P6](P6.md); se conserva la entrega original publicada
+en `80ceba4`, cuyo texto todavía describía su incremento como no confirmado.
+
+# Relevo P6 · Mission Lab, informe y recorrido E2E
+
+## Identidad de la tarea
+
+- Puesto: P6 (Mission Lab, informes y demo).
+- Rama: `codex/p6-mission-lab`.
+- Commit de partida: `44a8d8e` (Mission Lab A/B, P6). Merge de `origin/main` en `1041ff2`. HEAD `c6c2c1d`
+  (stubs de interfaz). **El incremento descrito aquí está sin commit en el árbol de trabajo.**
+- Objetivo: paneles P6 montables en el host de P5 (`MissionLabPanel`, `ReportPanel`), vigencia visible del A/B,
+  informe tal cual con descarga y recuperación, recorrido E2E versionado con backend real, y relevo.
+- Criterio de aceptación: recorrido completo en navegador real contra la API demo, tanto en el arnés como en la
+  interfaz P5 integrada; checks del README aprobados; sin cambios de contrato.
+
+## Estado observado
+
+- **Terminado (en el árbol, sin commit):**
+  - Lógica pura: `comparisonState.ts` (huella con defaults de `RankingRequest`, vigencia, guarda), `provenance.ts`,
+    `scenarios.ts` (preset de flujo puntuado corregido, `describeScenarioChanges`), `resultStatus.ts`.
+  - `MissionLabPanel.tsx`: presets A/B, entra/sale/se mantiene con motivos, vigencia «Previous …» con filtros usados
+    y «Recompute», hipótesis con su etiqueta y proveedor, consulta sin evidencia suficiente.
+  - `ReportPanel.tsx` + `report.ts`: informe de `GET /report` sin reconstruir ni renderizar, descarga del mismo texto,
+    replay de eventos, recuperación por id/recientes (localStorage), errores con Retry.
+  - `mission-lab.css` tokenizado (`--ml-*` sobre tokens P5 con respaldo del arnés): legible en tema oscuro de P5.
+  - Montaje en el arnés de esta rama (`apps/web/src/App.tsx`).
+  - E2E `apps/web/tests/e2e/p6-walkthrough.mjs` (`--host=harness|p5`) y su README.
+  - Parche de montaje para P5: `docs/handoffs/P6-mount-for-P5.patch`.
+- **En progreso:** nada.
+- **Pendiente (P6 NO está terminado):**
+  - Montaje real por P5 en `codex/p5-evidence-canvas` (aplicar el parche o equivalente) y E2E `--host=p5` en su rama.
+  - Commit y PR de este incremento.
+  - Playwright como devDependency + job E2E en CI (P1).
+  - Escena conceptual opcional; diseño final; revisión con lector de pantalla.
+- **Bloqueos:** ninguno técnico. El montaje real depende de P5; los datos reales, de P2/P3.
+
+## Archivos y contratos
+
+- **Archivos de este reparto (P6-I):**
+  - `apps/web/tests/e2e/p6-walkthrough.mjs`, `apps/web/tests/e2e/README.md` (nuevos).
+  - `docs/handoffs/P6.md`, `docs/handoffs/P6-mount-for-P5.patch` (nuevos).
+  - `docs/DEMO.md` (sección P6), `apps/web/src/features/mission-lab/README.md`, `docs/IMPLEMENTATION_STATUS.md`
+    (línea P6), `docs/VERIFICATION.md` (entrada final).
+  - `apps/web/src/features/mission-lab/mission-lab.css`: corrección de integración (colores fijos claros ⇒ tokens).
+  - `package.json`: solo `test:client` (añade `mission-lab-state.test.ts`, `mission-lab-panel.test.ts` y `report.test.ts`).
+- **Resto del incremento P6 (otros repartos):** `features/mission-lab/{comparisonState,provenance,scenarios,resultStatus,
+  MissionLabPanel,MissionLab}.ts(x)`, `features/report/{report.ts,ReportPanel.tsx,report.css,README.md}`,
+  `apps/web/src/App.tsx` (arnés), `apps/web/tests/{mission-lab,mission-lab-state,mission-lab-panel,report}.test.ts`.
+- **Contratos afectados:** ninguno. Sin cambios en API, `packages/contracts` ni dependencias.
+- **Consumidores afectados:** P5 (montaje), P1 (script `test:client`).
+- **Artefactos regenerados:** ninguno.
+- **Decisiones nuevas:** tras recargar no se reabre nada automáticamente (se ofrece «Reopen last research»).
+  Sin ADR: no cambia el producto ni dependencias.
+
+## Verificación
+
+- **Comandos en `/home/user/Flame-in-Freefall` (resultado real):**
+  - `npm run typecheck` → sin errores. `npm run build` → correcto. `npm run check:types` → «TypeScript contract matches OpenAPI.»
+  - `npm run test:client` → 43 aprobadas, 0 fallos.
+  - `uv run pytest -q` → 211 aprobadas, 3 omitidas. `uv run ruff check apps/api scripts` → «All checks passed!»
+  - `uv run python scripts/smoke.py` → `"restart_persistence": "passed"`.
+  - `node apps/web/tests/e2e/p6-walkthrough.mjs --host=harness` → 12/12 pasos, 23 comprobaciones, código 0.
+  - Control negativo: `--host=p5` contra el arnés → código 1 con resumen del fallo.
+- **Integración P5 (worktree temporal, ya eliminado):** HEAD + merge sin commit de `origin/codex/p5-evidence-canvas`
+  (`c71fa13`), App.tsx de P5 con el parche aplicado e `InterimMissionTools` eliminado:
+  typecheck y build correctos; `test:client` 43 aprobadas; `tests/evidence/*.test.ts` 10 aprobadas;
+  `p6-walkthrough.mjs --host=p5` 12/12 pasos, 23 comprobaciones. `git apply --check` del parche sobre `c71fa13`: aplica.
+- **Modo:** proveedor `demo` (coordinador determinista, sin LLM, sin claves); SQLite temporal; solo fixtures
+  sintéticos, no mediciones NASA.
+- **Limitaciones:** Linux, no Windows ni CI; Playwright global; sin lector de pantalla ni móvil real en esta pasada;
+  la tabla A/B queda estrecha en la columna central de P5; las cifras de los presets dependen del seed actual.
+
+## Siguiente paso
+
+- **Acción:** revisar el diff, hacer commit en `codex/p6-mission-lab`, abrir PR; enviar los mensajes de abajo.
+- **Leer primero:** `apps/web/src/features/mission-lab/slot.ts`, `MissionLabPanel.tsx`, `features/report/ReportPanel.tsx`,
+  `apps/web/tests/e2e/README.md`, el parche de montaje.
+- **Riesgos:** cambios de textos/roles en P5 rompen el adaptador `p5` del E2E; los textos de backend en español se
+  ven dentro de una UI en inglés; la huella de filtros distingue peso explícito 1 de peso ausente.
+- **Revisión:** P5 (integración visual), P1 (recorrido y CI), P3 (preset de flujo), P4 (hipótesis e informe).
+
+## Mensajes preparados (no enviados)
+
+### Para P5
+
+> Los paneles P6 están listos para montarse en tu App en lugar de `InterimMissionTools`. Exports:
+>
+> ```ts
+> // apps/web/src/features/mission-lab/slot.ts
+> export type EvidenceSource = "record" | "corpus";
+> export type ResearchState = "idle" | "loading" | "error" | "ready";
+> export interface MissionSlotProps {
+>   api: Api; research: ResearchResponse | null; request: RankingRequest | null;
+>   researchState?: ResearchState;
+>   onOpenRun: (run: ResearchResponse) => void;
+>   onOpenEvidence: (evidenceId: string, trialId: string | null, source?: EvidenceSource) => void;
+> }
+> // features/mission-lab/MissionLabPanel.tsx (named + default)
+> export function MissionLabPanel(props: MissionSlotProps & { question?: string; trigger?: ScenarioTrigger | null }): JSX.Element;
+> // features/report/ReportPanel.tsx (named + default)
+> export function ReportPanel(props: MissionSlotProps): JSX.Element;
+> ```
+>
+> Es tu propuesta ampliada con `researchState` y el tercer argumento `source`, ambos opcionales. Montaje probado
+> (parche `docs/handoffs/P6-mount-for-P5.patch`, aplica limpio sobre `c71fa13`):
+>
+> ```tsx
+> const slot: MissionSlotProps = { api, research: result, request: currentRequest, onOpenRun: showRun, onOpenEvidence,
+>   researchState: run.state === "ready" ? "ready" : run.state };
+> <div id="lab" className="p6-slot">
+>   <MissionLabPanel {...slot} question={draft.question} />
+>   <ReportPanel {...slot} />
+> </div>
+> ```
+>
+> Criterio record/corpus: `"record"` (hipótesis) lee con `research_id` del expediente activo; `"corpus"` (filas A/B)
+> lee del corpus activo **sin** `research_id`, aunque el id también esté en el expediente. En el parche lo hago con
+> `corpusPick` (la selección abierta desde el corpus) y `retrieved={… !fromCorpus && isRetrieved(…)}`; tu visor ya
+> rotula «Active corpus · not in this research record». Límite: tu `EvidenceViewer` no carga nada sin expediente
+> activo, así que la evidencia de un A/B sin investigación previa no se ve; si quieres permitirlo, el visor debería
+> aceptar `researchId === null` para lecturas de corpus.
+>
+> Estilos: todo acotado a `.mission-lab`/`ml-` y `.rp`/`rp-`; leen tus tokens (`--surface`, `--ink`, `--rule`,
+> `--signal`, `--warn`, `--font-num`…) y no definen globales. Revisado en tu tema oscuro. La tabla A/B queda estrecha
+> en `col-work`; si prefieres, dale más ancho a `#lab` o una regla `.p6-slot { display: grid; gap: … }` en tu
+> `style.css`. Idioma: todo el texto visible de P6 está en inglés. El E2E `--host=p5` usa «Investigate»,
+> «Max. trials», «Reset demo query», `#evidence` y el rótulo de corpus; avísame si cambian.
+
+### Para P1
+
+> 1. `package.json` `test:client` añade `apps/web/tests/mission-lab-state.test.ts`, `mission-lab-panel.test.ts` y
+>    `report.test.ts` (43 pruebas en total). Conviene reflejarlo en `check.ps1`/CI si listan archivos.
+> 2. Propuesta: `playwright` como devDependency fijada en el lockfile, script `test:e2e:p6`
+>    (`node apps/web/tests/e2e/p6-walkthrough.mjs --host=<host de main>`) y un job CI con
+>    `npx playwright install --with-deps chromium`. El script arranca API (SQLite temporal, semilla demo,
+>    `uv run --no-sync`) y Vite en puertos configurables y sale con código ≠ 0 si falla. Hoy usa Playwright global.
+> 3. No hacen falta endpoints nuevos: P6 consume `/research`, `/research/{id}`, `/report`, `/events`,
+>    `/scenarios/compare` y `/evidence/{id}` tal cual.
+
+### Para P4
+
+> El panel de informe consume `GET /research/{id}/report` tal cual (fuente Markdown sin renderizar) y la descarga es
+> byte a byte ese texto; el E2E lo comprueba. No se reconstruye nada en el navegador. La UI es inglesa, pero siguen
+> visibles en español el informe (`ai/report.py`), resumen, afirmaciones, hipótesis preparada, actividad y parte de
+> las advertencias (`ai/engine.py`). Si se traducen, el panel no necesita cambios. Las hipótesis se muestran con su
+> `label` (`prepared_demo_hypothesis`/`ai_hypothesis`) y el proveedor (`demo` = coordinador determinista sin LLM).
+
+### Para P3
+
+> Revisión pedida del preset «B · flow 2 cm/s scored» (`scenarios.ts`): pone `flow_velocity_cm_s` en el target, lo
+> quita de `required_match` y `vary`, y si su peso falta o es 0 lo pone a 1 (un peso positivo se conserva). Con el
+> seed sintético actual: synthetic:trial-1/-2/-3 siguen seleccionados con similitudes 1 / 0.985 / 0.96 (distancias
+> 0 / 0.03 / 0.08, `fixed_numeric_scale_v1`). ¿Es correcto presentar esto como «ordenar por parecido» y no como
+> compatibilidad física, y es razonable el peso 1 por defecto?
