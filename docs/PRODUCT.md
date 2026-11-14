@@ -25,9 +25,21 @@ Pregunta guía: «Estoy estudiando materiales para un hábitat. ¿Qué evidencia
 
 El expediente de investigación es compartido por las funciones. Cambiar una condición debe cambiar los datos o la interpretación pertinente; no basta con cambiar el texto visible.
 
-## Primer caso científico
+## Caso científico de la demo
 
-Una serie compatible de BASS-II será candidata a demostrar extracción, ranking y comparación cuantitativa. Un caso de Saffire permitirá explicar diferencias de escala y configuración. Se confirma la selección solo después de inspeccionar los archivos reales. Si el documento ofrece límites de extinción, no se presenta esa variable como velocidad de propagación.
+Los presets BASS-II usan diez observaciones publicadas, correspondientes a siete
+muestras, aprobadas por P3 para uso descriptivo limitado. Conservan segmentos,
+fuentes, aviso M8 y ausencia de O₂ medido por segmento. La comparación 6→5 cm/s
+describe cambios de evidencia recuperada; no demuestra causalidad exclusiva del flujo.
+El corpus global conserva `scientific_unverified`.
+
+Saffire aporta un contraste documental de material, escala, flujo y confinamiento,
+con fuentes y discrepancias explícitas. El cierre adicional P2 incorpora su tarjeta
+separada del análisis BASS-II. No mezcla tasas ni rankings entre campañas.
+Si un documento ofrece extinción, duración o longitud, esas variables conservan
+su identidad y no se presentan como velocidad de propagación.
+Ver [paquete P2](handoffs/P2_DEMO.md), [dictamen P3](handoffs/P3_BASS_II_DECISION_DEMO.md)
+y [estado de implementación](IMPLEMENTATION_STATUS.md).
 
 SAME y FLEX pueden ofrecer navegación contextual hacia detección y supresión. No se presupone que el primer incremento ingiera todas las familias.
 
@@ -43,6 +55,16 @@ SAME y FLEX pueden ofrecer navegación contextual hacia detección y supresión.
 
 No se requiere un simulador CFD validado, optimización universal de hábitats, entrenamiento de un modelo fundacional, clasificación universal de riesgo de materiales ni autonomía experimental real. El proyecto no certifica seguridad operacional. Clustering y detección de anomalías se posponen hasta validar recuperación y ranking.
 
-## Restricciones de interfaz
+## Interfaz implementada y evolución
 
-El usuario pidió reservar la construcción del frontend de producto para el equipo. La pantalla técnica prevista verificará conexiones cuando se implemente. El diseño final seguirá [DESIGN_ANDURIL](DESIGN_ANDURIL.md).
+La reserva inicial del frontend pertenece a la fase de construcción del esqueleto.
+La petición posterior integró Evidence Canvas P5 con Mission Lab, informe y
+recuperación P6 en `main`. Su recorrido utiliza filtros explícitos y presets;
+la API ofrece planificación acotada, sin interpretación general de lenguaje natural.
+La llama de la interfaz es conceptual. AskSI/CSS posteriores de P5 siguen en su
+rama independiente y no se dan por terminados por esta integración.
+
+La dirección visual de [DESIGN_ANDURIL](DESIGN_ANDURIL.md) continúa vigente.
+Diseño inverso, CFD y autonomía experimental siguen siendo visión futura, no
+requisitos ejecutables de la demo local. [DEMO](DEMO.md) y [VERIFICATION](VERIFICATION.md)
+identifican el recorrido y las comprobaciones realmente ejecutadas.

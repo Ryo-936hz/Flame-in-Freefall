@@ -7,7 +7,13 @@ Para continuar usar la referencia actual de TEAM_HANDOFF, sin volver a la base a
 
 ## Cuándo comenzar
 
-La base integrada ya existe. Sigue [TEAM_START](../TEAM_START.md), crea tu rama desde `origin/codex/team-start-v1` y comprueba el SHA común antes de comenzar. El prompt maestro y BUILD_ORDER conservan el proceso de construcción. Este paquete define las siguientes tareas del puesto; consulta IMPLEMENTATION_STATUS y VERIFICATION para distinguir lo ya ejecutado de lo pendiente.
+La base está integrada en `main`. Sigue [TEAM_START](../TEAM_START.md): crea una
+rama nueva desde `origin/main` o conserva e integra tu rama existente mediante merge.
+Comprueba el SHA común y la tarea actual en [TEAM_HANDOFF](../TEAM_HANDOFF.md).
+Este paquete conserva las fronteras, objetivos y tareas del primer reparto; no
+ordena rehacer funciones existentes. Consulta [IMPLEMENTATION_STATUS](../IMPLEMENTATION_STATUS.md)
+y [VERIFICATION](../VERIFICATION.md) y acuerda el incremento concreto antes de editar.
+El prompt maestro y BUILD_ORDER distinguen el proceso histórico de la continuidad vigente.
 
 ## Resultado del puesto
 

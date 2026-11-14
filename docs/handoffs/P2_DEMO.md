@@ -1,5 +1,13 @@
 # Relevo P2 para P1 y P3 · FlameLab Demo 1.1.1
 
+La implementación de `lujan` está integrada en `main`; la PR #3 se fusionó como
+`0b732cb`. El equipo parte de `origin/main`. Las ramas y hashes siguientes conservan
+la trazabilidad del paquete P2. El cierre adicional de catálogo, métricas y tarjeta
+Saffire está implementado y verificado localmente en `raul`, código `20aab80404fc2f0fc188d718cac47d0d4bf31d54`;
+El cierre se entrega mediante la PR #4 sobre `main`. Consultar
+[guía de integración](../INTEGRATION_P2_MAIN.md), [verificación](../VERIFICATION.md),
+[estado vigente](../IMPLEMENTATION_STATUS.md) y [arranque Windows](../DEMO.md).
+
 - Rama `lujan`. Base del extractor `04baeeee1f0bf3f75d957f7ed845c890efc2a3ec`.
 - Artefacto `flamelab-p2-demo-v1.1.1.zip`. Contiene `bundle.json`, `quality.json`, `cases.json`, `demo-copy.json`, este relevo, el [dictamen de P3](P3_BASS_II_DECISION_DEMO.md) y `SHA256SUMS`. Destino: traspaso interno a P1.
 - Contrato de datos `1.1`, `dataset_id: psi:nasa-local-corpus-v1`. La revisión `1.1.1` del paquete añade el aviso a dos evidencias M8 y actualiza el caso lunar y el guion. Los SHA-256 de la extracción base y los del paquete tienen ámbitos distintos.
@@ -8,6 +16,10 @@
 ## P1 · Cargar y comprobar
 
 Extraer el paquete en `work/flamelab-p2-demo-v1.1.1` dentro del clon. Los comandos se ejecutan desde la raíz con las dependencias fijadas de FlameLab. Para cargar el bundle basta su JSON, sin descargar los originales ni instalar el extractor.
+
+**Windows:** seguir los comandos PowerShell completos de [DEMO](../DEMO.md), que usan
+`.venv\Scripts\python.exe` y una base dedicada. El bloque siguiente es para Bash;
+no presupone que `uv` esté disponible globalmente después de setup en Windows.
 
 ```bash
 (cd work/flamelab-p2-demo-v1.1.1 && sha256sum -c SHA256SUMS)

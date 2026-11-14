@@ -1,8 +1,17 @@
 # Orden de construcción de la base compartida
 
-Este documento conserva el orden usado para construir la base local el 14 de noviembre de 2026. Ya existe código integrado para los hitos 0–6 y las herramientas del hito 7. El cierre y la referencia exacta se registran en [IMPLEMENTATION_STATUS](IMPLEMENTATION_STATUS.md), [VERIFICATION](VERIFICATION.md) y [TEAM_HANDOFF](TEAM_HANDOFF.md). La tabla mantiene criterios de salida; no acredita por sí sola publicación, pruebas de CI remoto o datos NASA revisados.
+Este documento conserva el **orden histórico** de construcción del esqueleto local.
+El equipo completó esa base y añadió P1/P3/P4, P2 y la interfaz P5/P6, ahora
+integrados en `main` mediante PR #3 (`0b732cb`). La continuidad parte de
+`origin/main`, según [TEAM_HANDOFF](TEAM_HANDOFF.md).
 
-## Resultado buscado
+Los hitos, tareas y restricciones de frontend de abajo pertenecen a aquella fase;
+no son pendientes actuales ni una instrucción para reconstruir o quitar funciones.
+[IMPLEMENTATION_STATUS](IMPLEMENTATION_STATUS.md) y [VERIFICATION](VERIFICATION.md)
+registran el alcance y las ejecuciones por SHA. El catálogo completo P2 y la
+conformidad descriptiva de diez puntos BASS-II son posteriores a la base inicial.
+
+## Resultado buscado en la fase inicial
 
 Una persona con un clon limpio puede preparar el entorno, arrancar API y arnés técnico sin clave de IA, enviar una investigación con filtros explícitos, comparar ensayos sintéticos claramente etiquetados, abrir su evidencia y recuperar el informe persistido. Ese recorrido establece las conexiones que las seis personas ampliarán después.
 
@@ -28,9 +37,13 @@ Las consultas y respuestas iniciales se ajustan a [CONTRACTS](CONTRACTS.md). No 
 
 P2 puede revisar archivos y fuentes; P3 puede definir casos científicos y consultas etiquetadas; P4 puede preparar evaluación y catálogo de herramientas; P5 puede revisar accesibilidad y semántica visual; P6 puede construir el guion. P1 integra el contrato y la base. Ninguno crea un segundo backend o esquema incompatible.
 
-La ronda siguiente comienza desde la referencia común indicada en TEAM_HANDOFF. No es necesario reconstruir seis esqueletos. La inspección ya realizada ha limitado la base a catálogo real de metadatos y recorrido numérico sintético; una serie cuantitativa BASS-II exige una nueva entrega P2/P3 revisada.
+En aquella primera ronda la base se limitó al catálogo real de metadatos y al
+recorrido numérico sintético; BASS-II requería una entrega P2/P3 posterior. Esa
+entrega ya existe, con alcance y límites en [P2_DEMO](handoffs/P2_DEMO.md). No es
+necesario reconstruir seis esqueletos ni usar el reparto histórico como una lista
+de tareas todavía pendientes.
 
-## Primera ronda después del reparto
+## Historial de la primera ronda después del reparto
 
 | Puesto | Primer incremento sugerido | Dependencia que debe consumir |
 |---|---|---|
@@ -41,7 +54,7 @@ La ronda siguiente comienza desde la referencia común indicada en TEAM_HANDOFF.
 | P5 | Tabla, gráfico, ranking y fuente conectados por identidad. | Cliente tipado y acciones visuales acordadas. |
 | P6 | Escenarios A/B y guion completo con límites explícitos. | Comparación, investigación y componentes compartidos. |
 
-## Criterio de cierre del esqueleto
+## Criterio histórico de cierre del esqueleto
 
 - El recorrido completo funciona en modo demo sin credenciales y conserva las etiquetas sintéticas.
 - Contratos, API y cliente mantienen los mismos campos; se detecta deriva de generados.

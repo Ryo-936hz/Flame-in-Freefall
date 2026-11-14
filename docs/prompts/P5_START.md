@@ -1,12 +1,18 @@
 # Prompt inicial para P5
 
-Usa este prompt después de seguir [TEAM_START](../TEAM_START.md) y comprobar que tu rama parte de `origin/codex/team-start-v1`. La base ya está integrada; no crees otro esqueleto. Completa al final tarea, rama y SHA de partida con los valores reales de tu clon.
+Usa este prompt después de seguir [TEAM_START](../TEAM_START.md) y consultar el
+[relevo vigente](../TEAM_HANDOFF.md). Una rama nueva parte de `origin/main`; una
+rama existente conserva su trabajo e integra esa base mediante merge. Comprueba
+y anota el SHA acordado. Completa al final la tarea actual, rama y SHA reales.
+Los paquetes conservan las fronteras y tareas del primer reparto; no ordenan
+reimplementar funciones ya integradas.
 
 ```text
 Trabaja en el repositorio Flame-in-Freefall como responsable P5: Evidence Canvas e interfaz científica.
 
 Este trabajo amplía la base integrada común. Comprueba el commit de partida
-indicado y la rama de tu puesto. Lee docs/TEAM_START.md para el arranque. Si la
+indicado y la rama de tu puesto. La base actual es origin/main. Lee
+docs/TEAM_START.md y docs/TEAM_HANDOFF.md para el arranque y la tarea vigente. Si la
 referencia común falta o difiere del SHA acordado, resuélvelo con P1; no reconstruyas
 el esqueleto ni elijas otra base sin coordinación.
 

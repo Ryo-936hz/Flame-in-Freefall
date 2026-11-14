@@ -1,29 +1,29 @@
 # Empieza aquí
 
-**Integración posterior de main:** se conservó el cambio de favicon `9f22d21`
-mediante merge `576e608`, manteniendo el HTML y las funciones de P5/P6.
-La referencia común actual es `flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta
-se conserva sin mover. El código funcional y sus pruebas completas son los
-registrados abajo; la única diferencia de aplicación posterior es esa línea de favicon.
-
-**P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
-informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
-la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II
-es local y opt-in; el CI utiliza datos sintéticos. Ver [relevo P6](handoffs/P6.md).
-
-**Incremento actual:** [demo de Mission Lab integrado](DEMO.md), rama `raul`,
-código `66934638e37c1396eeab638631d54a2159ab7930` y [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3). Incluye P1/P3/P4 y P2 de `main` `f8e6a01`,
-P6 `80ceba4` y la interfaz P5 `9f54700`. Leer [relevo P6](handoffs/P6.md),
-[estado vigente](IMPLEMENTATION_STATUS.md) y [pruebas](VERIFICATION.md).
-La PR aún no está fusionada en `main`; conservar ramas y cambios propios.
+**Base actual: `origin/main`.** La [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3)
+se fusionó mediante `0b732cb`, incluyendo P1/P3/P4, P2 y el montaje P5/P6.
+Lee [estado vigente](IMPLEMENTATION_STATUS.md), [relevo](TEAM_HANDOFF.md) y
+[guion](DEMO.md). El cierre adicional P2 está implementado y verificado localmente
+en `raul`, código **`20aab80404fc2f0fc188d718cac47d0d4bf31d54`**: tarjeta Saffire, catálogo con
+reintentos/identidades y selector de 14 métricas. El cierre se entrega mediante la PR #4 sobre `main`; la PR #3 anterior ya está integrada.
 
 La base conecta API, persistencia, ingesta, ciencia e IA demo con Evidence Canvas,
-Mission Lab, informe y recuperación. [README](../README.md) contiene los pasos para
-clonar desde `flamelab-p6-demo-2026-11-14-r2` y arrancar; [DEMO](DEMO.md) añade el E2E con Chromium.
-`team-start-v1` y [TEAM_START](TEAM_START.md) son la referencia inicial, no una orden
-de deshacer avances. La [entrega P1/P3/P4](INTEGRATION_P134.md) conserva el historial.
+Mission Lab, informe y recuperación. [README](../README.md) y [TEAM_START](TEAM_START.md)
+contienen los pasos para clonar `origin/main`, crear una rama propia y arrancar.
+Para cargar el corpus real sin sustituir otra base, seguir [INTEGRATION_P2_MAIN](INTEGRATION_P2_MAIN.md).
+En ramas existentes, conservar el trabajo e integrar `origin/main` mediante merge.
+Las etiquetas P6, `team-start-v1` y la [entrega P1/P3/P4](INTEGRATION_P134.md)
+conservan el historial; no se vuelve a ellas para deshacer avances.
 
-## Estado comprobado al 14 de noviembre de 2026
+## Cierre P2 comprobado localmente — código 20aab80
+
+`check.ps1` terminó con salida 0: 342 Python/1 omisión PostgreSQL, 77 cliente,
+contratos/tipado/build, evaluaciones ciencia/IA, corpus 7/7 y HTTP/reinicio.
+Navegador sintético 25 pasos/64 comprobaciones; real P2 17 pasos/101 comprobaciones,
+ambos sin fallos. El clon limpio también pasó: 340 Python/3 omisiones,
+77 cliente y navegador 25/64. Resultados por SHA en [VERIFICATION](VERIFICATION.md). [Guía de integración](INTEGRATION_P2_MAIN.md).
+
+## Hito comprobado P6 — código 6693463, 14 de noviembre de 2026
 
 - Demo predeterminada: dos estudios, cinco ensayos y seis observaciones sintéticas.
   No requiere claves ni originales NASA.
@@ -35,6 +35,9 @@ de deshacer avances. La [entrega P1/P3/P4](INTEGRATION_P134.md) conserva el hist
 - Corpus P2: seis campañas con resultados, una de configuraciones y 17 documentales.
   Diez puntos BASS-II tienen conformidad descriptiva de P3 con límites; el corpus
   completo conserva `scientific_unverified`. No se usó un proveedor externo real.
+
+Estas cifras pertenecen al SHA indicado. Las mejoras posteriores requieren su
+propia verificación, registrada en [VERIFICATION](VERIFICATION.md).
 
 ## Primera lectura para cualquier asistente
 
@@ -72,7 +75,8 @@ P1–P6 son puestos, no personas identificadas. El equipo debe asignar sus nombr
 ## Datos antes de ampliar
 
 El ZIP original se conserva intacto; [DATA_INSPECTION](DATA_INSPECTION.md)
-documenta el inventario. La tabla BASS-II ya está importada con segmentos y fuentes.
+documenta el inventario. La extracción e importación BASS-II conservan segmentos y fuentes; cada clon
+debe cargar el bundle local para disponer de las mediciones reales.
 El [dictamen P3](handoffs/P3_BASS_II_DECISION_DEMO.md) aprobó diez puntos para uso
 descriptivo; [P2_DEMO](handoffs/P2_DEMO.md) describe el paquete con aviso M8 y lunar
 corregido. No equivale a validar el corpus completo, atribuir causalidad al flujo,

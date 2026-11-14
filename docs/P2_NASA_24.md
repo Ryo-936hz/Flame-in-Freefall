@@ -1,5 +1,14 @@
 # P2 handoff for the 24-study NASA corpus
 
+The P2 implementation from `lujan` is integrated into `main`, including the PR #3
+merge `0b732cb`. New work starts from `origin/main`; retain existing branch changes
+when merging it. The additional catalog, metric-selector and documentary Saffire
+integration is implemented and locally verified in `raul`, code `20aab80404fc2f0fc188d718cac47d0d4bf31d54`.
+PR #4 delivers this closure on `main`; PR #3 records the previous integration. See
+[current integration guide](INTEGRATION_P2_MAIN.md), [verification](VERIFICATION.md),
+[current status](IMPLEMENTATION_STATUS.md) and [team handoff](TEAM_HANDOFF.md).
+The branch/commit references below describe the extraction history.
+
 For the versioned team demo, see [P2 demo handoff](handoffs/P2_DEMO.md) for the
 portable bundle, SHA-256 checks, verified BASS-II presets and Saffire contrast.
 
@@ -17,6 +26,11 @@ A **bundle** is a JSON file containing the studies, evidence, trial records, and
 observations in the format accepted by the importer. `quality.json` records how those records
 were obtained, what was excluded, and which source discrepancies remain. Both outputs are local.
 
+For Windows, use the complete PowerShell import/start commands in [DEMO](DEMO.md).
+They use the project's `.venv` and a dedicated SQLite file; importing a released
+bundle does not require the original files or a globally installed uv.
+The following extraction commands use Bash syntax and require the original sources.
+
 With the inspected originals under `datasets/`, run from the repository root. Choose a new
 output directory for each extraction. The extractor checks the source sizes and SHA-256 hashes.
 
@@ -28,7 +42,7 @@ uv run --locked python -m flamelab.data.cli import \
   data/processed/nasa-24-v11/bundle.json --database-url sqlite:///work/nasa-24-v11.db
 ```
 
-To open the technical web harness, start the API with the corpus database and run `npm run dev:web`
+To open the integrated Evidence Canvas/Mission Lab interface, start the API with the corpus database and run `npm run dev:web`
 in another terminal. Open the URL printed by Vite and use **Catálogo de estudios**.
 
 ```bash
