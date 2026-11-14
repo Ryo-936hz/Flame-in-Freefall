@@ -7,7 +7,7 @@ elegir tarea, usar [TEAM_START](TEAM_START.md). El frontend de producto sigue pe
 ## Estado local al 14 de noviembre de 2026
 
 - Integración: `main` en GitHub; referencia de arranque para los seis: `origin/codex/team-start-v1`. Crear rama propia desde ella según [TEAM_START](TEAM_START.md).
-- La demo usa 2 estudios, 5 ensayos y 6 observaciones **sintéticos**. El catálogo real contiene 24 investigaciones `metadata_only`, en un bundle separado; no hay una serie NASA cuantitativa importada.
+- The default demo uses 2 studies, 5 trials and 6 **synthetic** observations. The standalone catalog still contains 24 metadata-only investigations. P2 adds a separate local BASS-II extraction/import path with successive conditions and `unverified` scientific status; see [P2_DELIVERY](P2_DELIVERY.md).
 - SQLite y modo demo comprobados localmente y en CI GitHub Windows/Linux. Proveedor externo probado con HTTP simulado, sin llamadas reales. PostgreSQL/pgvector pendiente; ejecuciones en [VERIFICATION](VERIFICATION.md).
 - [README](../README.md) y [SETUP_WINDOWS](SETUP_WINDOWS.md) contienen comandos reales; [VERIFICATION](VERIFICATION.md) conserva resultados, entorno y límites.
 

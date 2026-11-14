@@ -4,6 +4,105 @@
 construcción local Windows; la última registra la publicación y CI remota.
 Ninguna de estas verificaciones equivale a validación científica.
 
+## Integration of `main` and `lujan`
+
+Integrated `main` at `9ccc996` and `lujan` at `a4b03c7` after fast-forward-only
+pulls of both branches. The merged contract preserves the `main` oxygen scope and
+range checks, P3 comparison rules, and P2 corpus mappings. OpenAPI and TypeScript
+were regenerated from the merged schema. The PostgreSQL workflow and test from
+`main` are included.
+
+- Python with both real 1.1 bundles: **213 passed**. PostgreSQL was skipped in
+  this local run because a test database URL was not configured.
+- Both P3 evaluation suites passed. SQLite HTTP and restart smoke passed.
+- Ruff, OpenAPI/TypeScript drift, typecheck, **6 client tests** and Vite build passed.
+
+## P2 follow-up after P1/P3 review
+
+Branch `lujan`, starting commit `cfc0795`. Used P1's segment contract at `94989a7`
+and P3's scientific baseline at `8134b1c`. The shared bundle version is 1.1 and
+OpenAPI and TypeScript were regenerated from the consolidated model.
+
+- The exact P1 example in `docs/examples/sequential_conditions.json` validates.
+  It contains one physical trial, two segments and two linked observations.
+- Re-extracted the hash-verified BASS-II PDF and the full set of NASA sources in WSL.
+  The full corpus has 24 studies, 2,265 evidence entries, 1,058 trial/configuration
+  records and 1,673 observations (1,283 known). BASS-II retains 20 trials and 43
+  segments, with 39 known rates and four explicit absences. Checked every observation
+  against the previous extraction after the segment field rename. Values, units,
+  absence states and evidence references match.
+- Imports into `sqlite:///work/nasa-24-v11.db` returned `changed: true` and then
+  `changed: false`. Legacy P2 snapshots can be read without rewriting saved payloads.
+- `FLAMELAB_BASS_BUNDLE=data/processed/bass-table51-v11/bundle.json FLAMELAB_NASA_BUNDLE=data/processed/nasa-24-v11/bundle.json uv run --locked pytest -q`
+  passed **190 tests**, including both real-data integrations and the imported
+  P1/P3 regressions. The existing Starlette/httpx warning remains.
+- `uv run --locked python evals/science/run.py` and
+  `uv run --locked python evals/science/segment_run.py` passed all **9 P3 cases**.
+  The regressions cover absent segment flow, oxygen scopes, isolated controls,
+  observation provenance, finite large weights and finite large medians.
+- Ruff, OpenAPI/TypeScript drift checks, typecheck, all **6 client tests**, Vite
+  build, and the SQLite HTTP/restart smoke test passed. The smoke health response
+  reports contract 1.1. These are local checks. Review of the NASA interpretations
+  and integration into `main` remain pending.
+
+## Extended NASA corpus on `lujan`
+
+- Built the 24-study corpus from `datasets/` in WSL using `extract-nasa` and the
+  isolated PyMuPDF 2.1 tool. Verified the 123 inventoried source files, parsed all
+  22 CSVs, and compared two runs of `bundle.json` and `quality.json` byte-for-byte.
+- `validate` passed. Import into `sqlite:///work/nasa-24.db` returned `changed: true`
+  and `changed: false` on consecutive runs. The bundle has 2,265 evidence entries,
+  1,058 mapped records and 1,673 outcome entries, including 1,283 known values.
+- `FLAMELAB_NASA_BUNDLE=data/processed/nasa-24/bundle.json FLAMELAB_BASS_BUNDLE=data/processed/bass-table51/bundle.json uv run --locked pytest -q`
+  passed **142 tests**, with the existing Starlette/httpx deprecation warning.
+  The real-corpus test verifies study evidence, pagination, provenance, campaign
+  restrictions, unresolved units and a saved FLEX research response.
+- Ruff, OpenAPI and TypeScript drift checks, typecheck, **6 client tests**, and
+  Vite production build passed. `uv run --locked python scripts/smoke.py` passed
+  using SQLite and the synthetic fixture. API verification used TestClient and
+  the smoke test used real HTTP. The new catalog UI was verified by typecheck/build.
+- Details about the quantities and pending source interpretation are in
+  [P2_NASA_24](P2_NASA_24.md).
+
+## P2 branch verification — 14 November 2026
+
+Branch `lujan`, starting/unchanged HEAD `f981bdd4df55ca8339bfb7c92f21bc50802bfcca`.
+Fetched main/team base `422f6b03f410c6ac049b699e13fc204a3af67743`; rebase reported
+already up to date. Changes below are local and uncommitted; no new remote CI run
+is claimed. Environment: Ubuntu under WSL, Python 3.12.3, uv 0.8.13,
+Node 24.21.0. The Windows wrapper was not run against this Linux virtualenv;
+its underlying checks were executed directly.
+
+| Executed check | Observed result |
+| --- | --- |
+| Clean baseline `uv run --locked pytest -q` | 112 passed. |
+| Local corpus audit using Python hashes/ZIP/CSV readers | All 24 studies present; all 123 inventory members match SHA-256; 12 extra loose files are identical metadata copies. |
+| Fixed-source extractor, two fresh output directories | Byte-identical `bundle.json` and `quality.json`. PDF/CSV hashes match the inspected source versions. |
+| Independent PDF visual/text audit | All 180 Table 5.1 cells match; Figure 5.2 discrepancy and section 5.4 oxygen scope retained. |
+| `uv run --locked python -m flamelab.data.cli validate data/processed/bass-table51/bundle.json` | 24 studies, 20 physical tests, 43 observations; 39 known rates and 4 missing rates. |
+| `uv run --locked python -m flamelab.data.cli import data/processed/bass-table51/bundle.json --database-url sqlite:///work/bass-p2.db` twice | First import `changed: true`; second `changed: false`. Persistent isolated local database is ready. |
+| `FLAMELAB_BASS_BUNDLE=data/processed/bass-table51/bundle.json uv run --locked pytest -q` | **132 passed**, one existing Starlette/httpx deprecation warning. Includes real-source TestClient research, strict stage filtering, source lookup, A/B, insufficiency, saved report, corpus replacement and API reopening. |
+| `uv run --locked ruff check apps/api scripts` | All checks passed. |
+| `uv run --locked python scripts/export-openapi.py --check` | OpenAPI matches canonical contracts. |
+| `npm run check:types` and `npm run typecheck` | Generated TypeScript matches OpenAPI; typecheck passed. |
+| `npm run test:client` | **6 passed**. |
+| `npm run build` | Production build passed. |
+| `uv run --locked python scripts/smoke.py` | Real uvicorn HTTP with synthetic fixture: 5 trials, 4 selected points, report unchanged after restart. |
+| `git diff --check` | Passed. |
+
+The real-source test explicitly skips if `FLAMELAB_BASS_BUNDLE` is not configured;
+the 132-pass run above did configure it and had no skipped tests. Ordinary CI does
+not need the local PDFs. New source-cell unit fixtures are explicitly invented
+test inputs and are not shipped as NASA observations.
+
+The default demo corpus remains synthetic. BASS-II in the separately generated
+bundle is `unverified`; all imported evidence retains `reviewed=false`. Eighteen
+physical tests have at least one known rate. Selected test/unit counts can include
+M6/M12 with zero usable rates. Saffire remains documentary. No external AI call,
+PostgreSQL run, new browser walkthrough, publication, or human scientific review
+was performed in this P2 increment. See [P2_DELIVERY](P2_DELIVERY.md) for commands
+and [ADR 0008](adr/0008-successive-conditions-and-bass-import.md) for shared changes.
+
 ## Entorno observado
 
 - Git 2.55.0.windows.5; Python 3.12.14; Node 24.22.1; uv 0.9.5; npm 11.6.2.

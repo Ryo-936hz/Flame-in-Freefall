@@ -14,5 +14,6 @@ IMPLEMENTATION_STATUS y VERIFICATION.
 - [0005 Compatibilidad antes de similitud](0005-scientific-ranking.md)
 - [0006 Interfaz técnica antes del frontend de producto](0006-ui-skeleton.md)
 - [0007 Inspección y base integrada local](0007-inspection-and-integrated-base.md)
+- [0008 Successive conditions and local BASS-II import](0008-successive-conditions-and-bass-import.md)
 
 Para una nueva decisión: siguiente número, fecha, estado, problema concreto, alternativas, decisión, consecuencias y rutas afectadas. Una preferencia de herramienta no necesita un ADR si no cambia una frontera o compromiso del sistema.

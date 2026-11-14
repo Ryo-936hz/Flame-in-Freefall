@@ -88,9 +88,9 @@ def test_flow_comparison_changes_plan_and_tool_parameters(monkeypatch):
     request = make_request("Compare trials while varying flow velocity.", flow_target=None)
     seen = {}
 
-    def rank_spy(source, filters):
+    def rank_spy(source, filters, **kwargs):
         seen["ranking"] = filters
-        return run_ranking(source, filters)
+        return run_ranking(source, filters, **kwargs)
 
     def comparison_spy(source, comparison_request):
         seen["comparison"] = comparison_request
@@ -117,9 +117,9 @@ def test_scenario_change_passes_named_condition_to_ranking_tool(monkeypatch):
     seen = {}
     real_rank = engine.rank_trials
 
-    def rank_spy(source, filters):
+    def rank_spy(source, filters, **kwargs):
         seen["ranking"] = filters
-        return real_rank(source, filters)
+        return real_rank(source, filters, **kwargs)
 
     monkeypatch.setattr(engine, "rank_trials", rank_spy)
     result = asyncio.run(run_research(request, bundle, Settings(_env_file=None, ai_provider="demo")))

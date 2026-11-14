@@ -12,6 +12,11 @@ GOWER_SCALES_V1 = {
     "thickness_mm": 100.0,
     "diameter_mm": 1000.0,
     "sample_width_mm": 1000.0,
+    "burning_faces": 2.0,
+    "burn_duration_s": 600.0,
+    "aging_duration_s": 3600.0,
+    "ignition_power_w": 100.0,
+    "ignition_duration_s": 600.0,
 }
 
 MISSING_STATUSES = ("known", "not_measured", "not_reported", "not_extracted", "not_applicable")

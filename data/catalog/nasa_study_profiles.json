@@ -1,0 +1,288 @@
+{
+  "psi:PSI-25": {
+    "role": "numeric_candidate",
+    "question": "How does spread rate vary with opposed flow within a test?",
+    "variables": "Flow cm/s; spread mm/s; sample thickness mm and width cm; faces; burn time min; initial and final oxygen vol%.",
+    "record_scope": "Physical test with successive conditions and a separate operational sample record.",
+    "related_studies": [
+      "psi:PSI-26",
+      "psi:PSI-62",
+      "psi:PSI-98",
+      "psi:PSI-99",
+      "psi:PSI-100"
+    ],
+    "limits": "Intermediate oxygen is unmeasured; review widths, face counts, time scope and the M8 figure/table discrepancy."
+  },
+  "psi:PSI-69": {
+    "role": "numeric_candidate",
+    "question": "Which droplet runs ended at reported extinction or disruption?",
+    "variables": "Pressure mmHg, mole fractions, droplet and extinction diameters mm, duration s, and a burning-rate field with ambiguous units.",
+    "record_scope": "Run ID with fuel, test condition, and recorded end reason.",
+    "related_studies": [
+      "psi:PSI-68",
+      "psi:PSI-39"
+    ],
+    "limits": "Clarify truncated composition headings and the burning-rate unit; separate disruption, incomplete tests and extinction."
+  },
+  "psi:PSI-102": {
+    "role": "numeric_candidate",
+    "question": "Which material, airflow and mass-loss values appear in the sample table?",
+    "variables": "Airflow cm/s, mass-loss rate mg/min and aging time min.",
+    "record_scope": "Sample or configuration record.",
+    "related_studies": [
+      "psi:PSI-101",
+      "psi:PSI-47",
+      "psi:PSI-115"
+    ],
+    "limits": "Verify whether each value is measured or imposed, and whether samples are independent. Aerosol response is not tabulated."
+  },
+  "psi:PSI-101": {
+    "role": "numeric_candidate",
+    "question": "How are duration and aging times reported by sample material?",
+    "variables": "Inlet velocity cm/s, Rt/R0 with undocumented meaning, and durations s.",
+    "record_scope": "Test with suffixes potentially identifying repeated steps or the same sample.",
+    "related_studies": [
+      "psi:PSI-102",
+      "psi:PSI-115"
+    ],
+    "limits": "Identify sample reuse and define Rt/R0 and the primary/net aging columns."
+  },
+  "psi:PSI-159": {
+    "role": "numeric_candidate",
+    "question": "Which conditions accompany the recorded ignition and termination outcomes?",
+    "variables": "Pressure bar, mass flow mg/s, time s, temperature °C/K and fractions. Tad, TFP and Zst also occur.",
+    "record_scope": "Normal or inverse flame test/configuration, with failed attempts and blank rows.",
+    "related_studies": [
+      "psi:PSI-10",
+      "psi:PSI-39",
+      "psi:PSI-117",
+      "psi:PSI-142"
+    ],
+    "limits": "Verify TFP and coded outcomes; distinguish measured temperature from calculated Tad and placeholder values."
+  },
+  "psi:PSI-10": {
+    "role": "numeric_candidate",
+    "question": "What ranges of pressure, composition and flow were explored in normal and inverse flames?",
+    "variables": "Mass flow mg/s, pressure atm, mole fractions, Zst and Tad K.",
+    "record_scope": "Identified configuration or test report, sometimes with ramps and endpoints.",
+    "related_studies": [
+      "psi:PSI-159"
+    ],
+    "limits": "Verify how ramp settings, Tad and Zst were generated; define a response before estimating effects."
+  },
+  "psi:PSI-98": {
+    "role": "numeric_candidate",
+    "question": "Which configuration and timing fields were reported for concurrent and opposed flow?",
+    "variables": "Dimensions cm, flow cm/s, approximate/ranged oxygen, power W, and ignition and burn timings s.",
+    "record_scope": "Two configured samples and separate visualization references.",
+    "related_studies": [
+      "psi:PSI-100",
+      "psi:PSI-99",
+      "psi:PSI-25"
+    ],
+    "limits": "Reconcile differing dimensional labels, flow provenance and reason for run end; the CSV omits spread rate."
+  },
+  "psi:PSI-99": {
+    "role": "configuration",
+    "question": "Which materials, gravity cases and spread-related fields are reported?",
+    "variables": "Dimensions, flow, power, timing, length and length-rate strings with embedded units.",
+    "record_scope": "Sample entries plus notes and visualization references.",
+    "related_studies": [
+      "psi:PSI-98",
+      "psi:PSI-100",
+      "psi:PSI-25"
+    ],
+    "limits": "Resolve ambiguous spread-length heading, 037mm, missing material and gravity labels before comparing outcomes."
+  },
+  "psi:PSI-107": {
+    "role": "configuration",
+    "question": "Which fuel flow, air flow and nozzle settings appear across recorded events?",
+    "variables": "Nozzle mm, fuel flow sccm/mg/s, air flow cm/s, and start and end GMT.",
+    "record_scope": "Event/configuration record with shared event times and exact duplicates.",
+    "related_studies": [
+      "psi:PSI-60",
+      "psi:PSI-106",
+      "psi:PSI-21"
+    ],
+    "limits": "Resolve event identity and date rollover; locate the smoke-point measurement in the report."
+  },
+  "psi:PSI-100": {
+    "role": "configuration",
+    "question": "Which sample dimensions and flow directions occur in Saffire III?",
+    "variables": "Dimensions cm, flow cm/s and orientation.",
+    "record_scope": "Two sample configurations.",
+    "related_studies": [
+      "psi:PSI-98",
+      "psi:PSI-99"
+    ],
+    "limits": "Reconcile nominal flow values and verify orientation. No measured spread rate in table."
+  },
+  "psi:PSI-39": {
+    "role": "configuration",
+    "question": "What fuel, atmospheric composition, pressure and fibre support were used?",
+    "variables": "Pressure (atm in text), mole fractions, fibre and fuel labels.",
+    "record_scope": "Test/CIR record, with exact duplicates.",
+    "related_studies": [
+      "psi:PSI-69",
+      "psi:PSI-68",
+      "psi:PSI-159",
+      "psi:PSI-117",
+      "psi:PSI-142"
+    ],
+    "limits": "Resolve test identity and duplicates; extract outcomes separately."
+  },
+  "psi:PSI-68": {
+    "role": "configuration",
+    "question": "Which ranges of fuel, diameter and atmosphere were in scope?",
+    "variables": "Diameter mm, pressure atm, temperature °C, flow cm/s, and oxygen mole fraction.",
+    "record_scope": "One fuel with sets or ranges of design conditions.",
+    "related_studies": [
+      "psi:PSI-69",
+      "psi:PSI-39"
+    ],
+    "limits": "Locate completed test records and outcomes; the design ranges do not establish which combinations ran."
+  },
+  "psi:PSI-26": {
+    "role": "operational_context",
+    "question": "Which BASS samples and materials were listed in the flight records?",
+    "variables": "Dates/GMT, run and sample IDs, and textual dimensions.",
+    "record_scope": "As-run entry associated with a sample.",
+    "related_studies": [
+      "psi:PSI-25",
+      "psi:PSI-62"
+    ],
+    "limits": "Match run IDs and find calibrated conditions and quantitative outcomes."
+  },
+  "psi:PSI-20": {
+    "role": "operational_context",
+    "question": "Which days, burners and oxygen levels reported ignitions?",
+    "variables": "Burner diameter mm, oxygen percent and ignition counts.",
+    "record_scope": "Campaign summary by day.",
+    "related_studies": [
+      "psi:PSI-21",
+      "psi:PSI-22",
+      "psi:PSI-23",
+      "psi:PSI-10",
+      "psi:PSI-159"
+    ],
+    "limits": "Obtain individual tests, pressures and actual burning-rate data; daily counts are aggregated."
+  },
+  "psi:PSI-21": {
+    "role": "operational_context",
+    "question": "Which fuel families and concentration ranges appear in CLD runs?",
+    "variables": "Controller capacity slpm on N₂ basis, concentration percent and counts.",
+    "record_scope": "Day or test type summary.",
+    "related_studies": [
+      "psi:PSI-107",
+      "psi:PSI-106",
+      "psi:PSI-20",
+      "psi:PSI-22",
+      "psi:PSI-23"
+    ],
+    "limits": "Check fuel-label irregularities and obtain actual flow and per-test signals."
+  },
+  "psi:PSI-22": {
+    "role": "operational_context",
+    "question": "Which polarities, fuels and days are recorded?",
+    "variables": "Polarity, concentration and ignition counts.",
+    "record_scope": "Day or series of tests, including exact duplicates.",
+    "related_studies": [
+      "psi:PSI-20",
+      "psi:PSI-21",
+      "psi:PSI-23"
+    ],
+    "limits": "Recover field strengths, electrode geometry and test-level response and identity."
+  },
+  "psi:PSI-23": {
+    "role": "operational_context",
+    "question": "Which atmospheres and mixtures appear in spherical diffusion flame sessions?",
+    "variables": "Approximate atmospheres, mixtures and ignition counts.",
+    "record_scope": "Day or test series summary.",
+    "related_studies": [
+      "psi:PSI-20",
+      "psi:PSI-21",
+      "psi:PSI-22",
+      "psi:PSI-39",
+      "psi:PSI-159"
+    ],
+    "limits": "Verify actual pressures, atmospheric labels, time profiles and response from reports."
+  },
+  "psi:PSI-106": {
+    "role": "operational_context",
+    "question": "Which fuels and sessions were used in SLICE?",
+    "variables": "Date and fuel/concentration descriptions.",
+    "record_scope": "Session/date that can include calibrations and multiple tests.",
+    "related_studies": [
+      "psi:PSI-107",
+      "psi:PSI-21"
+    ],
+    "limits": "Identify per-test flow, liftoff height and flame structure before a numerical analysis."
+  },
+  "psi:PSI-47": {
+    "role": "operational_context",
+    "question": "Which dust, sampling sites and instruments were used?",
+    "variables": "Instrument, powder and location descriptions.",
+    "record_scope": "Sampling session D1 or D2.",
+    "related_studies": [
+      "psi:PSI-101",
+      "psi:PSI-102"
+    ],
+    "limits": "Verify instrument calibration and retrieve sensor responses. Binary reports are inventoried."
+  },
+  "psi:PSI-142": {
+    "role": "documentary",
+    "question": "Which published figures address cool-flame limits and ozone conditions?",
+    "variables": "Data identifier, description, DOI and figure identifier.",
+    "record_scope": "Bibliographic figure reference.",
+    "related_studies": [
+      "psi:PSI-39",
+      "psi:PSI-159",
+      "psi:PSI-117"
+    ],
+    "limits": "Consult linked publications for measured values, axes and units."
+  },
+  "psi:PSI-60": {
+    "role": "documentary",
+    "question": "Which study analysed SPICE data with experiments and computation?",
+    "variables": "No experimental values in the local source inventory.",
+    "record_scope": "ISA study metadata.",
+    "related_studies": [
+      "psi:PSI-107"
+    ],
+    "limits": "Locate publications and connect derived outcomes to their original SPICE runs."
+  },
+  "psi:PSI-62": {
+    "role": "documentary",
+    "question": "How did the modeling study reuse BASS and BASS-II imagery?",
+    "variables": "No experimental values in the local source inventory.",
+    "record_scope": "ISA study metadata.",
+    "related_studies": [
+      "psi:PSI-26",
+      "psi:PSI-25"
+    ],
+    "limits": "NASA PSI identifies BASS and BASS-II imagery as inputs for post-processed tomography and model validation. The local inventory does not identify the individual runs reused. If results are imported later, link them to the original trials and distinguish reconstructed quantities from model predictions and original measurements."
+  },
+  "psi:PSI-115": {
+    "role": "documentary",
+    "question": "Which report used SAME data to model smoke generation?",
+    "variables": "Metadata and report reference NNX17AF08A.",
+    "record_scope": "Study metadata and attached report.",
+    "related_studies": [
+      "psi:PSI-102",
+      "psi:PSI-101"
+    ],
+    "limits": "Read the report to identify parameters and separate simulations from source measurements."
+  },
+  "psi:PSI-117": {
+    "role": "documentary",
+    "question": "Which local study concerns thermoconvective perturbations and cool-flame CFD?",
+    "variables": "Metadata and attached thesis.",
+    "record_scope": "Study metadata and thesis reference.",
+    "related_studies": [
+      "psi:PSI-39",
+      "psi:PSI-159",
+      "psi:PSI-142"
+    ],
+    "limits": "Verify how the thesis corresponds to ISA metadata before linking numerical results."
+  }
+}

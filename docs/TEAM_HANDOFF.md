@@ -17,9 +17,12 @@ Pregunta con filtros → perfil/ranking/comparación → evidencia → hipótesi
 → informe persistido. Datos sintéticos identificados, escenario lunar insuficiente,
 snapshot conservado tras reinicio y sustitución del corpus. Ver VERIFICATION.
 
-24 estudios reales son metadata_only. BASS-II tabla 5.1 PDF65/impresa57 es candidata
-pendiente de transcripción, condiciones sucesivas y revisión. Saffire exige aclarar
-encabezados/unidades/configuración. No se validó IA real, PostgreSQL ni ciencia NASA.
+The standalone catalog remains 24 metadata-only studies. The P2 branch adds a
+separate local BASS-II Table 5.1 extraction and canonical import with successive
+conditions: 20 tests, 43 conditions, 39 known rates and four absences. Scientific
+review remains pending; Saffire stays documentary context. See the English
+[P2 delivery](P2_DELIVERY.md). Real external AI, PostgreSQL and NASA scientific
+interpretation are not validated by these software checks.
 
 ## Reparto
 
