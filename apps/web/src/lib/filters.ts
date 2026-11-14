@@ -28,19 +28,21 @@ interface ConditionMeta {
   /** Display unit for the input. The API enforces canonical units. */
   unit: string | null;
   numeric: boolean;
+  /** Slider bounds for numeric inputs. Convenience only: typing any value is still allowed and the API validates it. */
+  range?: { min: number; max: number; step: number };
 }
 
 export const CONDITIONS = [
   { key: "gravity_regime", label: "Gravity regime", unit: null, numeric: false },
-  { key: "oxygen_pct", label: "Oxygen", unit: "%", numeric: true },
-  { key: "pressure_kpa", label: "Pressure", unit: "kPa", numeric: true },
-  { key: "flow_velocity_cm_s", label: "Flow velocity", unit: "cm/s", numeric: true },
+  { key: "oxygen_pct", label: "Oxygen", unit: "%", numeric: true, range: { min: 0, max: 100, step: 0.5 } },
+  { key: "pressure_kpa", label: "Pressure", unit: "kPa", numeric: true, range: { min: 0, max: 120, step: 0.1 } },
+  { key: "flow_velocity_cm_s", label: "Flow velocity", unit: "cm/s", numeric: true, range: { min: 0, max: 100, step: 0.5 } },
   { key: "flow_direction", label: "Flow direction", unit: null, numeric: false },
   { key: "material", label: "Material", unit: null, numeric: false },
   { key: "geometry", label: "Geometry", unit: null, numeric: false },
-  { key: "thickness_mm", label: "Thickness", unit: "mm", numeric: true },
-  { key: "sample_width_mm", label: "Sample width", unit: "mm", numeric: true },
-  { key: "diameter_mm", label: "Diameter", unit: "mm", numeric: true },
+  { key: "thickness_mm", label: "Thickness", unit: "mm", numeric: true, range: { min: 0, max: 20, step: 0.1 } },
+  { key: "sample_width_mm", label: "Sample width", unit: "mm", numeric: true, range: { min: 0, max: 100, step: 0.5 } },
+  { key: "diameter_mm", label: "Diameter", unit: "mm", numeric: true, range: { min: 0, max: 50, step: 0.5 } },
 ] as const satisfies readonly ConditionMeta[];
 
 export const METRICS = [

@@ -56,13 +56,15 @@ function SectionNav({ available }: { available: string[] }) {
   </nav>;
 }
 
-export default function TopBar({ health, offline, theme, onTheme, sections }: {
+export default function TopBar({ health, offline, theme, onTheme, sections, onResetAll }: {
   health: Health | null;
   offline: boolean;
   theme: "dark" | "light";
   onTheme: () => void;
   /** IDs of the sections currently rendered. */
   sections: string[];
+  /** Restore the whole app to its first-load state. */
+  onResetAll: () => void;
 }) {
   return <header className="topbar">
     <a className="brand roll-host" href="#brief">
@@ -77,6 +79,10 @@ export default function TopBar({ health, offline, theme, onTheme, sections }: {
         <Tag tone={health.ai_provider === "demo" ? "neutral" : "signal"}>AI {health.ai_provider === "demo" ? "deterministic demo" : health.ai_provider}</Tag>
         <span className="status-db">{health.database} · v{health.version}</span>
       </> : <span className="status-db">Connecting…</span>}
+      <button type="button" className="reset-all" onClick={onResetAll} title="Clear results, selection and filters">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></svg>
+        Reset
+      </button>
       <ThemeSwitch theme={theme} onToggle={onTheme} />
     </div>
   </header>;

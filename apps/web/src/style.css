@@ -503,3 +503,73 @@ body { background: var(--bg); }
 .flame-lbl span { font-size: 9px; margin-top: 2px; }
 .flame-ill figcaption { font-size: 12px; line-height: 1.45; }
 .col-evidence .panel { min-height: 0; }
+
+/* ---------- Ambient glow: day = green behind solid white panels; night = peach/rose ---------- */
+:root {
+  --ambient: radial-gradient(60vw 55vh at 6% 0%, rgba(231, 171, 121, 0.22), transparent 70%),
+             radial-gradient(55vw 60vh at 100% 100%, rgba(178, 80, 104, 0.30), transparent 70%),
+             radial-gradient(40vw 40vh at 60% 40%, rgba(231, 171, 121, 0.08), transparent 70%);
+}
+:root[data-theme="light"] {
+  --glass-bg: #ffffff;
+  --frost: none;
+  --frost-grain: none;
+  --ambient: radial-gradient(60vw 55vh at 6% 0%, rgba(223, 241, 64, 0.38), transparent 70%),
+             radial-gradient(55vw 60vh at 100% 100%, rgba(80, 85, 68, 0.22), transparent 70%),
+             radial-gradient(40vw 40vh at 60% 40%, rgba(223, 241, 64, 0.14), transparent 70%);
+}
+/* Day: the glow only shows in the gaps; panels, header and switch are solid white. */
+:root[data-theme="light"] .panel,
+:root[data-theme="light"] .topbar,
+:root[data-theme="light"] .theme-switch {
+  background-color: #ffffff; background-image: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+:root[data-theme="light"] .brief-actions { background: #ffffff; }
+
+/* Night glow strong enough to read through the frost (peach top-left, rose bottom-right). */
+:root:not([data-theme="light"]) {
+  --glass-bg: rgba(18, 14, 14, 0.38);
+  --frost: blur(26px) saturate(115%);
+  --ambient: radial-gradient(70vw 65vh at 4% -5%, rgba(231, 171, 121, 0.55), transparent 65%),
+             radial-gradient(65vw 70vh at 104% 108%, rgba(178, 80, 104, 0.65), transparent 65%),
+             radial-gradient(45vw 45vh at 55% 45%, rgba(178, 80, 104, 0.16), transparent 70%);
+}
+.cond-slider { grid-column: 1 / -1; margin-top: 2px; }
+.cond-slider .ticks { display: flex; justify-content: space-between; font-family: var(--font-num); font-size: 9.5px; color: var(--ink-3); }
+.reset-all {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid var(--rule-strong); background: transparent; color: var(--ink);
+  transition: border-color 0.2s, background 0.2s, transform 0.12s var(--ease);
+}
+.reset-all:hover { border-color: var(--ink); background: var(--sunk); }
+.reset-all:active { transform: scale(0.96); }
+.reset-all svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.4s var(--ease); }
+.reset-all:hover svg { transform: rotate(-200deg); }
+
+/* ---------- Final palette: no background glow; day = flame orange, night = microgravity flame blue ---------- */
+:root, :root:not([data-theme="light"]) {
+  --signal: #5c9cff;
+  --signal-ink: #010101;
+  --s0: #5c9cff; --s3: #a9c8ff;
+  --ambient: none;
+}
+:root[data-theme="light"] {
+  --signal: #c94a10;
+  --signal-ink: #ffffff;
+  --sunk: #fbefe6;
+  --s0: #010101; --s1: #c94a10; --s3: #f0a35e;
+  --ambient: none;
+}
+.app::before { background: var(--bg); }
+.app::after { display: none; }
+.btn.primary:hover:not(:disabled) { background: var(--signal); filter: brightness(1.08); }
+.flame-view {
+  background-image: linear-gradient(rgba(92, 156, 255, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(92, 156, 255, 0.08) 1px, transparent 1px);
+}
+:root[data-theme="light"] .select, :root[data-theme="light"] .input, :root[data-theme="light"] textarea { border-color: rgba(201, 74, 16, 0.22); }
+
+/* Night: notices and provenance labels in light flame blue instead of orange. */
+:root:not([data-theme="light"]) { --warn: #8fbaff; }
+:root:not([data-theme="light"]) .flame-tag { color: #8fbaff; border-color: #8fbaff; }
+:root[data-theme="light"] .flame-tag { color: #f0a35e; border-color: #f0a35e; }

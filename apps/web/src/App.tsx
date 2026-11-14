@@ -86,6 +86,17 @@ export default function App() {
 
   useEffect(() => { void connect(); }, [connect]);
 
+  // Full reset: back to the first-load state (demo filters, no run, no selection, fresh Mission Lab).
+  const [labKey, setLabKey] = useState(0);
+  const resetAll = useCallback(() => {
+    latest.current.cancel();
+    setRun({ state: "idle" });
+    setSelection(EMPTY_SELECTION);
+    setDraft(demoDraft());
+    setLabKey((k) => k + 1);
+    root.current?.querySelectorAll(".col-brief, .col-work, .col-evidence").forEach((col) => col.scrollTo({ top: 0 }));
+  }, []);
+
   const showRun = useCallback((result: ResearchResponse) => {
     latest.current.cancel();
     setRun({ state: "ready", result });
@@ -156,7 +167,7 @@ export default function App() {
   return <div className="app" ref={root}>
     <a className="skip" href="#brief">Skip to the form</a>
     <TopBar health={health} offline={Boolean(offline)} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
-      sections={result ? ["brief", "canvas", "evidence", "synthesis", "lab"] : ["brief", "canvas", "evidence", "lab"]} />
+      sections={result ? ["brief", "canvas", "evidence", "synthesis", "lab"] : ["brief", "canvas", "evidence", "lab"]} onResetAll={resetAll} />
     <main className="shell">
       <div className="col-brief">
         <MissionBrief draft={draft} onChange={setDraft} onSubmit={(request) => void investigate(request)} onReset={() => setDraft(demoDraft())}
@@ -194,7 +205,7 @@ export default function App() {
           <SynthesisPanel result={result} onCite={onCite} />
         </>}
 
-        <InterimMissionTools api={api} research={result} request={currentRequest} onOpenRun={showRun} onOpenEvidence={onCite} />
+        <InterimMissionTools key={labKey} api={api} research={result} request={currentRequest} onOpenRun={showRun} onOpenEvidence={onCite} />
       </div>
 
       <div className="col-evidence">

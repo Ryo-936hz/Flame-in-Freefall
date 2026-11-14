@@ -51,7 +51,9 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
 
       <fieldset className="conditions">
         <legend className="cap">Conditions</legend>
-        {CONDITIONS.map(({ key, label, unit, numeric }) => {
+        {CONDITIONS.map((meta) => {
+          const { key, label, unit, numeric } = meta;
+          const range = "range" in meta ? meta.range : undefined;
           const condition = draft.conditions[key];
           const error = built.errors[key];
           const needsValue = condition.role === "match" || condition.role === "similar";
@@ -68,6 +70,17 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
                 placeholder={numeric ? "0" : "value"}
                 onChange={(event) => setCondition(key, { value: event.target.value })} />
               {!numeric && <datalist id={`values-${key}`}>{(suggestions[key] ?? []).map((value) => <option key={value} value={value} />)}</datalist>}
+              {range && (() => {
+                const parsed = Number(condition.value.replace(",", "."));
+                const current = condition.value.trim() !== "" && Number.isFinite(parsed) ? Math.min(range.max, Math.max(range.min, parsed)) : range.min;
+                const p = ((current - range.min) / (range.max - range.min)) * 100;
+                return <div className="cond-slider">
+                  <input type="range" aria-label={`${label} slider`} min={range.min} max={range.max} step={range.step} value={current}
+                    style={{ ["--p" as string]: `${p}%` }}
+                    onChange={(event) => setCondition(key, { value: event.target.value })} />
+                  <span className="ticks" aria-hidden="true"><span>{range.min}</span><span>{(range.min + range.max) / 2}</span><span>{range.max}{unit ? ` ${unit}` : ""}</span></span>
+                </div>;
+              })()}
             </>}
             {error && <p className="field-error" id={`err-${key}`}>{error}</p>}
           </div>;
@@ -106,7 +119,7 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
       <div className="actions brief-actions">
         {Object.keys(built.errors).length > 0 && <p className="field-error brief-error" role="status">Fix the highlighted condition to investigate.</p>}
         <button type="submit" className="btn primary" disabled={!canSubmit} aria-keyshortcuts="Control+Enter">{busy ? "Investigating…" : "Investigate"}</button>
-        <button type="button" className="btn" onClick={onReset} disabled={busy}>Reset demo query</button>
+        <button type="button" className="btn" onClick={onReset} disabled={busy}>Reset filters</button>
         <span className="kbd-hint" aria-hidden="true">Ctrl + Enter</span>
       </div>
     </form>
