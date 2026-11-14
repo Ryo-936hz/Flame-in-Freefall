@@ -12,7 +12,7 @@ export default function SynthesisPanel({ result, onCite }: { result: ResearchRes
   const [allWarnings, setAllWarnings] = useState(false);
   const warnings = allWarnings ? result.warnings : result.warnings.slice(0, 4);
   return <Panel id="synthesis" title="Synthesis and limits" className="synthesis"
-    meta={<Tag tone={result.provider === "demo" ? "neutral" : "signal"}>{result.provider === "demo" ? "Deterministic coordinator · no LLM" : `External synthesis · ${result.provider}`}</Tag>}>
+    meta={<Tag tone={result.provider === "demo" ? "neutral" : "signal"}>{result.provider === "demo" ? "Demo AI · no LLM" : `AI · ${result.provider}`}</Tag>}>
     <div className="panel-b synth-grid">
       <section aria-labelledby="claims-title">
         <h3 id="claims-title" className="cap">Cited claims</h3>

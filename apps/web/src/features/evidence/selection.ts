@@ -1,6 +1,5 @@
 import type { Models, ResearchResponse } from "../../lib/client";
 
-export type PlotPoint = Models["PlotPoint"];
 export type RankedTrial = Models["RankedTrial"];
 
 /**

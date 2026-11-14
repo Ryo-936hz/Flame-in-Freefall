@@ -11,4 +11,3 @@ export function createLatest() {
   };
 }
 
-export type Latest = ReturnType<typeof createLatest>;

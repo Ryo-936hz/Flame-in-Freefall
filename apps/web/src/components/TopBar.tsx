@@ -56,7 +56,7 @@ function SectionNav({ available }: { available: string[] }) {
   </nav>;
 }
 
-export default function TopBar({ health, offline, theme, onTheme, sections, onResetAll }: {
+export default function TopBar({ health, offline, theme, onTheme, sections, onResetAll, chatOpen, onChat }: {
   health: Health | null;
   offline: boolean;
   theme: "dark" | "light";
@@ -65,6 +65,8 @@ export default function TopBar({ health, offline, theme, onTheme, sections, onRe
   sections: string[];
   /** Restore the whole app to its first-load state. */
   onResetAll: () => void;
+  chatOpen: boolean;
+  onChat: () => void;
 }) {
   return <header className="topbar">
     <a className="brand roll-host" href="#brief">
@@ -76,9 +78,11 @@ export default function TopBar({ health, offline, theme, onTheme, sections, onRe
     <div className="status" aria-live="polite">
       {offline ? <Tag tone="risk">API offline</Tag> : health ? <>
         <Tag tone={health.data_mode === "synthetic" ? "synthetic" : "neutral"}>{DATA_MODE_LABEL[health.data_mode] ?? health.data_mode}</Tag>
-        <Tag tone={health.ai_provider === "demo" ? "neutral" : "signal"}>AI {health.ai_provider === "demo" ? "deterministic demo" : health.ai_provider}</Tag>
-        <span className="status-db">{health.database} · v{health.version}</span>
       </> : <span className="status-db">Connecting…</span>}
+      <button type="button" className="reset-all ask-btn" aria-pressed={chatOpen} onClick={onChat} title="Open the Ask SI conversation">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" /></svg>
+        Ask SI
+      </button>
       <button type="button" className="reset-all" onClick={onResetAll} title="Clear results, selection and filters">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></svg>
         Reset

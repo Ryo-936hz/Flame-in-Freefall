@@ -8,7 +8,7 @@ export type Metric = NonNullable<Models["ResearchRequest"]["metric"]>;
 /** What the user wants a condition to do in the explicit filters. */
 export type ConditionRole = "off" | "match" | "similar" | "vary";
 
-export interface ConditionDraft {
+interface ConditionDraft {
   role: ConditionRole;
   value: string;
 }
@@ -131,7 +131,7 @@ export function activeHabitat(draft: BriefDraft): HabitatId | null {
   return hit?.id ?? null;
 }
 
-export interface BuildResult {
+interface BuildResult {
   request: RankingRequest | null;
   errors: Partial<Record<ConditionKey, string>>;
 }

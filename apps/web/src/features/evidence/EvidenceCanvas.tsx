@@ -61,14 +61,14 @@ export default function EvidenceCanvas({ result, labels, selection, onSelectObse
             <span className="num">median {fmt(group.median)} {comparison.unit}</span>
           </li>)}
         </ul>
-        {comparison.warnings.length > 0 && <ul className="warnings">{comparison.warnings.map((warning) => <li key={warning}>{tx(warning)}</li>)}</ul>}
+        {comparison.warnings.length > 0 && <details className="notes"><summary>Notes ({comparison.warnings.length})</summary><ul className="warnings">{comparison.warnings.map((warning) => <li key={warning}>{tx(warning)}</li>)}</ul></details>}
       </section>}
       {comparison && comparison.points.length === 0 && <StateMessage kind="empty" title="No comparable observations for this metric" />}
 
       <section className="block" aria-labelledby="rank-title">
         <div className="block-h">
           <h3 id="rank-title">Ranking and coverage</h3>
-          <span className="hint">{result.ranking.method} · similarity is not probability, confidence or hazard</span>
+          <span className="hint" title={result.ranking.method}>Similarity ≠ probability or hazard</span>
         </div>
         <RankingTable ranking={result.ranking} labels={labels} selectedTrial={selection.trialId} onSelect={onSelectTrial} />
       </section>

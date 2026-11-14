@@ -3,21 +3,30 @@
 Sustituye al arnés técnico por una interfaz utilizable para la demo: formular
 pregunta y filtros sin editar JSON, investigar y explorar gráfico, tabla, ranking
 y evidencia enlazados por identidad. Sigue `docs/DESIGN_ANDURIL.md` de forma
-acotada: tema oscuro por defecto (claro opcional), Inter Tight y Geist Mono
-autoalojadas, acento chartreuse solo para selección y actividad.
+acotada. Toda la interfaz está en inglés. Inter Tight y Geist Mono van autoalojadas.
+
+- **Tema noche (por defecto):** negro, vidrio esmerilado y acento azul de llama en microgravedad (`#5C9CFF`).
+- **Tema día:** fondo blanco cálido (`#FCF8F4`), paneles blancos sólidos y acento naranja de llama (`#C94A10`).
+- **Escritorio:** la página no se desplaza; cada columna tiene su propio scroll.
 
 ## Estructura
 
 | Ruta | Contenido |
 |---|---|
-| `src/App.tsx` | Montaje: conexión, investigación, selección compartida y paneles. |
-| `src/components/MissionBrief.tsx` | Formulario tipado → `RankingRequest` y resumen de los filtros que se enviarán. |
+| `src/App.tsx` | Montaje: conexión, investigación, selección compartida, chat, reinicio y animación de entrada. |
+| `src/components/TopBar.tsx` | Navegación por secciones, estado de la API, «Ask SI», «Reset» e interruptor día/noche. |
+| `src/components/MissionBrief.tsx` | Formulario tipado → `RankingRequest`: presets de hábitat, condiciones con slider numérico, resumen de los filtros que se enviarán y botón fijo «Investigate» (Ctrl+Enter). |
+| `src/components/ChatPanel.tsx` | «Ask SI»: cada pregunta lanza una investigación con los filtros del Brief; las citas abren la evidencia. Superpuesto a la columna de evidencia, nunca a la comparación. |
 | `src/components/SynthesisPanel.tsx` | Afirmaciones citadas, hipótesis rotuladas, actividad y advertencias. |
+| `src/components/FlameIllustration.tsx` | Animación **ilustrativa** de llama a 1 g y a la gravedad del Brief; solo antes de la primera investigación. No es una simulación. |
 | `src/components/InterimMissionTools.tsx` | Montaje **provisional** de A/B, informe, eventos y recuperación hasta los paneles de P6; define `MissionSlotProps`. |
-| `src/features/evidence/` | Evidence Canvas: gráfico, tabla de puntos, ranking, visor de evidencia y selección. |
-| `src/lib/filters.ts` | Estado del formulario y traducción a filtros explícitos. |
+| `src/features/evidence/` | Evidence Canvas: gráfico, tabla de puntos, ranking, visor de evidencia, selección y exportación CSV. |
+| `src/lib/filters.ts` | Estado del formulario, presets de hábitat y traducción a filtros explícitos. |
+| `src/lib/backendText.ts` | Traducción **provisional** al inglés del texto que emite el backend en español; borrar cuando el backend emita inglés. |
+| `src/lib/motion.ts` | Animaciones GSAP: respetan «movimiento reducido» y nunca dejan contenido oculto. |
 | `src/lib/latest.ts` | Guarda contra respuestas tardías. |
 | `src/lib/format.ts` | Texto de códigos de razón y etiquetas; no recalcula nada. |
+| `src/style.css` | Tokens por tema al inicio y reglas sin sobrescrituras. |
 | `src/assets/fonts/` | Subconjunto latino con licencia OFL y sus licencias. |
 
 ## Reglas que respeta la interfaz
@@ -44,7 +53,7 @@ Desde la raíz:
 ```powershell
 npm run typecheck
 npm run test:client
-npx tsx --test apps/web/tests/evidence/filters.test.ts apps/web/tests/evidence/selection.test.ts
+npx tsx --test apps/web/tests/evidence/*.test.ts
 npm run build
 npm run dev:web
 npm run test:client:live   # con la API iniciada en modo demo

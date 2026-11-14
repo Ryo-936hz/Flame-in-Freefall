@@ -3,7 +3,7 @@ import type { Api, RankingRequest, ResearchResponse, ScenarioComparison } from "
 import { ApiError } from "../lib/client";
 import { reasonText, shortId } from "../lib/format";
 import { tx, txText } from "../lib/backendText";
-import { Panel, StateMessage, Tag } from "./ui";
+import { Panel, StateMessage } from "./ui";
 
 /**
  * Proposed mount contract for P6's MissionLabPanel and ReportPanel. P5 renders
@@ -50,12 +50,11 @@ export default function InterimMissionTools({ api, research, request, onOpenRun 
     }));
   });
 
-  return <Panel id="lab" title="Mission Lab · interim" className="lab"
-    meta={<Tag tone="warn">Interim mount until P6 panels</Tag>}>
+  return <Panel id="lab" title="Mission Lab" className="lab">
     <div className="panel-b lab-grid">
       <section aria-labelledby="ab-title">
         <h3 id="ab-title" className="cap">A/B scenario</h3>
-        <p className="hint">Compares which evidence applies. It does not simulate combustion or predict safety.</p>
+        <p className="hint">Evidence applicability, not a simulation.</p>
         <button type="button" className="btn" disabled={busy || !request} onClick={compareLunar}>Compare with lunar gravity</button>
         {scenario && <div className="ab">
           {([[scenario.name_a, scenario.ranking_a], [scenario.name_b, scenario.ranking_b]] as const).map(([name, ranking]) => <div key={name} className="ab-col">

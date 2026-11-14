@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, createApi } from "./lib/client";
 import type { Health, Profile, RankingRequest, ResearchResponse } from "./lib/client";
-import { buildRanking, demoDraft } from "./lib/filters";
-import type { BriefDraft, ConditionKey } from "./lib/filters";
+import { applyHabitat, buildRanking, demoDraft, describeRanking } from "./lib/filters";
+import type { BriefDraft, ConditionKey, HabitatId } from "./lib/filters";
 import { createLatest } from "./lib/latest";
 import { tx } from "./lib/backendText";
 import { countUp, reveal, useGSAP } from "./lib/motion";
@@ -12,6 +12,8 @@ import MissionBrief from "./components/MissionBrief";
 import SynthesisPanel from "./components/SynthesisPanel";
 import InterimMissionTools from "./components/InterimMissionTools";
 import FlameIllustration from "./components/FlameIllustration";
+import ChatPanel from "./components/ChatPanel";
+import type { ChatMessage } from "./components/ChatPanel";
 import { Panel, StateMessage } from "./components/ui";
 import EvidenceCanvas from "./features/evidence/EvidenceCanvas";
 import EvidenceViewer from "./features/evidence/EvidenceViewer";
@@ -58,6 +60,9 @@ export default function App() {
   const [draft, setDraft] = useState<BriefDraft>(demoDraft);
   const [run, setRun] = useState<Run>({ state: "idle" });
   const [selection, setSelection] = useState<Selection>(EMPTY_SELECTION);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const nextId = useRef(1);
   const latest = useRef(createLatest());
   const root = useRef<HTMLDivElement>(null);
 
@@ -95,6 +100,7 @@ export default function App() {
     setSelection(EMPTY_SELECTION);
     setDraft(demoDraft());
     setLabKey((k) => k + 1);
+    setMessages([]);
     root.current?.querySelectorAll(".col-brief, .col-work, .col-evidence").forEach((col) => col.scrollTo({ top: 0 }));
   }, []);
 
@@ -104,19 +110,43 @@ export default function App() {
     setSelection(initialSelection(result));
   }, []);
 
-  async function investigate(request: RankingRequest) {
+  /** Runs one investigation; returns the run, an error message, or null when a newer run superseded it. */
+  async function investigate(request: RankingRequest, question = draft.question.trim(), metric = draft.metric): Promise<ResearchResponse | string | null> {
     const token = latest.current.begin();
     setRun({ state: "loading" });
     try {
-      const result = await api.research({ question: draft.question.trim(), ranking: request, metric: draft.metric, include_hypotheses: true });
+      const result = await api.research({ question, ranking: request, metric, include_hypotheses: true });
       // A slower earlier request must never replace the current one.
-      if (!latest.current.isCurrent(token)) return;
+      if (!latest.current.isCurrent(token)) return null;
       setRun({ state: "ready", result });
       setSelection(initialSelection(result));
+      return result;
     } catch (error) {
-      if (latest.current.isCurrent(token)) setRun({ state: "error", message: failure(error) });
+      const message = failure(error);
+      if (latest.current.isCurrent(token)) setRun({ state: "error", message });
+      return message;
     }
   }
+
+  /** Chat question: same investigation, recorded as a conversation turn. */
+  async function ask(question: string, from: BriefDraft = draft) {
+    const request = buildRanking(from).request;
+    if (!request) return;
+    const userId = nextId.current++;
+    const pendingId = nextId.current++;
+    setDraft({ ...from, question });
+    setMessages((list) => [...list, { id: userId, role: "user", text: question }, { id: pendingId, role: "si", pending: true }]);
+    const outcome = await investigate(request, question, from.metric);
+    setMessages((list) => list.map((m) => m.id !== pendingId ? m
+      : outcome === null ? { id: pendingId, role: "si", error: "Superseded by a newer question." }
+      : typeof outcome === "string" ? { id: pendingId, role: "si", error: outcome }
+      : { id: pendingId, role: "si", run: outcome }));
+  }
+
+  const askPreset = (id: HabitatId) => {
+    const next = applyHabitat(draft, id);
+    void ask(next.question, next);
+  };
 
   const result = run.state === "ready" ? run.result : null;
   // Brief values that drive the illustrative flame (display only, never sent anywhere).
@@ -168,7 +198,12 @@ export default function App() {
   return <div className="app" ref={root}>
     <a className="skip" href="#brief">Skip to the form</a>
     <TopBar health={health} offline={Boolean(offline)} theme={theme} onTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
-      sections={result ? ["brief", "canvas", "evidence", "synthesis", "lab"] : ["brief", "canvas", "evidence", "lab"]} onResetAll={resetAll} />
+      sections={result ? ["brief", "canvas", "evidence", "synthesis", "lab"] : ["brief", "canvas", "evidence", "lab"]} onResetAll={resetAll}
+      chatOpen={chatOpen} onChat={() => setChatOpen((v) => !v)} />
+    <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} messages={messages} busy={run.state === "loading"}
+      filters={currentRequest ? describeRanking(currentRequest) : null} activeRunId={result?.id ?? null}
+      onAsk={(question) => void ask(question)} onPreset={askPreset} onShowRun={showRun}
+      onCite={(evidenceId, trialId) => { setChatOpen(false); onCite(evidenceId, trialId); }} />
     <main className="shell">
       <div className="col-brief">
         <MissionBrief draft={draft} onChange={setDraft} onSubmit={(request) => void investigate(request)} onReset={() => setDraft(demoDraft())}
@@ -184,12 +219,12 @@ export default function App() {
         {run.state === "idle" && <Panel id="canvas" title="Evidence Canvas">
           <div className="panel-b">
             <StateMessage kind="empty" title="Ask a question and press “Investigate”">
-              <p>Results appear here: chart, observation table and ranking with coverage. Every point, row and citation opens its evidence.</p>
+              <p>Chart, ranking and linked evidence appear here.</p>
             </StateMessage>
           </div>
         </Panel>}
         {run.state === "loading" && <Panel id="canvas" title="Evidence Canvas">
-          <div className="panel-b"><StateMessage kind="loading" title="Querying the API: profile, ranking, comparison and evidence…" /></div>
+          <div className="panel-b"><StateMessage kind="loading" title="Investigating…" /></div>
         </Panel>}
         {run.state === "error" && <Panel id="canvas" title="Evidence Canvas">
           <div className="panel-b"><StateMessage kind="error" title="The investigation did not complete"
@@ -199,7 +234,7 @@ export default function App() {
         </Panel>}
 
         {result && <>
-          <p className="run-id num">Research record <span className="id">{result.id}</span> · {new Date(result.created_at).toLocaleString("en-GB")} · “{result.question}”</p>
+          <p className="run-id num">{result.id} · {new Date(result.created_at).toLocaleString("en-GB")}</p>
           <EvidenceCanvas result={result} labels={labels} selection={selection}
             onSelectObservation={(id) => setSelection(selectObservation(result, id))}
             onSelectTrial={(id) => setSelection(selectTrial(result, id))} />
@@ -222,7 +257,6 @@ export default function App() {
     </main>
     <footer className="foot">
       <span>FlameLab SI · Los TTS · NASA Space Apps 2026 “Flame in Freefall”</span>
-      <span>Visual direction inspired by control-system software; no affiliation or third-party assets.</span>
     </footer>
   </div>;
 }

@@ -20,7 +20,7 @@ const COLORS: [number, number, number][] = [
 /** Display-only mapping of gravity labels to a relative buoyancy for the sketch. */
 const GRAVITY: Record<string, number> = { microgravity: 0, lunar: 0.166, martian: 0.38, earth: 1 };
 
-export function sketchGravity(label: string | null): number | null {
+function sketchGravity(label: string | null): number | null {
   if (!label) return null;
   return GRAVITY[label.trim().toLowerCase()] ?? null;
 }
@@ -171,8 +171,7 @@ export default function FlameIllustration({ gravityLabel, o2, flow }: { gravityL
       <i className="flame-divider" aria-hidden="true" />
     </div>
     <figcaption>
-      Without buoyancy, hot gases do not rise: the flame becomes a dim sphere fed by diffusion, so Earth results cannot
-      simply be reused for habitats. It follows the brief’s gravity, oxygen and flow.
+      Without buoyancy the flame becomes a dim sphere, so Earth results don’t transfer directly to habitats.
       {g === null && gravityLabel ? ` “${gravityLabel}” has no preset; microgravity is shown.` : ""}
     </figcaption>
   </figure>;

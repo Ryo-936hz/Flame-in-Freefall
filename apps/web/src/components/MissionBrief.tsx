@@ -46,7 +46,7 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
             // Ctrl/Cmd + Enter runs the investigation without leaving the keyboard.
             if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); }
           }} />
-        <small className="hint">Shown with the synthesis. The filters below drive the analysis; the demo does not interpret written constraints.</small>
+        <small className="hint">The filters below drive the analysis.</small>
       </label>
 
       <div className="field">
@@ -57,7 +57,6 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
             {h.label}<small>{h.note}</small>
           </button>)}
         </div>
-        <small className="hint">Fills gravity, O₂ and pressure. Gravity must exist in the data to match.</small>
       </div>
 
       <fieldset className="conditions">
