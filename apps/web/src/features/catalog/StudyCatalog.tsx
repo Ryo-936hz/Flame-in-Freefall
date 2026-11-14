@@ -83,7 +83,7 @@ export function StudyCatalog({ api }: { api: ReturnType<typeof createApi> }) {
   const total = Math.max(page?.total ?? 0, observations?.total ?? 0);
   return <section className="study-catalog" aria-labelledby="catalog-title">
     <h2 id="catalog-title">Catálogo de estudios</h2>
-    <p>Contenido del corpus activo. Los perfiles documentales, las configuraciones y las observaciones no representan el mismo tipo de registro. Varias observaciones o segmentos de un ensayo no crean réplicas independientes.</p>
+    <details className="catalog-help"><summary>Cómo leer estos registros</summary><p>Los perfiles documentales, las configuraciones y las observaciones no representan el mismo tipo de registro. Varias observaciones o segmentos de un ensayo no crean réplicas independientes.</p></details>
     {catalogLoading && <p role="status">Cargando catálogo…</p>}
     {catalogError && <div role="alert"><p>{catalogError}</p>
       <button onClick={() => setCatalogAttempt((attempt) => attempt + 1)}>Reintentar catálogo</button>
@@ -104,7 +104,7 @@ export function StudyCatalog({ api }: { api: ReturnType<typeof createApi> }) {
     {pageError && <div role="alert"><p>{pageError}</p>
       <button onClick={() => { clearSource(); pageTicket.current += 1; setPageAttempt((attempt) => attempt + 1); }}>Reintentar página</button>
     </div>}
-    {page && <details open><summary>Fuentes y registros ({page.total})</summary>
+    {page && <details><summary>Fuentes y registros ({page.total})</summary>
       {page.items.length === 0 && <p>No hay fuentes en esta página.</p>}
       <ul className="catalog-records">{page.items.map((item) => <li key={item.id}>
         <button className="reference" onClick={() => { clearSource(); setSource(item); }}>{item.title}</button>

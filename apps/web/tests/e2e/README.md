@@ -27,6 +27,26 @@ Lanzamiento directo equivalente:
 node apps/web/tests/e2e/p6-walkthrough.mjs --host=p5 --screenshots=work/p6-e2e
 ```
 
+## Navegación del recorrido
+
+La interfaz distribuye el trabajo en `#research`, `#results`, `#lab`, `#library`
+y `#reports`. `workspace-navigation.mjs` utiliza los enlaces visibles de Workspace,
+las pestañas de Lab y los disclosures del formulario; no interactúa con controles
+ocultos ni usa clics forzados. Las pantallas siguen montadas para conservar estado.
+
+El recorrido comprueba atrás/adelante del navegador, conservación del borrador y
+resultado A/B al cambiar de pantalla, teclado de las pestañas y una sola pantalla
+visible. En móvil comprueba el encabezado y scroll del documento tras navegar,
+abrir directamente `#lab` y usar atrás/adelante. Investigar y recuperar abren Results; para revisar el informe o el caso
+BASS se vuelve explícitamente a su pantalla. Las citas abren un diálogo modal de
+fuente con cierre por botón/Escape, foco y texto literal. El catálogo mantiene su
+fuente inline en Library y conserva estudio/página al navegar.
+
+Las pruebas de Reset regresan a la pantalla correspondiente antes de comprobar
+que no reapareció una respuesta tardía: ocultar un panel no basta para pasar esa
+comprobación. `Saved events` se abre para verificar el replay literal. Las capturas
+cubren las cinco pantallas en escritorio/móvil y el visor de fuentes.
+
 ## Aislamiento y portabilidad
 
 - `runtime.mjs` usa Python del `.venv` del clon y Vite instalado mediante

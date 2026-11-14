@@ -37,7 +37,7 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
     });
   }, { scope: form, dependencies: [roles] });
 
-  return <Panel id="brief" title="Mission Brief" className="brief">
+  return <Panel id="brief" title="Query" className="brief">
     <form ref={form} className="panel-b" onSubmit={(event) => { event.preventDefault(); if (canSubmit && built.request) onSubmit(built.request); }}>
       <label className="field">
         <span className="cap">Question</span>
@@ -47,9 +47,17 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
             // Ctrl/Cmd + Enter runs the investigation without leaving the keyboard.
             if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); }
           }} />
-        <small className="hint">Shown with the synthesis. The filters below drive the analysis; the demo does not interpret written constraints.</small>
+        <small className="hint">The demo uses the selected filters, not free-text constraints.</small>
       </label>
 
+      <label className="field metric-field"><span className="cap">Metric</span>
+        <select className="select" value={draft.metric} onChange={(event) => onChange({ ...draft, metric: event.target.value as BriefDraft["metric"] })}>
+          {METRICS.map((metric) => <option key={metric.key} value={metric.key}>{metric.label}</option>)}
+        </select>
+      </label>
+      <details className="brief-disclosure" data-brief-section="conditions">
+        <summary>Conditions <span className="num">{CONDITIONS.filter(({ key }) => draft.conditions[key].role !== "off").length} active</span></summary>
+        <div className="disclosure-body">
       <div className="field">
         <span className="cap">Habitat presets</span>
         <div className="presets" role="group" aria-label="Habitat presets">
@@ -58,7 +66,7 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
             {h.label}<small>{h.note}</small>
           </button>)}
         </div>
-        <small className="hint">Fills gravity, O₂ and pressure. Gravity must exist in the data to match.</small>
+
       </div>
 
       <fieldset className="conditions">
@@ -99,13 +107,12 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
         })}
       </fieldset>
 
+        </div>
+      </details>
+      <details className="brief-disclosure" data-brief-section="sampling">
+        <summary>Sampling & coverage <span className="num">{draft.limit} trials · {Math.round(draft.minimumCoverage * 100)}%</span></summary>
+        <div className="disclosure-body">
       <div className="field-row">
-        <label className="field">
-          <span className="cap">Metric</span>
-          <select className="select" value={draft.metric} onChange={(event) => onChange({ ...draft, metric: event.target.value as BriefDraft["metric"] })}>
-            {METRICS.map((metric) => <option key={metric.key} value={metric.key}>{metric.label}</option>)}
-          </select>
-        </label>
         <label className="field">
           <span className="cap">Max. trials</span>
           <input className="input" type="number" min={1} max={50} value={draft.limit}
@@ -124,13 +131,20 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
         <span>Include synthetic demo data <small>(not NASA measurements)</small></span>
       </label>
 
-      {built.request && <div className="interpreted" aria-live="polite">
-        <p className="cap">Filters to be sent</p>
-        <ul>{describeRanking(built.request).map((line) => <li key={line}>{line}</li>)}</ul>
-      </div>}
-
+        </div>
+      </details>
+      {built.request && <details className="brief-disclosure" data-brief-section="review">
+        <summary>Review filters <span>{draft.allowSynthetic ? "Synthetic allowed" : "Synthetic excluded"}</span></summary>
+        <div className="interpreted"><ul>{describeRanking(built.request).map((line) => <li key={line}>{line}</li>)}</ul></div>
+      </details>}
+      <div className="active-conditions" aria-label="Active conditions">
+        {CONDITIONS.filter(({ key }) => draft.conditions[key].role !== "off").map(({ key, label, unit }) => <span key={key}>
+          {label}: {draft.conditions[key].role === "vary" ? "studied variable" : `${draft.conditions[key].value} ${unit ?? ""}`}
+          {draft.conditions[key].role === "match" ? " · exact" : draft.conditions[key].role === "similar" ? " · similarity" : ""}
+        </span>)}
+      </div>
       <div className="actions brief-actions">
-        {Object.keys(built.errors).length > 0 && <p className="field-error brief-error" role="status">Fix the highlighted condition to investigate.</p>}
+        {Object.keys(built.errors).length > 0 && <p className="field-error brief-error" role="status">Check Conditions to fix the highlighted value.</p>}
         <button type="submit" className="btn primary" disabled={!canSubmit} aria-keyshortcuts="Control+Enter">{busy ? "Investigating…" : "Investigate"}</button>
         <button type="button" className="btn" onClick={onReset} disabled={busy}>Reset filters</button>
         <span className="kbd-hint" aria-hidden="true">Ctrl + Enter</span>

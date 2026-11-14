@@ -26,13 +26,27 @@ Mission Lab presenta escenarios A/B, hipótesis y el caso sin evidencia suficien
   propio de botones y tablas dentro del panel porque P5 no estiliza `button`/`table` sin clase.
   El host define `.p6-slot { container-type: inline-size; container-name: mission-slot; }`;
   la tabla pasa a filas apiladas dentro de columnas estrechas, también en escritorio.
-- Montaje actual en P5: `App.tsx` sustituye `InterimMissionTools` por
-  `<MissionLabPanel {...slot} question={draft.question} />` y `<ReportPanel {...slot} />` dentro de `#lab`. El
-  `slot.metric` recibe `draft.metric`. `beginResearchIntent` coordina recuperaciones con Reset/Investigate;
-  `onOpenEvidence` del host lee sin `research_id` cuando `source === "corpus"`, incluso sin expediente activo.
-  El parche antiguo se conserva como antecedente y no se aplica sobre el montaje actual.
+- Montaje experimental actual en `raul`: [App.tsx](../../App.tsx) mantiene Mission Lab en la pantalla
+  `data-screen="lab"`, dentro de `.p6-slot`, y ReportPanel en `data-screen="reports"`. Se montan como
+  `<MissionLabPanel {...slot} question={draft.question} />` y `<ReportPanel key={labKey} {...slot} />`;
+  el contenedor `.p6-slot` también lleva `key={labKey}`. Ambas pantallas permanecen montadas y se ocultan
+  con `hidden` al navegar; Reset cambia la clave de ambos componentes para cancelar solicitudes y reiniciarlos.
+  `#lab` y `#reports` son rutas de navegación del host. El contenedor de Mission Lab **no tiene `id="lab"`**:
+  así el hash no provoca un salto nativo de scroll, especialmente en móvil.
+- El contrato [MissionSlotProps](slot.ts) se conserva. `slot.metric` recibe `draft.metric` y el panel
+  recibe además `question={draft.question}`. `beginResearchIntent` coordina recuperaciones con
+  Reset/Investigate; `onOpenRun` abre el expediente en Results. `onOpenEvidence` abre el diálogo lateral
+  común: usa el snapshot cuando corresponde al expediente y lee sin `research_id` cuando
+  `source === "corpus"`, incluso sin expediente activo. El parche de montaje antiguo es histórico y
+  no se aplica sobre este reparto. [Alcance del experimento UX](../../../../../docs/UX_EXPERIMENT_RAUL.md).
+- Dentro de Lab, la tablist «Lab views» separa «BASS-II cases», «A/B scenarios» y
+  «Hypotheses & queries». Sus paneles también permanecen montados con `hidden`; conservan resultados,
+  solicitudes y avisos de vigencia al alternar. Flechas izquierda/derecha, Home y End permiten navegar
+  por teclado. Métodos y filtros extensos se consultan en desplegables; los límites científicos activos
+  y las etiquetas de procedencia permanecen vinculados al resultado.
 - Recorrido E2E con navegador y backend reales: `apps/web/tests/e2e/p6-walkthrough.mjs` (`--host=p5`); usa
   roles, nombres accesibles, `data-freshness` (resultado A/B y consulta) y `data-research-id` (informe/eventos).
+  El recorrido navega primero a la pantalla y vista correspondientes; no busca un contenedor DOM `#lab`.
   Cambiar esos textos o atributos exige actualizar el recorrido.
 
 La consulta lunar envía `planning_mode: explicit` y la métrica seleccionada. Muestra
@@ -73,7 +87,7 @@ un filtro de velocidad. Estos controles son presets fijos independientes del
 formulario general; no heredan silenciosamente sus filtros o su métrica.
 
 Para reproducir los datos reales debe importarse el paquete interno P2 1.1.1 en
-una base separada, según `docs/handoffs/P2_DEMO.md`. No se agregan mediciones reales
+una base separada, según el [relevo P2](../../../../../docs/handoffs/P2_DEMO.md). No se agregan mediciones reales
 al fixture. La UI muestra los resultados reales de la API incluso si el corpus
 activo solo contiene fixtures o no coincide con la referencia; en ese caso
 explica la diferencia y no muestra la interpretación preparada.

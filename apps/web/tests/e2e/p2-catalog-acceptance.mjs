@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import path from "node:path";
+import { brief, disclosure, go, libraryView, openedResults, resultView } from "./workspace-navigation.mjs";
 
 // Fixed coverage claims from docs/P2_NASA_24.md; source content comes only from
 // the explicit, SHA-checked private input and the live API, never a mocked corpus.
@@ -17,6 +18,7 @@ const representatives = [
 const sorted = (items) => [...items].sort();
 
 export async function verifySaffireContext({ page, check, screenshots }) {
+  await libraryView(page, "Saffire context");
   const card = page.getByRole("region", { name: "Saffire documentary context", exact: true });
   await card.waitFor();
   check(await card.getAttribute("data-saffire-context") !== null, "Saffire is a separate documentary context node");
@@ -48,6 +50,7 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
   const observations = new Map(bundle.observations.map((item) => [item.id, item]));
   const trials = new Map(bundle.trials.map((item) => [item.id, item]));
   await step("an empty target remains insufficient even at zero minimum coverage", async () => {
+    await brief(page, ["conditions", "sampling"]);
     await page.locator("#role-gravity_regime").selectOption("off");
     await page.locator("#role-flow_velocity_cm_s").selectOption("off");
     await page.getByRole("slider", { name: "Minimum coverage", exact: true }).press("Home");
@@ -58,11 +61,13 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
     assert(response.ok());
     assert.deepEqual(response.request().postDataJSON().ranking.target, {});
     const run = await response.json();
+    await openedResults(page);
     check(run.status === "insufficient_evidence" && run.ranking.items.length === 0 && run.comparison === null, "no target does not create an ungrounded ranking");
     check(run.ranking.excluded.some((item) => item.reasons.includes("no_active_target_weights")), "the saved result states the missing active target explicitly");
   });
   for (const [studyId, metric, unit, material] of campaigns) {
     await step(`P2 ${studyId} metric travels through investigation, values and saved report`, async () => {
+      await brief(page, ["conditions", "sampling"]);
       await page.locator("#role-gravity_regime").selectOption("off");
       await page.locator("#role-flow_velocity_cm_s").selectOption("off");
       await page.getByRole("checkbox", { name: /Include synthetic demo data/ }).uncheck();
@@ -83,6 +88,8 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
       assert.deepEqual(payload.ranking.target, { material });
       assert.equal(payload.ranking.minimum_coverage, 0);
       const run = await response.json();
+      await openedResults(page);
+      await resultView(page);
       assert.equal(run.provider, "demo");
       assert(run.ranking.items.length > 0 && run.comparison?.points.length > 0, `${metric} must return its own known observations`);
       assert.equal(run.comparison.metric, metric); assert.equal(run.comparison.unit, unit);
@@ -108,6 +115,7 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
       });
       check(true, `${metric}: every visible table value, physical unit ID and Y unit matches the API`);
       if (screenshots) await table.screenshot({ path: path.join(screenshots, `p2-${studyId.replace(":", "-")}-metric.png`) });
+      await go(page, "reports");
       const pre = report.locator(`pre[data-research-id="${run.id}"]`).first();
       await pre.waitFor();
       const reportResponse = await fetch(`${apiUrl}/api/v1/research/${encodeURIComponent(run.id)}/report`, { signal: AbortSignal.timeout(30000) });
@@ -119,6 +127,7 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
       check(true, `${metric}: persisted report is literal, retains campaign trial IDs and canonical units`);
     });
   }
+  await brief(page);
   await page.getByRole("button", { name: "Reset filters", exact: true }).click();
 }
 
@@ -142,8 +151,7 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
     return bundle.observations.filter((item) => trialIds.has(item.trial_id));
   };
   async function openCatalog() {
-    const summary = page.locator(".p6-catalog > details > summary");
-    if (await summary.evaluate((element) => !element.parentElement.open)) await summary.click();
+    await libraryView(page);
     await catalog.waitFor();
   }
   async function verifyPages(id, evidence, observations, offset) {
@@ -156,6 +164,7 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
     assert.deepEqual(observations.items, wantedObservations.slice(offset, offset + 20));
     await catalog.getByText(`Fuentes y registros (${evidence.total})`, { exact: true }).waitFor();
     await catalog.getByText(`Observaciones normalizadas (${observations.total})`, { exact: true }).waitFor();
+    await disclosure(evidenceDetails());
     assert.deepEqual(await evidenceDetails().locator("li button").allTextContents(), evidence.items.map((item) => item.title));
     const observationsPanel = observationDetails();
     if (!(await observationsPanel.getAttribute("open"))) {
@@ -292,7 +301,9 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
       check(await catalog.getByRole("button", { name: "Anterior", exact: true }).isDisabled(), "previous page is disabled at offset zero");
       check(researchCalls === 0, "browsing P2 studies, sources and observations never starts a research run or mixes BASS points");
       if (screenshots) await catalog.screenshot({ path: path.join(screenshots, "p2-catalog-bass-page.png") });
-      await page.locator(".p6-catalog > details > summary").click();
+      await go(page, "research");
+      await libraryView(page);
+      check(await selector.inputValue() === id && await catalog.getByRole("button", { name: "Anterior", exact: true }).isDisabled(), "study and page selection survive workspace navigation");
     });
   } catch (error) {
     if (screenshots) await page.screenshot({ path: path.join(screenshots, "p2-catalog-failure.png") }).catch(() => {});

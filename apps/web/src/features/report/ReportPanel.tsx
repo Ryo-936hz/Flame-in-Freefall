@@ -165,8 +165,7 @@ export function ReportPanel({ api, research, researchState, onOpenRun, beginRese
 
   return <section className="rp" aria-labelledby={`${uid}-title`}>
     <header className="rp-head">
-      <p className="rp-eyebrow">Research record · saved on the server</p>
-      <h2 id={`${uid}-title`} ref={headingRef} tabIndex={-1}>Report and recovery</h2>
+      <h2 id={`${uid}-title`} className="rp-sr" ref={headingRef} tabIndex={-1}>Report and recovery</h2>
       {research
         ? <dl className="rp-meta">
             <div><dt>Research</dt><dd><code>{research.id}</code></dd></div>
@@ -174,91 +173,93 @@ export function ReportPanel({ api, research, researchState, onOpenRun, beginRese
           </dl>
         : <p className="rp-muted">No active research. Run one or recover a saved research below.</p>}
       {researchState === "loading" && research &&
-        <p className="rp-muted">The workspace is loading another research; everything below still belongs to <code>{research.id}</code>.</p>}
+        <p className="rp-muted">Loading another research. This report belongs to <code>{research.id}</code>.</p>}
     </header>
 
     <p className="rp-sr" role="status" aria-live="polite">{status}</p>
 
-    <section className="rp-block" aria-labelledby={`${uid}-report`}>
-      <div className="rp-row">
-        <h3 id={`${uid}-report`}>Saved report</h3>
-        <span className="rp-tag">Markdown source · not rendered</span>
-      </div>
-      {!research && <p className="rp-muted">The report appears once a research is active.</p>}
-      {shownReport?.status === "loading" && <p className="rp-muted" aria-busy="true">Loading report…</p>}
-      {shownReport?.status === "error" && <div className="rp-error" role="alert">
-        <p>{shownReport.message}</p>
-        <button type="button" className="rp-btn" onClick={() => void loadReport(shownReport.id)}>Retry report</button>
-      </div>}
-      {shownReport?.status === "ready" && <>
-        <div className="rp-actions">
-          <button type="button" className="rp-btn rp-btn-primary"
-            onClick={() => downloadText(shownReport.value, reportFileName(shownReport.id))}>
-            Download report (.md)
-          </button>
-          <button type="button" className="rp-btn" onClick={() => void loadReport(shownReport.id)}>Reload</button>
-          <span className="rp-muted">File: <code>{reportFileName(shownReport.id)}</code></span>
-        </div>
-        <pre className="rp-pre" tabIndex={0} aria-label={`Saved report for research ${shownReport.id}, Markdown source`}
-          data-research-id={shownReport.id}>{shownReport.value}</pre>
-      </>}
-    </section>
-
-    <section className="rp-block" aria-labelledby={`${uid}-events`}>
-      <div className="rp-row">
-        <h3 id={`${uid}-events`}>Saved events</h3>
-        <span className="rp-tag">Replay · not live</span>
-      </div>
-      <p className="rp-muted">Replays the activity persisted with this research. Nothing is re-run.</p>
-      <div className="rp-actions">
-        <button type="button" className="rp-btn" disabled={!research || shownEvents?.status === "loading"}
-          onClick={() => { if (research) void loadEvents(research.id); }}>
-          {shownEvents?.status === "ready" ? "Replay again" : "Replay saved events"}
-        </button>
-      </div>
-      {shownEvents?.status === "loading" && <p className="rp-muted" aria-busy="true">Loading saved events…</p>}
-      {shownEvents?.status === "error" && <div className="rp-error" role="alert">
-        <p>{shownEvents.message}</p>
-        <button type="button" className="rp-btn" onClick={() => void loadEvents(shownEvents.id)}>Retry replay</button>
-      </div>}
-      {shownEvents?.status === "ready" && <pre className="rp-pre rp-pre-events" tabIndex={0}
-        aria-label={`Event replay for research ${shownEvents.id}`} data-research-id={shownEvents.id}>{shownEvents.value}</pre>}
-    </section>
-
-    <section className="rp-block" aria-labelledby={`${uid}-recover`}>
-      <h3 id={`${uid}-recover`}>Recover a saved research</h3>
-      <p className="rp-muted">Reads the research persisted by the API. Recent ids are kept only in this browser.</p>
-      {!research && lastRun && <div className="rp-actions">
-        <button type="button" className="rp-btn rp-btn-primary" disabled={busyRecover} onClick={() => void recoverRun(lastRun)}>
-          Reopen last research
-        </button>
-        <code className="rp-id">{lastRun}</code>
-      </div>}
-      <form className="rp-form" onSubmit={(event) => { event.preventDefault(); void recoverRun(runId); }}>
-        <label htmlFor={`${uid}-runid`}>Research id</label>
+    <div className="rp-layout">
+      <section className="rp-block rp-document" aria-labelledby={`${uid}-report`}>
         <div className="rp-row">
-          <input id={`${uid}-runid`} className="rp-input" value={runId} autoComplete="off" spellCheck={false}
-            onChange={(event) => setRunId(event.target.value)} placeholder={research?.id ?? "research id"} />
-          <button type="submit" className="rp-btn" disabled={busyRecover || !runId.trim()}>Recover</button>
+          <h3 id={`${uid}-report`}>Saved report</h3>
+          <span className="rp-tag">Saved Markdown</span>
         </div>
-      </form>
-      {recover.status === "error" && <div className="rp-error" role="alert">
-        <p>{recover.message} <span className="rp-muted">Id: <code>{recover.id}</code></span></p>
-        <button type="button" className="rp-btn" onClick={() => void recoverRun(recover.id)}>Retry recovery</button>
-      </div>}
-      <h4>Recent in this browser</h4>
-      {recent.length
-        ? <ul className="rp-recent">
-            {recent.map((id) => <li key={id}>
-              <code className="rp-id">{id}</code>
-              {id === activeId
-                ? <span className="rp-tag">Active</span>
-                : <button type="button" className="rp-btn rp-btn-small" disabled={busyRecover}
-                    aria-label={`Open research ${id}`} onClick={() => void recoverRun(id)}>Open</button>}
-            </li>)}
-          </ul>
-        : <p className="rp-muted">No research opened in this browser yet.</p>}
-    </section>
+        {!research && <p className="rp-muted">The report appears once a research is active.</p>}
+        {shownReport?.status === "loading" && <p className="rp-muted" aria-busy="true">Loading report…</p>}
+        {shownReport?.status === "error" && <div className="rp-error" role="alert">
+          <p>{shownReport.message}</p>
+          <button type="button" className="rp-btn" onClick={() => void loadReport(shownReport.id)}>Retry report</button>
+        </div>}
+        {shownReport?.status === "ready" && <>
+          <div className="rp-actions">
+            <button type="button" className="rp-btn rp-btn-primary"
+              onClick={() => downloadText(shownReport.value, reportFileName(shownReport.id))}>
+              Download report (.md)
+            </button>
+            <button type="button" className="rp-btn" onClick={() => void loadReport(shownReport.id)}>Reload</button>
+            <span className="rp-muted rp-file">File: <code>{reportFileName(shownReport.id)}</code></span>
+          </div>
+          <pre className="rp-pre" tabIndex={0} aria-label={`Saved report for research ${shownReport.id}, Markdown source`}
+            data-research-id={shownReport.id}>{shownReport.value}</pre>
+        </>}
+      </section>
+
+      <section className="rp-block rp-recovery" aria-labelledby={`${uid}-recover`}>
+        <h3 id={`${uid}-recover`}>Recover a saved research</h3>
+        {!research && lastRun && <div className="rp-actions">
+          <button type="button" className="rp-btn rp-btn-primary" disabled={busyRecover} onClick={() => void recoverRun(lastRun)}>
+            Reopen last research
+          </button>
+          <code className="rp-id">{lastRun}</code>
+        </div>}
+        <form className="rp-form" onSubmit={(event) => { event.preventDefault(); void recoverRun(runId); }}>
+          <label htmlFor={`${uid}-runid`}>Research id</label>
+          <div className="rp-row">
+            <input id={`${uid}-runid`} className="rp-input" value={runId} autoComplete="off" spellCheck={false}
+              onChange={(event) => setRunId(event.target.value)} placeholder={research?.id ?? "research id"} />
+            <button type="submit" className="rp-btn" disabled={busyRecover || !runId.trim()}>Recover</button>
+          </div>
+        </form>
+        {recover.status === "error" && <div className="rp-error" role="alert">
+          <p>{recover.message} <span className="rp-muted">Id: <code>{recover.id}</code></span></p>
+          <button type="button" className="rp-btn" onClick={() => void recoverRun(recover.id)}>Retry recovery</button>
+        </div>}
+        <h4>Recent in this browser</h4>
+        {recent.length
+          ? <ul className="rp-recent">
+              {recent.map((id) => <li key={id}>
+                <code className="rp-id">{id}</code>
+                {id === activeId
+                  ? <span className="rp-tag">Active</span>
+                  : <button type="button" className="rp-btn rp-btn-small" disabled={busyRecover}
+                      aria-label={`Open research ${id}`} onClick={() => void recoverRun(id)}>Open</button>}
+              </li>)}
+            </ul>
+          : <p className="rp-muted">No research opened in this browser yet.</p>}
+        <p className="rp-muted">Records are saved by the API. This list is local to your browser.</p>
+      </section>
+    </div>
+
+    <details className="rp-technical" data-report-events>
+      <summary id={`${uid}-events`}>Saved events</summary>
+      <div className="rp-technical-body">
+        <span className="rp-tag">Replay · not live</span>
+        <p className="rp-muted">Saved activity for this research. Nothing is re-run.</p>
+        <div className="rp-actions">
+          <button type="button" className="rp-btn" disabled={!research || shownEvents?.status === "loading"}
+            onClick={() => { if (research) void loadEvents(research.id); }}>
+            {shownEvents?.status === "ready" ? "Replay again" : "Replay saved events"}
+          </button>
+        </div>
+        {shownEvents?.status === "loading" && <p className="rp-muted" aria-busy="true">Loading saved events…</p>}
+        {shownEvents?.status === "error" && <div className="rp-error" role="alert">
+          <p>{shownEvents.message}</p>
+          <button type="button" className="rp-btn" onClick={() => void loadEvents(shownEvents.id)}>Retry replay</button>
+        </div>}
+        {shownEvents?.status === "ready" && <pre className="rp-pre rp-pre-events" tabIndex={0}
+          aria-label={`Event replay for research ${shownEvents.id}`} data-research-id={shownEvents.id}>{shownEvents.value}</pre>}
+      </div>
+    </details>
   </section>;
 }
 

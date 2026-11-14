@@ -84,7 +84,7 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
           ? <a className="btn" href={link} target="_blank" rel="noreferrer">Open public source ↗</a>
           : <p className="hint">{evidence.provenance === "synthetic"
             ? "Synthetic fixture: it does not link to any NASA measurement."
-            : "No public URL. The source can be found with the file locator; no link is invented."}</p>}
+            : "No public URL. Use the file locator above."}</p>}
       </article>}
     </div>
   </Panel>;

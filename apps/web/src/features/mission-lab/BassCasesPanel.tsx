@@ -10,7 +10,9 @@ import { describeSegments, diffScenarioRankings } from "./scenarios";
 import { assessBassComparison, assessBassRun, bassScenarioRequest, BASS_STUDY, hasBassCohort, parseBassCases, parseBassCopy,
   type BassAssessment, type BassCaseId } from "./bassCases";
 
-type Props = Pick<MissionSlotProps, "api" | "research" | "researchState" | "onOpenRun" | "onOpenEvidence" | "beginResearchIntent">;
+type Props = Pick<MissionSlotProps, "api" | "research" | "researchState" | "onOpenRun" | "onOpenEvidence" | "beginResearchIntent"> & {
+  onBrowseScenarios?(): void;
+};
 type Operation = BassCaseId | "compare";
 type Outcome =
   | { kind: "case"; id: BassCaseId; run: ResearchResponse; assessment: BassAssessment }
@@ -67,7 +69,7 @@ function RunDetails({ run, active, onOpen, onEvidence }: {
   </div>;
 }
 
-export function BassCasesPanel({ api, research, researchState, onOpenRun, onOpenEvidence, beginResearchIntent }: Props) {
+export function BassCasesPanel({ api, research, researchState, onOpenRun, onOpenEvidence, beginResearchIntent, onBrowseScenarios }: Props) {
   const uid = useId();
   const [config] = useState(loadConfig);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
@@ -129,9 +131,13 @@ export function BassCasesPanel({ api, research, researchState, onOpenRun, onOpen
 
   return <section className="ml-block ml-bass" aria-labelledby={`${uid}-bass-title`}>
     <h3 id={`${uid}-bass-title`}>BASS-II · approved source cases</h3>
-    <p><strong>Fixed metric: flame spread rate (mm/s).</strong> These fixed presets are independent of the general form, including its selected metric.</p>
-    <p>These fixed source presets use P2 demo 1.1.1 and P3's limited descriptive review. They select only BASS-II segments, exclude synthetic data and request no hypotheses. They do not change the general form above.</p>
-    <p className="ml-muted">The active API must contain the imported P2 package. On a fixture-only or different corpus, the observed response is shown without substituting source data or claiming the approved result. The corpus remains scientifically unverified as a whole.</p>
+    <p><strong>Fixed metric: flame spread rate (mm/s).</strong> Independent of the general form.</p>
+    <p className="ml-bass-requirement">Requires the imported P2 demo 1.1.1 package. The review is limited and descriptive; the full corpus remains scientifically unverified.</p>
+    <details className="ml-method"><summary>Source scope and corpus requirements</summary>
+      <p>Presets select only BASS-II segments, exclude synthetic data and request no hypotheses. They preserve the general form.</p>
+      <p>On a fixture-only or different corpus, only the actual API response is shown. Source data and approved interpretations are never substituted.</p>
+    </details>
+    {onBrowseScenarios && <button className="ml-text-action" type="button" onClick={onBrowseScenarios}>Use A/B scenarios with the current corpus</button>}
     {!config.ok ? <p role="alert">{config.message}</p> : <>
       <div className="actions ml-bass-actions">
         {(["bass_6", "bass_5", "lunar"] as const).map((id) => <button type="button" key={id} disabled={pending !== null}
@@ -145,7 +151,7 @@ export function BassCasesPanel({ api, research, researchState, onOpenRun, onOpen
         data-research-id={outcome.kind === "case" ? outcome.run.id : undefined} data-bass-comparison={outcome.kind === "comparison" ? "true" : undefined}
         data-approved-match={outcome.assessment.confirmed ? "true" : "false"}>
         <h4 ref={heading} tabIndex={-1}>{outcome.kind === "case" ? `BASS-II result · ${TITLES[outcome.id]}` : "BASS-II A/B result · 6 → 5 cm/s"}</h4>
-        <p className="ml-muted"><strong>Fixed metric: flame spread rate (mm/s).</strong> Requested by this preset, independently of the general form.</p>
+        <p className="ml-muted">Requested metric: <strong>flame spread rate (mm/s)</strong> · fixed preset.</p>
         <p className={outcome.assessment.confirmed ? "ml-muted" : "ml-warn"}>{outcome.assessment.confirmed
           ? "Returned identities, values and citations match the limited approved source case. This is not validation of the full corpus or a causal model."
           : "This response does not reproduce the approved source case. Only the actual API result is shown; the prepared interpretation is not applied."}</p>
@@ -155,16 +161,15 @@ export function BassCasesPanel({ api, research, researchState, onOpenRun, onOpen
           <RunDetails run={outcome.run} active={research?.id === outcome.run.id} onOpen={() => onOpenRun(outcome.run)} onEvidence={(id) => openEvidence(outcome.run, id)} />
         </> : <>
           {outcome.assessment.confirmed && <blockquote data-approved-copy="comparison">{config.copy.bass_comparison}</blockquote>}
-          <p>Comparison from <code>/scenarios/compare</code>: {outcome.response.label}. The result compares evidence selection, not combustion or risk.</p>
+          <p className="ml-label">Evidence selection comparison · not combustion or risk.</p>
           {diff && <><ul className="ml-summary">{diff.summary.map((line, index) => <li key={index}>{line}</li>)}</ul>
-            <ul className="ml-list">{[...diff.kept, ...diff.entered, ...diff.left].map((change) => <li key={change.trial_id}>
+            <details className="ml-method"><summary>Trial and segment changes</summary><ul className="ml-list">{[...diff.kept, ...diff.entered, ...diff.left].map((change) => <li key={change.trial_id}>
               <code>{change.trial_id}</code> · {change.status}<br/>A: {describeSegments(change.a)}<br/>B: {describeSegments(change.b)}
-            </li>)}</ul></>}
+            </li>)}</ul></details></>}
           <div className="actions"><button type="button" onClick={() => onOpenRun(outcome.a)}>Open BASS-II research A</button><button type="button" onClick={() => onOpenRun(outcome.b)}>Open BASS-II research B</button></div>
           <h5>A · 6 cm/s</h5><RunDetails run={outcome.a} active={research?.id === outcome.a.id} onOpen={() => onOpenRun(outcome.a)} onEvidence={(id) => openEvidence(outcome.a, id)} />
           <h5>B · 5 cm/s</h5><RunDetails run={outcome.b} active={research?.id === outcome.b.id} onOpen={() => onOpenRun(outcome.b)} onEvidence={(id) => openEvidence(outcome.b, id)} />
         </>}
-        <p className="ml-muted">Use Report and recovery for the active research's original report and saved evidence. The generic form remains independent of these fixed presets.</p>
       </div>}
     </>}
   </section>;

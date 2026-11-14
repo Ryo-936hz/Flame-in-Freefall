@@ -1,7 +1,7 @@
 // Mission Lab (P6) · escenarios A/B de evidencia, hipótesis y consulta sin evidencia suficiente.
 // Presenta respuestas de la API; no calcula ranking ni simula física en el navegador.
 // Montaje: props MissionSlotProps (slot.ts). Textos visibles en inglés.
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { BassCasesPanel } from "./BassCasesPanel";
 import { ApiError } from "../../lib/client";
 import type { RankingRequest, ResearchResponse } from "../../lib/client";
@@ -44,6 +44,13 @@ interface QueryEntry extends ComputedContext {
 interface Pending extends ComputedContext {
   label: string;
 }
+
+const LAB_VIEWS = [
+  { id: "bass", label: "BASS-II cases" },
+  { id: "scenarios", label: "A/B scenarios" },
+  { id: "inquiry", label: "Hypotheses & queries" }
+] as const;
+type LabView = typeof LAB_VIEWS[number]["id"];
 
 const INSUFFICIENT_PRESET = "gravity_lunar";
 const FALLBACK_QUESTION = "Which trials provide applicable evidence under these filters?";
@@ -102,7 +109,6 @@ function ContextBlock({ entry, status, subject, filtersTitle, sentFilters, curre
   const notice = previousNotice(status, subject);
   const where = entry.researchId ? <> while research <code>{entry.researchId}</code> was active</> : <> with no active research</>;
   const filters = <>
-    <p>Metric used: <code>{entry.metric}</code></p>
     <p className="ml-filters-title">{filtersTitle}</p>
     <FiltersList request={entry.request} />
     {sentFilters && <>
@@ -126,7 +132,8 @@ function ContextBlock({ entry, status, subject, filtersTitle, sentFilters, curre
       {status === "variable_order_changed" && " The order of studied variables changed; research can choose a different X axis."}
       {status === "research_changed" && <> The active research is now {currentResearchId ? <code>{currentResearchId}</code> : "none"}.</>}
     </p>
-    {filters}
+    <p>Metric used: <code>{entry.metric}</code></p>
+    <details><summary>{filtersTitle}</summary>{filters}</details>
     <div className="actions">
       <button type="button" disabled={!canRecompute} onClick={onRecompute}>Recompute with current filters</button>
     </div>
@@ -148,13 +155,6 @@ function ScenarioColumn({ side, name, selected, excluded, noEvidence, metric }: 
       <p><strong>Insufficient applicable evidence.</strong> No eligible candidates with these explicit filters, minimum coverage{metric ? <> and an available measurement of <code>{metric}</code></> : " (the API did not confirm metric availability)"}.</p>
       <p>What is missing: {uniqueReasons(excluded).length ? uniqueReasons(excluded).map((reason) => <code key={reason}>{reason}</code>) : "the API returned no exclusion reasons."}</p>
     </div>}
-    {selected.length > 0 && <ul className="ml-list">
-      {selected.map((item) => <li key={item.trial_id}>
-        <code>{item.trial_id}</code> <span className="ml-tag">{item.provenance}</span>
-        <span className="ml-metrics">similarity {num(item.similarity)} · coverage {num(item.coverage)}</span>
-        <span className="ml-segments">{describeSegments(item)}</span>
-      </li>)}
-    </ul>}
     {excluded.length > 0 && <details>
       <summary>Returned exclusion / indeterminate reasons in {side}</summary>
       <ul className="ml-list">
@@ -169,6 +169,8 @@ function ScenarioColumn({ side, name, selected, excluded, noEvidence, metric }: 
 
 export function MissionLabPanel({ api, research, request, metric, researchState, onOpenRun, onOpenEvidence, beginResearchIntent, question, trigger }: MissionLabPanelProps) {
   const uid = useId();
+  const [view, setView] = useState<LabView>("bass");
+  const viewButtons = useRef<Partial<Record<LabView, HTMLButtonElement | null>>>({});
   const researchId = research?.id ?? null;
   const [presetId, setPresetId] = useState<string>(scenarioPresets[0]?.id ?? "");
   const [comparison, setComparison] = useState<ComparisonEntry | null>(null);
@@ -189,6 +191,18 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
   const queryQuestionValid = queryQuestion.length >= 3 && queryQuestion.length <= 4000;
 
   useEffect(() => () => { compareGuard.current.cancel(); queryGuard.current.cancel(); }, []);
+
+  function onViewKey(event: KeyboardEvent<HTMLButtonElement>, current: LabView) {
+    const index = LAB_VIEWS.findIndex((item) => item.id === current);
+    const next = event.key === "ArrowRight" ? (index + 1) % LAB_VIEWS.length
+      : event.key === "ArrowLeft" ? (index + LAB_VIEWS.length - 1) % LAB_VIEWS.length
+      : event.key === "Home" ? 0 : event.key === "End" ? LAB_VIEWS.length - 1 : null;
+    if (next === null) return;
+    event.preventDefault();
+    const target = LAB_VIEWS[next]!;
+    setView(target.id);
+    viewButtons.current[target.id]?.focus();
+  }
 
   async function compare(id: string) {
     const base = request ? structuredClone(request) : null;
@@ -243,6 +257,7 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
 
   useEffect(() => {
     if (!trigger) return;
+    setView("scenarios");
     setPresetId(trigger.presetId);
     void compare(trigger.presetId);
     // Solo reacciona a una nueva petición externa.
@@ -277,19 +292,28 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
 
   return <section aria-labelledby={`${uid}-title`} className="mission-lab">
     <header className="ml-head">
-      <p className="ml-eyebrow">P6 · Mission Lab</p>
       <h2 id={`${uid}-title`}>Mission Lab · evidence scenarios</h2>
-      <p className="ml-modes">
-        <span><strong>Live:</strong> A/B comparisons and queries are computed by the API when requested.</span>
-        <span><strong>Hypotheses:</strong> shown with the label returned by the backend; the research provider is stated next to them.</span>
-        <span><strong>Illustrative:</strong> no conceptual scene in this view; if one is added it keeps its label.</span>
-      </p>
-      <p className="ml-muted">Changing a scenario changes which evidence applies; it does not predict a flame. Provenance labels below are derived from the items the API returns.</p>
+      <p className="ml-muted">Scenarios compare evidence; they do not simulate combustion.</p>
     </header>
+    <div className="ml-view-tabs" role="tablist" aria-label="Lab views">
+      {LAB_VIEWS.map((item) => <button key={item.id} type="button" role="tab"
+        id={`${uid}-tab-${item.id}`} aria-controls={`${uid}-view-${item.id}`} aria-selected={view === item.id}
+        tabIndex={view === item.id ? 0 : -1} ref={(element) => { viewButtons.current[item.id] = element; }}
+        onClick={() => setView(item.id)} onKeyDown={(event) => onViewKey(event, item.id)}>{item.label}</button>)}
+    </div>
 
+    <div id={`${uid}-view-bass`} className="ml-view" role="tabpanel" aria-labelledby={`${uid}-tab-bass`} hidden={view !== "bass"}>
+      <BassCasesPanel api={api} research={research} researchState={researchState} onOpenRun={onOpenRun}
+        onOpenEvidence={onOpenEvidence} beginResearchIntent={beginResearchIntent} onBrowseScenarios={() => {
+          setView("scenarios"); viewButtons.current.scenarios?.focus();
+        }} />
+    </div>
+
+    <div id={`${uid}-view-scenarios`} className="ml-view" role="tabpanel" aria-labelledby={`${uid}-tab-scenarios`} hidden={view !== "scenarios"}>
     <div className="ml-block" role="group" aria-labelledby={`${uid}-scenario`}>
       <h3 id={`${uid}-scenario`}>Scenario B versus A</h3>
-      <p className="ml-muted">Selected metric: <code>{metric}</code>. Both scenarios require an available measurement of this metric before applying the result limit.</p>
+      <p className="ml-muted">Selected metric: <code>{metric}</code></p>
+      <p className="ml-muted">A uses your form filters. B applies one explicit change.</p>
       {!request && <p className="ml-warn" role="note">The current filters are not valid; A/B comparisons need valid filters.</p>}
       <fieldset className="ml-presets">
         <legend>Explicit change for B</legend>
@@ -297,9 +321,12 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
           <input type="radio" name={`${uid}-preset`} value={item.id} checked={item.id === presetId} onChange={() => setPresetId(item.id)} />
           <span className="ml-preset-title">B · {item.title}</span>
           <span className="ml-preset-text"><em>Change:</em> {item.change}</span>
-          <span className="ml-preset-text"><em>Expected:</em> {item.expectation}</span>
         </label>)}
       </fieldset>
+      <details className="ml-method"><summary>Preset expectations and eligibility</summary>
+        <p>Both scenarios require an available measurement of the selected metric before applying the result limit.</p>
+        <dl>{scenarioPresets.map((item) => <div key={item.id}><dt>{item.title}</dt><dd>{item.expectation}</dd></div>)}</dl>
+      </details>
       <div className="actions">
         <button type="button" disabled={!request || !preset || !!comparePending} onClick={() => preset && void compare(preset.id)}>
           Compare A vs B{preset ? ` · ${preset.title}` : ""}
@@ -318,7 +345,7 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
         <h4 ref={comparisonHeading} tabIndex={-1} className="ml-result-title">
           {compareStatus === "current" ? "A/B result" : "Previous A/B result"}{comparedPreset ? ` · ${comparedPreset.title}` : ""}
         </h4>
-        <p className="ml-label"><span className="ml-tag ml-tag-strong">{LABEL_TEXT[comparison.response.label ?? ""] ?? "Unrecognized comparison label · treat as an evidence comparison"}</span> <code>{comparison.response.label ?? "no label"}</code></p>
+        <p className="ml-label"><span className="ml-tag ml-tag-strong">{LABEL_TEXT[comparison.response.label ?? ""] ?? "Unrecognized comparison label · treat as an evidence comparison"}</span></p>
         <ContextBlock entry={comparison} status={compareStatus} subject="comparison" filtersTitle="Filters used for A"
           currentResearchId={researchId} canRecompute={!!request && !comparePending}
           onRecompute={() => void compare(comparison.presetId)} />
@@ -358,16 +385,15 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
             </tr>;
           })}</tbody>
         </table> : <p>No trial selected in A or B.</p>}
-        {diff.warnings.length > 0 && <details>
+        {diff.warnings.length > 0 && <details open>
           <summary>API warnings ({diff.warnings.length})</summary>
           <ul>{diff.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
         </details>}
       </div>}
     </div>
+    </div>
 
-    <BassCasesPanel api={api} research={research} researchState={researchState} onOpenRun={onOpenRun}
-      onOpenEvidence={onOpenEvidence} beginResearchIntent={beginResearchIntent} />
-
+    <div id={`${uid}-view-inquiry`} className="ml-view" role="tabpanel" aria-labelledby={`${uid}-tab-inquiry`} hidden={view !== "inquiry"}>
     <div className="ml-block" role="group" aria-labelledby={`${uid}-hyp`}>
       <h3 id={`${uid}-hyp`}>Hypotheses of the active research</h3>
       {researchState === "loading" && <p className="ml-muted" aria-busy="true">The workspace is loading a research{research ? <>; the hypotheses below still belong to <code>{research.id}</code></> : ""}.</p>}
@@ -376,7 +402,7 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
         <p className="ml-mode"><span className="ml-tag">mode</span> {providerText(research.provider)} · research <code>{research.id}</code> ({research.status})</p>
         <ProvenanceLine items={research.ranking.items} scope="Active research provenance" />
         {!research.hypotheses.length
-          ? <p>This research returned no hypotheses. They are not replaced with text written here.</p>
+          ? <p>No hypotheses were returned for this research.</p>
           : <div className="ml-hypotheses">{research.hypotheses.map((hypothesis) => <article key={hypothesis.id} className="ml-hypothesis" aria-labelledby={`${uid}-h-${hypothesis.id}`}>
             <p className="ml-tag ml-tag-strong">{hypothesisLabelText(hypothesis.label)}</p>
             <h4 id={`${uid}-h-${hypothesis.id}`}>{hypothesis.statement}</h4>
@@ -393,9 +419,13 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
     </div>
 
     <div className="ml-block" role="group" aria-labelledby={`${uid}-insufficient`}>
-      <h3 id={`${uid}-insufficient`}>Lunar query · synthetic insufficiency check</h3>
-      <p>Runs a research with the current question, selected metric and filters changed as in scenario B “lunar gravity”. The default synthetic fixtures have no lunar trials, so their expected result is insufficient evidence. Other corpora may contain eligible lunar trials: the status and results below always come from the API.</p>
-      <p className="ml-muted">Question to send: “{queryQuestion}” · metric <code>{metric}</code>. Explicit filters determine the analysis; the question is descriptive.</p>
+      <h3 id={`${uid}-insufficient`}>Lunar evidence query</h3>
+      <p className="ml-muted">Selected metric: <code>{metric}</code>. Uses your form with lunar gravity required.</p>
+      <p className="ml-muted">Synthetic fixtures have no lunar trials. Other corpora may return evidence; the API determines the result.</p>
+      <details className="ml-method"><summary>Question and query method</summary>
+        <p>Question to send: “{queryQuestion}”</p>
+        <p>Explicit filters determine the analysis; the question is descriptive. The request changes your filters as in scenario B “lunar gravity”.</p>
+      </details>
       {!queryQuestionValid && <p className="ml-warn" role="note">Enter a question between 3 and 4000 characters before running the query.</p>}
       <div className="actions">
         <button type="button" disabled={!request || !!queryPending || !queryQuestionValid} onClick={() => void runInsufficient()}>Run lunar evidence query</button>
@@ -439,6 +469,7 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
           ? <ul>{query.response.warnings.map((warning, index) => <li key={index}>{warning}</li>)}</ul>
           : <p className="ml-muted">No warnings returned.</p>}
       </div>}
+    </div>
     </div>
   </section>;
 }

@@ -1,87 +1,45 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { gsap, prefersReducedMotion, useGSAP } from "../lib/motion";
 import type { Health } from "../lib/client";
 import { DATA_MODE_LABEL } from "../lib/format";
 import { Mark, RollText, Tag } from "./ui";
 
-const SECTIONS = [
-  { id: "brief", label: "Brief" },
-  { id: "canvas", label: "Evidence Canvas" },
-  { id: "evidence", label: "Evidence" },
-  { id: "synthesis", label: "Synthesis" },
+export const WORKSPACE_PAGES = [
+  { id: "research", label: "Research" },
+  { id: "results", label: "Results" },
   { id: "lab", label: "Lab" },
-];
+  { id: "library", label: "Library" },
+  { id: "reports", label: "Reports" },
+] as const;
+export type WorkspacePage = typeof WORKSPACE_PAGES[number]["id"];
 
-/**
- * Section links. Brief and Evidence live in sticky columns that are always on
- * screen, so a plain anchor would look inert: every jump also highlights the
- * target panel and moves focus to its heading.
- */
-function SectionNav({ available }: { available: string[] }) {
-  const [active, setActive] = useState("brief");
-  const timer = useRef<number | undefined>(undefined);
-
-  const go = (id: string) => {
-    const panel = document.getElementById(id);
-    if (!panel) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const startTop = panel.getBoundingClientRect().top;
-    panel.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-    // Some embedded or throttled browsers never run smooth scrolling: jump if nothing moved.
-    window.setTimeout(() => {
-      if (Math.abs(panel.getBoundingClientRect().top - startTop) < 2) panel.scrollIntoView({ block: "start" });
-    }, 400);
-    const heading = panel.querySelector<HTMLElement>("h2");
-    if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
-    // Restart the highlight even when the same panel is chosen twice.
-    panel.dataset.flash = "false";
-    void panel.offsetWidth;
-    panel.dataset.flash = "true";
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => { panel.dataset.flash = "false"; }, 1300);
-    setActive(id);
-  };
-
-  return <nav className="nav" aria-label="Sections">
-    {SECTIONS.map(({ id, label }) => {
-      const enabled = available.includes(id);
-      return <a key={id} href={`#${id}`} className="nav-link roll-host"
-        aria-current={active === id ? "location" : undefined}
-        aria-disabled={!enabled || undefined}
-        title={enabled ? undefined : "Run an investigation first"}
-        onClick={(event) => { event.preventDefault(); if (enabled) go(id); }}>
-        <RollText>{label}</RollText>
-      </a>;
-    })}
-  </nav>;
-}
-
-export default function TopBar({ health, offline, theme, onTheme, sections, onResetAll }: {
+export default function TopBar({ health, offline, theme, onTheme, activePage, onNavigate, onResetAll }: {
   health: Health | null;
   offline: boolean;
   theme: "dark" | "light";
   onTheme: () => void;
-  /** IDs of the sections currently rendered. */
-  sections: string[];
-  /** Restore the whole app to its first-load state. */
+  activePage: WorkspacePage;
+  onNavigate: (page: WorkspacePage) => void;
   onResetAll: () => void;
 }) {
   return <header className="topbar">
-    <a className="brand roll-host" href="#brief">
-      <Mark />
-      <b><RollText>FlameLab SI</RollText></b>
-      <span className="brand-team">Los TTS</span>
+    <a className="brand roll-host" href="#research" onClick={(event) => { event.preventDefault(); onNavigate("research"); }}>
+      <Mark /><b><RollText>FlameLab SI</RollText></b>
     </a>
-    <SectionNav available={sections} />
-    <div className="status" aria-live="polite">
-      {offline ? <Tag tone="risk">API offline</Tag> : health ? <>
-        <Tag tone={health.data_mode === "synthetic" ? "synthetic" : "neutral"}>{DATA_MODE_LABEL[health.data_mode] ?? health.data_mode}</Tag>
-        <Tag tone={health.ai_provider === "demo" ? "neutral" : "signal"}>AI {health.ai_provider === "demo" ? "deterministic demo" : health.ai_provider}</Tag>
-        <span className="status-db">{health.database} · v{health.version}</span>
-      </> : <span className="status-db">Connecting…</span>}
+    <nav className="nav" aria-label="Workspace">
+      {WORKSPACE_PAGES.map(({ id, label }) => <a key={id} href={`#${id}`} className="nav-link"
+        aria-current={activePage === id ? "page" : undefined}
+        onClick={(event) => { event.preventDefault(); onNavigate(id); }}>{label}</a>)}
+    </nav>
+    <div className="status">
+      <div className="status-modes" aria-live="polite">
+        {offline ? <Tag tone="risk">API offline</Tag> : health ? <>
+          <Tag tone={health.data_mode === "synthetic" ? "synthetic" : "neutral"}>{DATA_MODE_LABEL[health.data_mode] ?? health.data_mode}</Tag>
+          <Tag tone="neutral">{health.ai_provider === "demo" ? "AI demo" : `AI ${health.ai_provider}`}</Tag>
+        </> : <span className="status-db">Connecting…</span>}
+      </div>
       <button type="button" className="reset-all" onClick={onResetAll} title="Clear results, selection and filters">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></svg>
-        Reset
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></svg>Reset
       </button>
       <ThemeSwitch theme={theme} onToggle={onTheme} />
     </div>
