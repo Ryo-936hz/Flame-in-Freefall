@@ -1,5 +1,19 @@
 # Evaluación de ciencia e IA
 
+## Puertas ejecutables de la entrega P1/P3/P4
+
+`scripts/check.ps1` y CI ejecutan suites científicas de seis casos legacy, seis
+de segmentos y el diagnóstico de disponibilidad por segmento, más 18 casos IA
+en `evals/ai/run.py`. Las expectativas son explícitas, los fixtures sintéticos se
+identifican y los runners devuelven fallo ante discrepancias o entradas inválidas.
+El corpus P2 tiene siete checks adicionales opt-in, separados de la evaluación
+sintética. [Detalle ciencia](../evals/science/README.md),
+[detalle IA](../evals/ai/README.md) y resultados en VERIFICATION.
+
+La revisión externa acepta un catálogo de hechos numéricos ligados a su campo,
+ensayo y fuente; no es un juez semántico general. Las siguientes propuestas de
+benchmark humano/validación científica siguen siendo planes, no resultados medidos.
+
 ## Objetivo
 
 Determinar si la aplicación encuentra evidencia pertinente y explica sus límites. No optimizar únicamente apariencia, longitud de respuesta o coincidencia con un texto redactado por otro LLM.
@@ -28,6 +42,27 @@ Comparar valores, unidades, identidad y localizador con el original. Separar err
 - El modelo no altera puntuaciones o datos de las herramientas.
 - Una hipótesis permanece etiquetada como hipótesis.
 - El sistema reconoce evidencia insuficiente cuando procede.
+
+### Regresiones deterministas del coordinador
+
+`apps/api/tests/test_ai_evaluation.py` conserva una pequeña evaluación automatizada
+del comportamiento que ya promete la base, sin invocar un proveedor ni usar datos
+reales:
+
+- La misma solicitud estructurada produce el mismo ranking aunque la pregunta pida
+  ignorar los filtros y elegir otro escenario. La pregunta no es un planificador.
+- Una pregunta que pide presentar fixtures como NASA no elimina su etiqueta
+  sintética ni permite citas fuera de la evidencia devuelta.
+- Si falta el eje X comparable, la investigación termina como
+  `insufficient_evidence` y no llama al proveedor externo.
+- `apps/api/tests/test_review.py` y `test_provider.py` cubren citas inventadas,
+  asociaciones cruzadas entre ensayos y fallos explícitos del proveedor.
+
+Estos casos son controles de integración y límites de seguridad, no una puntuación
+de precisión de citas, pertinencia semántica ni calidad de planificación. No prueban
+que una fuente respalde el texto de una afirmación. Para esa evaluación hacen falta
+consultas etiquetadas y revisión humana independiente; los casos deben quedar fuera
+de cualquier ajuste si luego se usan como conjunto de evaluación.
 
 ## Registro de resultados
 

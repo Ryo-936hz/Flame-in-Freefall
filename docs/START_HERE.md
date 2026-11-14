@@ -1,5 +1,11 @@
 # Empieza aquí
 
+**Incremento actual:** [entrega conjunta P1/P3/P4](INTEGRATION_P134.md), rama `raul`.
+El catálogo opt-in de preguntas, plan público y disponibilidad por segmento están
+implementados. Los datos P2 están integrados y siguen sin revisión científica
+aprobada. Para estado vigente y pruebas, consultar IMPLEMENTATION_STATUS y VERIFICATION.
+La guía y referencias iniciales de abajo se conservan como historial de arranque.
+
 FlameLab SI es la base compartida de Los TTS: API, SQLite, ingesta, ciencia,
 coordinación demo y cliente TypeScript con arnés React. Para clonar, arrancar y
 elegir tarea, usar [TEAM_START](TEAM_START.md). El frontend de producto sigue pendiente.
@@ -7,8 +13,8 @@ elegir tarea, usar [TEAM_START](TEAM_START.md). El frontend de producto sigue pe
 ## Estado local al 14 de noviembre de 2026
 
 - Integración: `main` en GitHub; referencia de arranque para los seis: `origin/codex/team-start-v1`. Crear rama propia desde ella según [TEAM_START](TEAM_START.md).
-- La demo usa 2 estudios, 5 ensayos y 6 observaciones **sintéticos**. El catálogo real contiene 24 investigaciones `metadata_only`, en un bundle separado; no hay una serie NASA cuantitativa importada.
-- SQLite y modo demo comprobados localmente y en CI GitHub Windows/Linux. Proveedor externo probado con HTTP simulado, sin llamadas reales. PostgreSQL/pgvector pendiente; ejecuciones en [VERIFICATION](VERIFICATION.md).
+- The default demo uses 2 studies, 5 trials and 6 **synthetic** observations. The standalone catalog still contains 24 metadata-only investigations. The integrated P2 import covers six campaigns with outcomes, one with configurations and seventeen documentary studies; scientific status remains unverified. See [P2_NASA_24](P2_NASA_24.md).
+- SQLite y modo demo comprobados localmente y en CI GitHub Windows/Linux. Proveedor externo probado con HTTP simulado, sin llamadas reales. PostgreSQL base verificado en CI; pgvector pendiente; ejecuciones en [VERIFICATION](VERIFICATION.md).
 - [README](../README.md) y [SETUP_WINDOWS](SETUP_WINDOWS.md) contienen comandos reales; [VERIFICATION](VERIFICATION.md) conserva resultados, entorno y límites.
 
 ## Primera lectura para cualquier asistente

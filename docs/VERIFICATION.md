@@ -1,8 +1,182 @@
 # Registro de verificaciones
 
-14 de noviembre de 2026, zona Europe/Madrid. Las primeras secciones registran la
-construcción local Windows; la última registra la publicación y CI remota.
-Ninguna de estas verificaciones equivale a validación científica.
+Los resultados vigentes aparecen primero; el resto conserva el historial.
+Ninguna prueba de software equivale a validación científica.
+
+## Cierre conjunto P1/P3/P4 — 14 noviembre 2026
+
+Rama `raul`, conservando P3 `321cc0b`, `main`/P2 `04baeee` y P4 `12555c1`
+mediante merge. El commit de esta entrega se identifica en su PR y con
+`git log -1 --format=%H -- docs/INTEGRATION_P134.md`.
+Los resultados anteriores se conservan abajo como historial, no como pendientes actuales.
+
+### Puerta completa local Windows
+
+Entorno: Python 3.12.14 y Node 24.22.1, Windows.
+Ejecutado `scripts/check.ps1` con `FLAMELAB_AI_PROVIDER=demo` y ambos bundles
+reales locales opt-in. No se usaron claves ni llamadas externas de IA.
+
+| Comprobación ejecutada | Resultado |
+|---|---|
+| Ruff: API, scripts y evals | Aprobada. |
+| Suite Python, incluyendo integraciones BASS-II y NASA-24 | **342 aprobadas, 1 omitida**: PostgreSQL sin servidor local. Un aviso de deprecación Starlette/httpx. |
+| Evaluación científica heredada | 6/6 casos aprobados. |
+| Evaluación científica de segmentos | 6/6 casos aprobados. |
+| Diagnóstico de disponibilidad antes de top-k | Aprobado; salida 0. |
+| Evaluación IA determinista | 18/18 casos aprobados; incluye errores de proveedor esperados. |
+| Auditoría ejecutable de corpus real | 7/7 comprobaciones aprobadas. |
+| Deriva OpenAPI / TypeScript | Sin diferencias respecto al contrato canónico. |
+| Tipado, cliente y build | Correctos; 6/6 pruebas cliente. |
+| Smoke HTTP real, SQLite y reinicio | Correctos; 5 ensayos sintéticos, 4 puntos, plan persistido e informe idéntico tras reinicio. |
+| Tres ejemplos de catálogo por HTTP | Flujo: completed/4 puntos; Tierra: completed/1 punto; Luna: insufficient_evidence/0 puntos. Conflicto bloqueado sin análisis. |
+
+Los casos adversarios comprueban variable, unidad, valor, ensayo y referencia de
+cada afirmación numérica, además de fuentes con instrucciones o Markdown. Son
+pruebas deterministas, no una evaluación de calidad de un modelo real.
+
+Bundles sin modificar, fuera de Git:
+
+- BASS-II SHA-256: `a2779a6e3a2b335298408c2dc5184e4bef916ad29cf7821737e148c5e5920007`.
+- NASA-24 SHA-256: `7dc69717b4bc6151025df2993d9cf66622db3a8b7242798a1d7bfe8b8e335781`.
+
+La auditoría prueba contratos, trazabilidad y comportamiento; no aprueba la
+interpretación científica. Siguen `unverified` y `reviewed=false`. Ver
+[P2_INTEGRATION_REVIEW](../evals/science/P2_INTEGRATION_REVIEW.md).
+
+### Clon limpio y CI de esta entrega — aprobados
+
+Commit de código verificado: **`fd83a84aa24511e573a1b5f27cc859bcdddbf638`**, [PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2).
+Esta anotación posterior modifica únicamente documentación.
+
+Clon nuevo `git clone --no-hardlinks --branch raul` desde el repositorio local,
+sin `.venv`, `node_modules` ni `.env` iniciales. Se instalaron dependencias propias
+con `scripts/setup.ps1` y se ejecutó `scripts/check.ps1`: ambos terminaron con
+salida 0. Entorno de proceso sin variables FLAMELAB/PYTHONPATH heredadas.
+Se comprobó que ROOT y sys.prefix apuntaran al clon, con directorios normales
+sin junctions, SHA exacto y árbol Git limpio después.
+
+- **340 Python aprobadas, 3 omitidas**: dos bundles reales no distribuidos y
+  PostgreSQL sin servidor local. Un aviso Starlette/httpx.
+- Ciencia 6+6 y disponibilidad, IA 18, cliente 6, Ruff, deriva de contratos,
+  tipado/build y smoke HTTP/reinicio correctos; los tres escenarios esperados.
+- Python 3.12.14, Node 24.22.1, PowerShell 7.6.9 y Git 2.55.0.windows.5.
+- Fue el mismo Windows con runtimes y posibles cachés compartidas, no una máquina
+  recién instalada; `.venv` y `node_modules` se crearon para este clon.
+
+CI remoto [43614900736](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43614900736), estado `completed`, conclusión `success`,
+head `fd83a84aa24511e573a1b5f27cc859bcdddbf638`:
+
+| Trabajo | Resultado observado |
+|---|---|
+| Windows, Python 3.12.10 | 340 Python aprobadas, 3 omitidas; evaluaciones, 6 cliente, contratos, build y smoke/reinicio correctos. |
+| Linux, Python 3.12.16 | 340 Python aprobadas, 3 omitidas; las mismas puertas correctas. |
+| PostgreSQL 17, Python 3.12.16 | 1 integración aprobada sobre servidor real: migración, corpus/reemplazo, snapshots y recuperación histórica de plan/informe/fuentes. |
+
+Las tres omisiones de cada job general son esperadas: los dos bundles locales
+y PostgreSQL, que tiene su job específico aprobado. El contenedor incluye
+pgvector, pero no se afirma uso ni validación de búsquedas vectoriales.
+El corpus real sí se verificó localmente en la puerta de 342 pruebas anterior.
+
+## Historial de verificaciones anteriores
+
+## Integration of `main` and `lujan`
+
+Integrated `main` at `9ccc996` and `lujan` at `a4b03c7` after fast-forward-only
+pulls of both branches. The merged contract preserves the `main` oxygen scope and
+range checks, P3 comparison rules, and P2 corpus mappings. OpenAPI and TypeScript
+were regenerated from the merged schema. The PostgreSQL workflow and test from
+`main` are included.
+
+- Python with both real 1.1 bundles: **213 passed**. PostgreSQL was skipped in
+  this local run because a test database URL was not configured.
+- Both P3 evaluation suites passed. SQLite HTTP and restart smoke passed.
+- Ruff, OpenAPI/TypeScript drift, typecheck, **6 client tests** and Vite build passed.
+
+## P2 follow-up after P1/P3 review
+
+Branch `lujan`, starting commit `cfc0795`. Used P1's segment contract at `94989a7`
+and P3's scientific baseline at `8134b1c`. The shared bundle version is 1.1 and
+OpenAPI and TypeScript were regenerated from the consolidated model.
+
+- The exact P1 example in `docs/examples/sequential_conditions.json` validates.
+  It contains one physical trial, two segments and two linked observations.
+- Re-extracted the hash-verified BASS-II PDF and the full set of NASA sources in WSL.
+  The full corpus has 24 studies, 2,265 evidence entries, 1,058 trial/configuration
+  records and 1,673 observations (1,283 known). BASS-II retains 20 trials and 43
+  segments, with 39 known rates and four explicit absences. Checked every observation
+  against the previous extraction after the segment field rename. Values, units,
+  absence states and evidence references match.
+- Imports into `sqlite:///work/nasa-24-v11.db` returned `changed: true` and then
+  `changed: false`. Legacy P2 snapshots can be read without rewriting saved payloads.
+- `FLAMELAB_BASS_BUNDLE=data/processed/bass-table51-v11/bundle.json FLAMELAB_NASA_BUNDLE=data/processed/nasa-24-v11/bundle.json uv run --locked pytest -q`
+  passed **190 tests**, including both real-data integrations and the imported
+  P1/P3 regressions. The existing Starlette/httpx warning remains.
+- `uv run --locked python evals/science/run.py` and
+  `uv run --locked python evals/science/segment_run.py` passed all **9 P3 cases**.
+  The regressions cover absent segment flow, oxygen scopes, isolated controls,
+  observation provenance, finite large weights and finite large medians.
+- Ruff, OpenAPI/TypeScript drift checks, typecheck, all **6 client tests**, Vite
+  build, and the SQLite HTTP/restart smoke test passed. The smoke health response
+  reports contract 1.1. These are local checks. Review of the NASA interpretations
+  and integration into `main` remain pending.
+
+## Extended NASA corpus on `lujan`
+
+- Built the 24-study corpus from `datasets/` in WSL using `extract-nasa` and the
+  isolated PyMuPDF 2.1 tool. Verified the 123 inventoried source files, parsed all
+  22 CSVs, and compared two runs of `bundle.json` and `quality.json` byte-for-byte.
+- `validate` passed. Import into `sqlite:///work/nasa-24.db` returned `changed: true`
+  and `changed: false` on consecutive runs. The bundle has 2,265 evidence entries,
+  1,058 mapped records and 1,673 outcome entries, including 1,283 known values.
+- `FLAMELAB_NASA_BUNDLE=data/processed/nasa-24/bundle.json FLAMELAB_BASS_BUNDLE=data/processed/bass-table51/bundle.json uv run --locked pytest -q`
+  passed **142 tests**, with the existing Starlette/httpx deprecation warning.
+  The real-corpus test verifies study evidence, pagination, provenance, campaign
+  restrictions, unresolved units and a saved FLEX research response.
+- Ruff, OpenAPI and TypeScript drift checks, typecheck, **6 client tests**, and
+  Vite production build passed. `uv run --locked python scripts/smoke.py` passed
+  using SQLite and the synthetic fixture. API verification used TestClient and
+  the smoke test used real HTTP. The new catalog UI was verified by typecheck/build.
+- Details about the quantities and pending source interpretation are in
+  [P2_NASA_24](P2_NASA_24.md).
+
+## P2 branch verification — 14 November 2026
+
+Branch `lujan`, starting/unchanged HEAD `f981bdd4df55ca8339bfb7c92f21bc50802bfcca`.
+Fetched main/team base `422f6b03f410c6ac049b699e13fc204a3af67743`; rebase reported
+already up to date. Changes below are local and uncommitted; no new remote CI run
+is claimed. Environment: Ubuntu under WSL, Python 3.12.3, uv 0.8.13,
+Node 24.21.0. The Windows wrapper was not run against this Linux virtualenv;
+its underlying checks were executed directly.
+
+| Executed check | Observed result |
+| --- | --- |
+| Clean baseline `uv run --locked pytest -q` | 112 passed. |
+| Local corpus audit using Python hashes/ZIP/CSV readers | All 24 studies present; all 123 inventory members match SHA-256; 12 extra loose files are identical metadata copies. |
+| Fixed-source extractor, two fresh output directories | Byte-identical `bundle.json` and `quality.json`. PDF/CSV hashes match the inspected source versions. |
+| Independent PDF visual/text audit | All 180 Table 5.1 cells match; Figure 5.2 discrepancy and section 5.4 oxygen scope retained. |
+| `uv run --locked python -m flamelab.data.cli validate data/processed/bass-table51/bundle.json` | 24 studies, 20 physical tests, 43 observations; 39 known rates and 4 missing rates. |
+| `uv run --locked python -m flamelab.data.cli import data/processed/bass-table51/bundle.json --database-url sqlite:///work/bass-p2.db` twice | First import `changed: true`; second `changed: false`. Persistent isolated local database is ready. |
+| `FLAMELAB_BASS_BUNDLE=data/processed/bass-table51/bundle.json uv run --locked pytest -q` | **132 passed**, one existing Starlette/httpx deprecation warning. Includes real-source TestClient research, strict stage filtering, source lookup, A/B, insufficiency, saved report, corpus replacement and API reopening. |
+| `uv run --locked ruff check apps/api scripts` | All checks passed. |
+| `uv run --locked python scripts/export-openapi.py --check` | OpenAPI matches canonical contracts. |
+| `npm run check:types` and `npm run typecheck` | Generated TypeScript matches OpenAPI; typecheck passed. |
+| `npm run test:client` | **6 passed**. |
+| `npm run build` | Production build passed. |
+| `uv run --locked python scripts/smoke.py` | Real uvicorn HTTP with synthetic fixture: 5 trials, 4 selected points, report unchanged after restart. |
+| `git diff --check` | Passed. |
+
+The real-source test explicitly skips if `FLAMELAB_BASS_BUNDLE` is not configured;
+the 132-pass run above did configure it and had no skipped tests. Ordinary CI does
+not need the local PDFs. New source-cell unit fixtures are explicitly invented
+test inputs and are not shipped as NASA observations.
+
+The default demo corpus remains synthetic. BASS-II in the separately generated
+bundle is `unverified`; all imported evidence retains `reviewed=false`. Eighteen
+physical tests have at least one known rate. Selected test/unit counts can include
+M6/M12 with zero usable rates. Saffire remains documentary. No external AI call,
+PostgreSQL run, new browser walkthrough, publication, or human scientific review
+was performed in this P2 increment. See [P2_DELIVERY](P2_DELIVERY.md) for commands
+and [ADR 0008](adr/0008-successive-conditions-and-bass-import.md) for shared changes.
 
 ## Entorno observado
 
@@ -103,3 +277,11 @@ de equipo incorpora esta documentación; consultar su ejecución propia en Actio
 Para nuevos cambios, revisar la ejecución asociada a su SHA: el éxito de #1 no
 acredita automáticamente futuras modificaciones. Los permisos de colaboradores,
 visibilidad y reglas de protección del repositorio no se han cambiado.
+
+## Comprobación de integración PostgreSQL
+
+El incremento P1 desde `422f6b03f410c6ac049b699e13fc204a3af67743` añade un job CI separado con PostgreSQL 17 y una prueba que aplica migraciones, guarda una investigación basada en fixtures sintéticos y comprueba que el informe y su snapshot se recuperen tras reconectar. Esta configuración aún no se ha ejecutado en CI ni contra un servidor local; PostgreSQL sigue pendiente hasta que termine correctamente el workflow del commit resultante. La prueba no habilita ni verifica pgvector.
+
+## Contrato 1.1 de condiciones sucesivas
+
+Verificado en el incremento P1: `apps/api/tests/test_contracts.py` y `test_science.py` (45 passed), Ruff de API/scripts, export OpenAPI `--check`, TypeScript generado `--check`, typecheck de cliente y 6 pruebas cliente. La suite Python completa no finalizo en este entorno: pytest no pudo crear temporales en el directorio de sistema y la reejecucion con `--basetemp work/pytest-p1` se interrumpio tras quedar sin salida. El ejemplo es totalmente sintetico. La comparacion extrae X y el `segment_id` enlazado, pero la estratificacion cientifica P3 completa sigue pendiente; PostgreSQL tampoco se verifico.

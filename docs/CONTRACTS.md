@@ -1,6 +1,6 @@
 # Contrato local implementado
 
-El contrato `1.0` está implementado en `apps/api/src/flamelab/domain/contracts.py`, autoridad ejecutable.
+El contrato de corpus `1.1` está implementado en `apps/api/src/flamelab/domain/contracts.py`, autoridad ejecutable.
 OpenAPI y tipos TypeScript se generan desde la API en `packages/contracts/`. La API es local, no un
 servicio publicado. [CONTRACT_MODELS](CONTRACT_MODELS.md) conserva las tablas y explica los ajustes
 respecto de la propuesta documental. P1 coordina cambios y regeneración con productores/consumidores.
@@ -8,7 +8,7 @@ JSON snake_case en red y modelos; rutas `/api/v1`.
 
 ## Límites de módulo implementados
 
-- `flamelab.science.ranking.rank_trials(bundle, request) -> RankingResponse`.
+- `flamelab.science.ranking.rank_trials(bundle, request, *, metric=None) -> RankingResponse`.
 - `flamelab.science.comparison.compare_trials(bundle, request) -> ComparisonResponse`.
 - `flamelab.science.profiling.profile_dataset(bundle) -> ProfileResponse`.
 - `flamelab.ai.engine.run_research(request, bundle, settings) -> ResearchResponse` es async.
@@ -29,6 +29,7 @@ JSON snake_case en red y modelos; rutas `/api/v1`.
 | GET | /datasets/profile | — | ProfileResponse |
 | POST | /rankings | RankingRequest | RankingResponse |
 | POST | /comparisons | ComparisonRequest | ComparisonResponse |
+| POST | /research/plan | ResearchRequest | ResearchPlan (sin ejecutar ni guardar) |
 | POST | /research | ResearchRequest | ResearchResponse |
 | GET | /research/{id} | — | ResearchResponse |
 | GET | /research/{id}/events | — | SSE de eventos guardados, no streaming en vivo |
@@ -48,11 +49,87 @@ Las fuentes NASA de catálogo no se utilizan como citas de cifras sintéticas.
 Los intervalos de bootstrap requieren unidades independientes; no están implícitos por tener muchas observaciones.
 Los paneles son una lista cerrada con `data_ref`; nunca HTML o JavaScript generado por IA.
 
+## Successive conditions
+
+`Trial` represents one physical test. Its `segments` each have a source `sequence`,
+evidence IDs and an explicit effective condition map. An observation with `segment_id`
+uses that segment's conditions. Trial-level values do not fill missing segment fields.
+Initial and final oxygen describe the trial. `burning_faces` is a count and
+`combustion_face` identifies a specific face when the source reports one. Sample and
+independent unit IDs stay on the physical trial. See the exact P1
+[sequential example](examples/sequential_conditions.json).
+
+Known oxygen values and ranking targets must be between 0 and 100 inclusive.
+Segments reject the initial and final oxygen keys even when explicitly missing.
+Sequences may have gaps. An observation can leave `segment_id` null when its
+segment assignment lacks evidence.
+
+Ranking uses explicit trial conditions by default. An explicit
+`condition_scope: "segment"` evaluates segment conditions and ranks each physical
+trial once using the best eligible segment. Research forwards `eligible_segment_ids`
+to comparison. Nonempty `segment_ids` filters every observation to those segments,
+including exclusion of unassigned observations and unsegmented trials. An empty list
+preserves unrestricted selection. Each point retains its
+`segment_id`, original value, original unit and sources. Comparison separates the
+observation's provenance and isolates unresolved controls by segment. Profiles and
+comparison summaries count segments separately from physical units.
+
+Canonical bundles with version `1.0` remain readable. Newly generated scientific
+bundles use `1.1`. Previously saved P2 snapshots have a storage-only reader for
+the old field names. Historical reports keep their saved calculations and flag their
+previous scientific rules when they contain segments.
+
 ## Autoridad de la pregunta
 
-En el esqueleto los filtros explícitos de ResearchRequest mandan. La pregunta se usa en la síntesis;
-el planificador de lenguaje natural será una ampliación del propietario P4. No afirmar que el modo demo
-entiende cualquier restricción verbal. Una variable de `vary` no puede estar en `required_match`.
+The extended NASA corpus exposes paginated study evidence and observations at
+`GET /api/v1/studies/{study_id}/evidence` and
+`GET /api/v1/studies/{study_id}/observations`. Both accept zero-based `offset` and
+`limit` (1–200). Observations also accept a `metric` filter. The response includes
+the total number of matching entries, the offset, and the page items.
+
+Campaign-specific metrics declare their source study and canonical unit. Bundle
+validation rejects outcomes assigned to another campaign. Comparison excludes
+records outside the metric's campaign, and research ranks available observations
+for the requested metric. A trial with `independent_unit_status=unresolved` is
+counted separately from identified experimental units. Old snapshots load with
+the existing identified default. See [P2_NASA_24](P2_NASA_24.md) for coverage.
+
+`ResearchRequest.planning_mode` distingue dos modos compatibles:
+
+- `explicit` (predeterminado): aplica exactamente `ranking`; la pregunta es descriptiva.
+- `catalog`: interpreta únicamente las frases documentadas en [AI_SYSTEM](AI_SYSTEM.md).
+  Un conflicto, ambigüedad o restricción no soportada produce un plan `blocked=true`;
+  no se ejecutan herramientas ni se llama al proveedor. No se ignoran restricciones
+  para fabricar una respuesta. El formulario explícito permite el resto de condiciones.
+
+`POST /research/plan` devuelve el mismo plan tipado que se ejecutará, sin leer el
+corpus, llamar a IA ni guardar una investigación. `ResearchPlan` contiene modo,
+intención, `ranking` efectivo, métrica, eje X, explicación, bloqueo y límites.
+El consumidor puede mostrarlo antes de enviar la misma petición a `/research`.
+No es una reserva de datos: el corpus puede cambiar entre previsualización y ejecución.
+
+Cada resultado nuevo incluye `ResearchResponse.plan`. En snapshots anteriores es
+`null`: no se reconstruye una interpretación que no se guardó. Para preservar el
+contrato de estados, un plan bloqueado devuelve `status=insufficient_evidence`
+con resultados vacíos; `plan.blocked` distingue necesidad de aclaración de falta
+de mediciones después de ejecutar. El contrato rechaza resultados que contradigan
+la métrica/eje del plan o presenten cálculos bajo un plan bloqueado.
+
+La investigación exige observaciones conocidas de la métrica solicitada antes
+de puntuar y aplicar el límite, tanto en métricas generales como de campaña.
+En modo segmento deben estar vinculadas al segmento elegible. Medidas de otro
+segmento o sin asignación no prueban disponibilidad en él. `requested_metric_unavailable`
+y `requested_metric_unavailable_for_segment` explican exclusiones.
+
+`POST /rankings` conserva selección por condiciones sin exigir resultados.
+`ScenarioComparisonRequest.metric` es opcional: `null` conserva ese comportamiento
+en A/B; una métrica explícita activa la misma comprobación de disponibilidad que
+la investigación. `ScenarioComparisonResponse.metric` informa qué modo se usó.
+Esto no convierte A/B en simulación física ni demuestra que todos los X estén medidos.
+
+Una variable de `vary` no puede estar en `required_match`. Cambiar el plan nunca
+sobrescribe silenciosamente un filtro estructurado contradictorio.
+Ver [ADR 0009](adr/0009-visible-plans-and-metric-availability.md).
 
 ## Cambios
 
@@ -81,6 +158,5 @@ Elegir la variable X de forma explícita y mantener el mismo significado en herr
 Tipos estrictos, números finitos, IDs con namespace y sin `/`, condiciones conocidas con referencias,
 fuentes HTTP(S), separación de estudios sintéticos y científicos, `uncertainty=null` e `interval=null`
 se validan en el dominio. Cada resultado de ranking incluye la unión de fuentes del ensayo, condiciones
-y observaciones, para validar citas legítimas a mediciones. Los perfiles incluyen `known` y todos los
-estados de ausencia. Las decisiones y los límites de series reales se registran en ADR 0007; no se ha
-forzado la tabla BASS-II dentro de una granularidad incorrecta para simular ingesta científica.
+y observaciones elegibles, para validar citas a mediciones. Los perfiles incluyen `known` y todos los
+estados de ausencia. ADR 0007 registra las decisiones y límites de la base inicial.

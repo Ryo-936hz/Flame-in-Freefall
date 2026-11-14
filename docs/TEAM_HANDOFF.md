@@ -1,4 +1,29 @@
-# Relevo de ingeniería — Los TTS
+# Relevo vigente — integración P1/P3/P4
+
+El usuario asume P1/P3/P4. Entrega publicada en `raul`, [PR #2](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/2).
+Código verificado `fd83a84aa24511e573a1b5f27cc859bcdddbf638`; las anotaciones posteriores solo documentan pruebas. [Guía reproducible](INTEGRATION_P134.md),
+[estado](IMPLEMENTATION_STATUS.md), [verificación](VERIFICATION.md).
+
+P1 publica el contrato/preview/snapshots/CI; P3 conserva identidad, controles,
+métricas y evaluaciones; P4 conecta plan, herramientas y revisión acotada con
+funcionamiento sin credenciales. El pendiente de métrica por segmento está cerrado.
+Los nuevos tipos son aditivos y generados. Los expedientes antiguos permanecen
+legibles con `plan=null`, sin recalcular resultados.
+
+| Puesto | Siguiente trabajo propio |
+|---|---|
+| P1/P3/P4 | Mantener las puertas de check/CI y revisar cambios de datos/consumidores; no quedan stubs de su recorrido demo. |
+| P2 | Resolver las dudas científicas de la auditoría con evidencia; no cambiar revisado/unverified por pasar software. |
+| P5 | Consumir preview/plan, mostrar filtros/bloqueos y conectar Evidence Canvas con tipos regenerados. |
+| P6 | Conectar A/B, informe y recuperación; probar el recorrido visual junto a P5. |
+
+No se han enviado mensajes en nombre del equipo ni movido referencias iniciales.
+La rama `main` se integra mediante el proceso de revisión acordado; usar el commit
+exacto entregado, preservando ramas/cambios propios. El historial inferior conserva
+el estado de la primera base y no sustituye esta sección.
+
+## Histórico de la base inicial
+
 
 Integrador P1. [Repositorio compartido](https://github.com/Ryo-936hz/Flame-in-Freefall),
 rama de integración `main`. La referencia común de arranque es
@@ -17,9 +42,12 @@ Pregunta con filtros → perfil/ranking/comparación → evidencia → hipótesi
 → informe persistido. Datos sintéticos identificados, escenario lunar insuficiente,
 snapshot conservado tras reinicio y sustitución del corpus. Ver VERIFICATION.
 
-24 estudios reales son metadata_only. BASS-II tabla 5.1 PDF65/impresa57 es candidata
-pendiente de transcripción, condiciones sucesivas y revisión. Saffire exige aclarar
-encabezados/unidades/configuración. No se validó IA real, PostgreSQL ni ciencia NASA.
+The standalone catalog remains 24 metadata-only studies. The P2 branch adds a
+separate local BASS-II Table 5.1 extraction and canonical import with successive
+conditions: 20 tests, 43 conditions, 39 known rates and four absences. Scientific
+review remains pending; Saffire stays documentary context. See the English
+[P2 delivery](P2_DELIVERY.md). Real external AI, PostgreSQL and NASA scientific
+interpretation are not validated by these software checks.
 
 ## Reparto
 

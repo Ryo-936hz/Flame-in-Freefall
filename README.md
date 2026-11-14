@@ -9,15 +9,22 @@ ingesta CLI, perfil, ranking Gower, comparación, coordinador determinista, adap
 externo configurable y cliente React/TypeScript generado desde OpenAPI.
 El frontend entregado es un **arnés técnico**, no el diseño final.
 
-**Equipo: empezar por [la guía de los seis puestos](docs/TEAM_START.md).** La base
+**Entrega actual P1/P3/P4: [arranque, ejemplos y contratos](docs/INTEGRATION_P134.md).**
+La [guía inicial de los seis puestos](docs/TEAM_START.md) conserva la primera referencia. La base
 compartida se publica en [GitHub](https://github.com/Ryo-936hz/Flame-in-Freefall).
 `main` integra cambios; `codex/team-start-v1` conserva el punto de partida común.
-Cada persona crea su propia rama desde esa referencia, aunque `main` avance.
+Para este incremento, crear la rama propia desde el commit entregado de `raul`; la referencia inicial no se mueve.
 
-El recorrido numérico utiliza **datos sintéticos**, no mediciones NASA. El ZIP real
-se inventarió: 24 investigaciones, 22 CSV y 27 PDF, sin vídeos. El catálogo real se
-importa como `metadata_only`, sin observaciones numéricas. La serie BASS-II candidata
-y los problemas de Saffire están en [inspección](docs/DATA_INSPECTION.md).
+La demo predeterminada usa **datos sintéticos**, no mediciones NASA. P2 incorpora
+un corpus local de 24 estudios: seis campañas con resultados, una con configuraciones
+y 17 documentales. Los datos siguen `unverified`; las fuentes no se marcan revisadas
+por pasar pruebas. [Importación](docs/P2_NASA_24.md) y
+[auditoría P3](evals/science/P2_INTEGRATION_REVIEW.md).
+
+El backend conecta pregunta/filtros → plan visible → herramientas científicas →
+fuentes e informe persistido. `planning_mode=explicit` conserva los filtros actuales;
+`catalog` interpreta tres intenciones acotadas y bloquea conflictos/no soportado.
+El proveedor externo es opcional; no se necesitan credenciales para este recorrido.
 
 ## Arrancar en Windows
 
@@ -28,8 +35,8 @@ para la primera instalación. `setup.ps1` utiliza los lockfiles; si falta uv ins
 ```powershell
 git clone https://github.com/Ryo-936hz/Flame-in-Freefall.git
 Set-Location Flame-in-Freefall
-# Ejemplo P1; elegir la rama del puesto en docs/TEAM_START.md.
-git switch --no-track -c codex/p1-integracion origin/codex/team-start-v1
+# Clon nuevo; comprobar el SHA con la entrega compartida.
+git switch --no-track -c mi-demo origin/raul
 git rev-parse HEAD
 .\scripts\setup.ps1
 .\scripts\check.ps1
@@ -67,7 +74,9 @@ IA externa. Resultado: `work/smoke-result.json`.
 
 En el arnés: **Investigar**, abrir referencia, informe y eventos guardados; comparar
 A/B cambiando gravedad. Desactivar `allow_synthetic` demuestra ausencia de evidencia.
-Los filtros explícitos mandan; la demo no interpreta restricciones verbales.
+El arnés conserva filtros explícitos. La API ofrece el catálogo y preview de plan
+para integrar en P5/P6; los tres ejemplos se ejecutan por HTTP en el smoke.
+Ver [guía de entrega](docs/INTEGRATION_P134.md).
 
 ## Ingesta local
 
@@ -99,13 +108,22 @@ Repetir observaciones no crea réplicas independientes.
 [Windows](docs/SETUP_WINDOWS.md), [seis puestos](docs/TEAM_HANDOFF.md) y [ADR de
 inspección](docs/adr/0007-inspection-and-integrated-base.md).
 
-SQLite y demo comprobados. Adaptador OpenAI probado con HTTP simulado, sin llamadas
-reales ni claves. PostgreSQL/pgvector preparados, no ejecutados. El estado de CI
-se registra en VERIFICATION. Pendientes: planificador de lenguaje natural, corpus numérico
-revisado, embeddings, bootstrap, regresión, CFD, diseño inverso y frontend final.
+SQLite y demo comprobados. Adaptador externo probado con HTTP simulado, sin llamadas
+reales ni claves. PostgreSQL pasó en el CI de `main` `04baeee`; los resultados de cada
+incremento se registran en VERIFICATION. pgvector no está implementado. La revisión
+científica del corpus y la interfaz P5/P6 permanecen separadas del cierre de backend.
+El catálogo no es interpretación general de lenguaje natural ni predicción física.
 
 Código compartido en GitHub; comprobar las ejecuciones de [Actions](https://github.com/Ryo-936hz/Flame-in-Freefall/actions)
 y VERIFICATION antes de atribuir un resultado a CI. El historial de construcción
 local y su bundle se conservan como referencia histórica. Documents y el paquete
 original permanecen intactos. No necesitas el ZIP para arrancar la demo.
 [Dirección visual](docs/DESIGN_ANDURIL.md).
+
+## Comprobación de integración PostgreSQL
+
+El workflow incluye un job independiente con PostgreSQL 17 y el driver opcional. Para ejecutarlo localmente, instala `uv sync --locked --extra postgres`, define `FLAMELAB_TEST_POSTGRES_URL` con una base desechable de prueba y ejecuta `uv run pytest -q apps/api/tests/test_postgres_integration.py`. La prueba aplica migraciones y comprueba la recuperación de un informe sintético tras reconectar. La base anterior pasó PostgreSQL en CI; la prueba ampliada de esta entrega también exige recuperación tras reemplazo del corpus. Consultar el run del commit antes de atribuirle éxito.
+
+## Ejemplo de condiciones sucesivas
+
+`docs/examples/sequential_conditions.json` es un ejemplo totalmente sintetico: un ensayo y una unidad experimental, dos segmentos en orden reportado, O2 inicial/final en el ensayo y observaciones enlazadas a cada segmento. No representa mediciones NASA ni tiempos medidos.

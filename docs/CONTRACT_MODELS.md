@@ -1,9 +1,50 @@
 # Modelos de contrato y autoridad ejecutable
 
-El contrato `1.0` existe localmente en `apps/api/src/flamelab/domain/contracts.py`. Ese archivo y su OpenAPI
+El contrato de corpus `1.1` existe localmente en `apps/api/src/flamelab/domain/contracts.py`. Ese archivo y su OpenAPI
 generado son la autoridad para campos y validación; esta guía explica las tablas procedentes de la propuesta
-documental. No hay una API desplegada. La inspección del ZIP mantuvo el contrato para la base sintética y
-pospuso la ingesta cuantitativa real hasta modelar correctamente condiciones sucesivas.
+documental. No hay una API desplegada.
+
+## Successive conditions in corpus 1.1
+
+| Model | Added fields and semantics |
+|---|---|
+| `ConditionSegment` | Dataset-wide unique ID, positive source `sequence` unique in the trial, explicit condition map and evidence IDs. Sequence can have gaps. |
+| `Trial` | `segments` defaults to `[]`. Segment conditions are resolved solely from its own map. |
+| `Observation` | Optional `segment_id` must reference a segment of the same trial. Optional `original_value` and `original_unit` retain the source text. |
+| `RankingRequest` | `condition_scope` defaults to `trial`. `segment` opts into filtering/scoring explicit segment conditions. |
+| `RankedTrial` | `scored_segment_id` identifies the segment underlying the score in segment mode. `eligible_segment_ids` gives the segments that passed eligibility and coverage. |
+| `ComparisonRequest` | Nonempty `segment_ids` restricts all observations to those segments; unassigned/unsegmented observations are excluded. Unknown or out-of-scope IDs give 404. |
+| `PlotPoint` | Optional `segment_id`, `original_value` and `original_unit` trace the segment and measurement. |
+| `ComparisonGroup`, `ProfileResponse` | `n_segments` counts segments apart from trials and units. `missing_by_segment_condition` counts explicit segment conditions in the profile. |
+
+The trial-only keys `oxygen_initial_pct` and `oxygen_final_pct` use `%`,
+`burn_duration_s` uses `s`, and `burning_faces` is a positive integer with unit
+`count`. The categorical `combustion_face` identifies a face and has no unit.
+Keep the original basis and units. Segment `oxygen_pct` keeps the appropriate
+missing status when no segment-specific measurement is available.
+Known oxygen values and ranking targets are bounded to 0–100 inclusive. Segments
+reject initial and final oxygen fields regardless of their missingness status.
+
+Older canonical unstaged bundles load through the same models. A storage-only reader
+loads historical P2 snapshots without rewriting them. Identical legacy corpus reimports
+remain idempotent.
+
+## Plan visible y disponibilidad de métrica (adición compatible)
+
+| Modelo | Campos y semántica |
+|---|---|
+| `ResearchRequest` | `planning_mode`: `explicit` por defecto, o `catalog` para las frases acotadas. |
+| `ResearchPlan` | Modo, intención, ranking canónico efectivo, métrica, eje X, mensaje, `blocked` y límites. No contiene código ejecutable. |
+| `ResearchResponse` | `plan` opcional; ausente en snapshots anteriores significa `null`, sin recalcular el expediente. |
+| `ScenarioComparisonRequest/Response` | `metric` opcional. `null`: selección por condiciones; valor explícito: exige métrica disponible antes de limitar candidatos. |
+
+La ruta de previsualización `POST /api/v1/research/plan` acepta `ResearchRequest`
+y devuelve `ResearchPlan`. Un resultado bloqueado no admite análisis ejecutado.
+Una comparación debe conservar métrica y eje declarado en su plan.
+Los nuevos campos tienen valores predeterminados para mantener compatibilidad
+con solicitudes y snapshots anteriores. No cambian la versión del corpus 1.1
+ni requieren migración de tablas. OpenAPI/TypeScript se regeneran desde la API.
+La tabla histórica inferior debe leerse junto a estas adiciones.
 
 ## Ajustes aceptados en la primera implementación
 
@@ -35,7 +76,7 @@ de validadores a partir de la tabla. Un cambio futuro se coordina y genera junto
 
 ## Tipos y enumeraciones
 
-`ConditionKey`: oxygen_pct, pressure_kpa, flow_velocity_cm_s, material, geometry, thickness_mm, diameter_mm, sample_width_mm, flow_direction, gravity_regime.
+`ConditionKey`: oxygen_pct, pressure_kpa, flow_velocity_cm_s, material, geometry, thickness_mm, diameter_mm, sample_width_mm, flow_direction, gravity_regime, oxygen_initial_pct, oxygen_final_pct, burning_faces, burn_duration_s.
 
 `Metric`: flame_spread_rate_mm_s, extinction_oxygen_pct, heat_release_w, other.
 
@@ -112,7 +153,7 @@ de validadores a partir de la tabla. Un cambio futuro se coordina y genera junto
 
 | Campo | Tipo | Obligatorio | Restricciones o valor inicial |
 |---|---|---|---|
-| `schema_version` | '1.0' | No | {"default": "1.0"} |
+| `schema_version` | '1.0' o '1.1' | No | {"default": "1.1"} |
 | `dataset_id` | string | Sí | — |
 | `description` | string | Sí | — |
 | `studies` | lista de Study | No | — |
@@ -366,10 +407,12 @@ de validadores a partir de la tabla. Un cambio futuro se coordina y genera junto
 17. `metric=other` no se compara ni combina hasta disponer de identificador semántico y unidad compatibles. Añadirlos al contrato si el ZIP lo requiere, o devolver estado explícito de métrica no soportada.
 18. `missing_by_condition` tiene forma condición → estado de ausencia → cantidad; `missing_by_study` tiene forma estudio → condición → estado → cantidad. Definir en la implementación si se incluyen estados `known`, documentarlo y mantenerlo en API y UI.
 
-## Ajustes pendientes para datos científicos reales
+## Scientific review still required
 
-La inspección está registrada en DATA_INSPECTION. `material_grade` ya es un campo separado. BASS-II
-necesita representar condiciones sucesivas sin convertir mesetas en réplicas, conservar el ensayo padre y
-evitar asignar oxígeno inicial/final a una observación temporal sin respaldo. Revisar sensores, regiones de
-evidencia, unidades originales y diferencias CSV/PDF antes de ampliar la ingesta. Saffire no se agrega
-automáticamente al mismo análisis. Registrar cada ajuste en DECISIONS/ADR y actualizar consumidores juntos.
+The successive-condition model now preserves the parent trial and links each
+observation to a stage. Trial oxygen endpoints are distinct from unmeasured stage
+oxygen, and burning faces and original observation values/units are explicit.
+These additive changes and their consumer behavior are recorded in
+[ADR 0008](adr/0008-successive-conditions-and-bass-import.md).
+P3 reviewed extraction and representation; documented source discrepancies and scientific comparability still require human review. Saffire is not
+automatically combined with BASS-II. See [P2_DELIVERY](P2_DELIVERY.md).

@@ -1,0 +1,555 @@
+{
+  "description": "Synthetic software regression: expectations authored from the existing fixture, not computed from the evaluated output.",
+  "expected_profile": {
+    "n_studies": 2,
+    "n_trials": 5,
+    "n_observations": 6,
+    "n_independent_units": 5,
+    "synthetic_trials": 5
+  },
+  "cases": [
+    {
+      "id": "synthetic-valid-flow-comparison",
+      "rationale": "The fixture has three microgravity trials with four observations. Two observations belong to trial-1, so there are three independent units, not four.",
+      "request": {
+        "question": "Demo sintética: comparar propagación frente a flujo en microgravedad.",
+        "ranking": {
+          "target": {
+            "material": "demo_polymer",
+            "gravity_regime": "microgravity"
+          },
+          "required_match": [
+            "material",
+            "gravity_regime"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true,
+          "minimum_coverage": 0.4,
+          "limit": 3
+        },
+        "metric": "flame_spread_rate_mm_s",
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "completed",
+        "provider": "demo",
+        "selected_trial_ids": [
+          "synthetic:trial-1",
+          "synthetic:trial-2",
+          "synthetic:trial-3"
+        ],
+        "similarities": [
+          1,
+          1,
+          1
+        ],
+        "coverages": [
+          1,
+          1,
+          1
+        ],
+        "excluded": [
+          {
+            "trial_id": "synthetic:trial-4",
+            "eligibility": "excluded",
+            "reasons": [
+              "required_condition_mismatch:gravity_regime"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-5",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "required_condition_missing:gravity_regime"
+            ]
+          }
+        ],
+        "comparison_units": {
+          "x": "cm/s",
+          "y": "mm/s"
+        },
+        "points": [
+          {
+            "id": "synthetic:observation-1-1",
+            "x": 2,
+            "y": 0.05,
+            "independent_unit_id": "synthetic:unit-1",
+            "evidence_ids": [
+              "synthetic:evidence-1"
+            ],
+            "provenance": "synthetic"
+          },
+          {
+            "id": "synthetic:observation-1-2",
+            "x": 2,
+            "y": 0.055,
+            "independent_unit_id": "synthetic:unit-1",
+            "evidence_ids": [
+              "synthetic:evidence-1"
+            ],
+            "provenance": "synthetic"
+          },
+          {
+            "id": "synthetic:observation-2-1",
+            "x": 5,
+            "y": 0.1,
+            "independent_unit_id": "synthetic:unit-2",
+            "evidence_ids": [
+              "synthetic:evidence-2"
+            ],
+            "provenance": "synthetic"
+          },
+          {
+            "id": "synthetic:observation-3-1",
+            "x": 10,
+            "y": 0.2,
+            "independent_unit_id": "synthetic:unit-3",
+            "evidence_ids": [
+              "synthetic:evidence-3"
+            ],
+            "provenance": "synthetic"
+          }
+        ],
+        "groups": [
+          {
+            "trial_ids": [
+              "synthetic:trial-1",
+              "synthetic:trial-2",
+              "synthetic:trial-3"
+            ],
+            "n_trials": 3,
+            "n_observations": 4,
+            "n_independent_units": 3,
+            "median": 0.0775,
+            "interval": null
+          }
+        ],
+        "retrieved_evidence_ids": [
+          "synthetic:evidence-1",
+          "synthetic:evidence-2",
+          "synthetic:evidence-3"
+        ],
+        "hypothesis_count": 0,
+        "n_quantitative_pairs": 4
+      }
+    },
+    {
+      "id": "synthetic-changed-earth-condition",
+      "rationale": "Only trial-4 matches earth. Its reported zero is a known result, not absence. Changing gravity changes the selection, and does not simulate a physical response of the microgravity samples.",
+      "request": {
+        "question": "Demo sintética: cambiar el filtro de gravedad a terrestre.",
+        "ranking": {
+          "target": {
+            "material": "demo_polymer",
+            "gravity_regime": "earth"
+          },
+          "required_match": [
+            "material",
+            "gravity_regime"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true,
+          "minimum_coverage": 0.4,
+          "limit": 3
+        },
+        "metric": "flame_spread_rate_mm_s",
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "completed",
+        "provider": "demo",
+        "selected_trial_ids": [
+          "synthetic:trial-4"
+        ],
+        "similarities": [
+          1
+        ],
+        "coverages": [
+          1
+        ],
+        "excluded": [
+          {
+            "trial_id": "synthetic:trial-1",
+            "eligibility": "excluded",
+            "reasons": [
+              "required_condition_mismatch:gravity_regime"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-2",
+            "eligibility": "excluded",
+            "reasons": [
+              "required_condition_mismatch:gravity_regime"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-3",
+            "eligibility": "excluded",
+            "reasons": [
+              "required_condition_mismatch:gravity_regime"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-5",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "required_condition_missing:gravity_regime"
+            ]
+          }
+        ],
+        "comparison_units": {
+          "x": "cm/s",
+          "y": "mm/s"
+        },
+        "points": [
+          {
+            "id": "synthetic:observation-4-1",
+            "x": 5,
+            "y": 0,
+            "independent_unit_id": "synthetic:unit-4",
+            "evidence_ids": [
+              "synthetic:evidence-4"
+            ],
+            "provenance": "synthetic"
+          }
+        ],
+        "groups": [
+          {
+            "trial_ids": [
+              "synthetic:trial-4"
+            ],
+            "n_trials": 1,
+            "n_observations": 1,
+            "n_independent_units": 1,
+            "median": 0,
+            "interval": null
+          }
+        ],
+        "retrieved_evidence_ids": [
+          "synthetic:evidence-4"
+        ],
+        "hypothesis_count": 0,
+        "n_quantitative_pairs": 1
+      }
+    },
+    {
+      "id": "synthetic-no-lunar-evidence",
+      "rationale": "There is no lunar trial in the fixture. Trial-5 has unknown gravity and cannot be silently treated as a match even though coverage is above the deliberately low threshold.",
+      "request": {
+        "question": "Demo sintética: buscar evidencia en gravedad lunar.",
+        "ranking": {
+          "target": {
+            "material": "demo_polymer",
+            "gravity_regime": "lunar"
+          },
+          "required_match": [
+            "material",
+            "gravity_regime"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true,
+          "minimum_coverage": 0.4,
+          "limit": 3
+        },
+        "metric": "flame_spread_rate_mm_s",
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "insufficient_evidence",
+        "provider": "demo",
+        "selected_trial_ids": [],
+        "similarities": [],
+        "coverages": [],
+        "excluded": [
+          {
+            "trial_id": "synthetic:trial-1",
+            "eligibility": "excluded",
+            "reasons": [
+              "required_condition_mismatch:gravity_regime"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-2",
+            "eligibility": "excluded",
+            "reasons": [
+              "required_condition_mismatch:gravity_regime"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-3",
+            "eligibility": "excluded",
+            "reasons": [
+              "required_condition_mismatch:gravity_regime"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-4",
+            "eligibility": "excluded",
+            "reasons": [
+              "required_condition_mismatch:gravity_regime"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-5",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "required_condition_missing:gravity_regime"
+            ]
+          }
+        ],
+        "comparison_units": null,
+        "points": [],
+        "groups": [],
+        "retrieved_evidence_ids": [],
+        "hypothesis_count": 0,
+        "n_quantitative_pairs": 0
+      }
+    },
+    {
+      "id": "synthetic-permission-disabled",
+      "rationale": "All fixture trials are synthetic. Explicit permission disabled excludes every trial even when conditions match.",
+      "request": {
+        "question": "Comprobar que no se usan fixtures cuando allow_synthetic está desactivado.",
+        "ranking": {
+          "target": {
+            "material": "demo_polymer",
+            "gravity_regime": "microgravity"
+          },
+          "required_match": [
+            "material",
+            "gravity_regime"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": false,
+          "minimum_coverage": 0.4,
+          "limit": 3
+        },
+        "metric": "flame_spread_rate_mm_s",
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "insufficient_evidence",
+        "provider": "demo",
+        "selected_trial_ids": [],
+        "similarities": [],
+        "coverages": [],
+        "excluded": [
+          {
+            "trial_id": "synthetic:trial-1",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "synthetic_not_allowed"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-2",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "synthetic_not_allowed"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-3",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "synthetic_not_allowed"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-4",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "required_condition_mismatch:gravity_regime",
+              "synthetic_not_allowed"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-5",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "required_condition_missing:gravity_regime",
+              "synthetic_not_allowed"
+            ]
+          }
+        ],
+        "comparison_units": null,
+        "points": [],
+        "groups": [],
+        "retrieved_evidence_ids": [],
+        "hypothesis_count": 0,
+        "n_quantitative_pairs": 0
+      }
+    },
+    {
+      "id": "synthetic-unsupported-metric",
+      "rationale": "The unsupported metric other has no canonical unit, so none of the synthetic trials can establish measurement availability before ranking.",
+      "request": {
+        "question": "Solicitar una métrica other sin semántica compatible.",
+        "ranking": {
+          "target": {
+            "material": "demo_polymer",
+            "gravity_regime": "microgravity"
+          },
+          "required_match": [
+            "material",
+            "gravity_regime"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true,
+          "minimum_coverage": 0.4,
+          "limit": 3
+        },
+        "metric": "other",
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "insufficient_evidence",
+        "provider": "demo",
+        "selected_trial_ids": [],
+        "similarities": [],
+        "coverages": [],
+        "excluded": [
+          {
+            "trial_id": "synthetic:trial-1",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-2",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-3",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-4",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "required_condition_mismatch:gravity_regime"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-5",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable",
+              "required_condition_missing:gravity_regime"
+            ]
+          }
+        ],
+        "comparison_units": null,
+        "points": [],
+        "groups": [],
+        "retrieved_evidence_ids": [],
+        "hypothesis_count": 0,
+        "n_quantitative_pairs": 0
+      }
+    },
+    {
+      "id": "synthetic-unavailable-measurement-excluded",
+      "rationale": "Trial-5 matches the explicit conditions but its rate is not_measured. Research excludes it as requested_metric_unavailable before top-k; the condition-only ranking still independently tests its eligibility.",
+      "request": {
+        "question": "Seleccionar ensayo sintético con tasa no medida y comprobar insuficiencia.",
+        "ranking": {
+          "target": {
+            "material": "demo_polymer",
+            "geometry": "sheet"
+          },
+          "required_match": [
+            "material",
+            "geometry"
+          ],
+          "vary": [
+            "flow_velocity_cm_s"
+          ],
+          "allow_synthetic": true,
+          "minimum_coverage": 0.4,
+          "limit": 3,
+          "study_ids": [
+            "synthetic:contrast-study"
+          ]
+        },
+        "metric": "flame_spread_rate_mm_s",
+        "include_hypotheses": false
+      },
+      "expected": {
+        "status": "insufficient_evidence",
+        "provider": "demo",
+        "selected_trial_ids": [],
+        "similarities": [],
+        "coverages": [],
+        "excluded": [
+          {
+            "trial_id": "synthetic:trial-1",
+            "eligibility": "excluded",
+            "reasons": [
+              "study_not_selected"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-2",
+            "eligibility": "excluded",
+            "reasons": [
+              "study_not_selected"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-3",
+            "eligibility": "excluded",
+            "reasons": [
+              "study_not_selected"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-4",
+            "eligibility": "excluded",
+            "reasons": [
+              "required_condition_mismatch:geometry"
+            ]
+          },
+          {
+            "trial_id": "synthetic:trial-5",
+            "eligibility": "excluded",
+            "reasons": [
+              "requested_metric_unavailable"
+            ]
+          }
+        ],
+        "comparison_units": null,
+        "points": [],
+        "groups": [],
+        "retrieved_evidence_ids": [],
+        "hypothesis_count": 0,
+        "n_quantitative_pairs": 0
+      }
+    }
+  ]
+}

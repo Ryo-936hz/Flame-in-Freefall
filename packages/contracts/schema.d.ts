@@ -102,6 +102,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/research/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Research Plan */
+        post: operations["research_plan_api_v1_research_plan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/research/{run_id}": {
         parameters: {
             query?: never;
@@ -179,6 +196,40 @@ export interface paths {
         };
         /** Studies */
         get: operations["studies_api_v1_studies_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studies/{study_id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Study Evidence */
+        get: operations["study_evidence_api_v1_studies__study_id__evidence_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studies/{study_id}/observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Study Observations */
+        get: operations["study_observations_api_v1_studies__study_id__observations_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -274,8 +325,18 @@ export interface components {
             n_independent_units: number;
             /** N Observations */
             n_observations: number;
+            /**
+             * N Segments
+             * @default 0
+             */
+            n_segments?: number;
             /** N Trials */
             n_trials: number;
+            /**
+             * N Trials With Unresolved Independence
+             * @default 0
+             */
+            n_trials_with_unresolved_independence?: number;
             /** Trial Ids */
             trial_ids: string[];
             /** Warnings */
@@ -293,17 +354,19 @@ export interface components {
              * @default flame_spread_rate_mm_s
              * @enum {string}
              */
-            metric?: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "other";
+            metric?: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other";
+            /** Segment Ids */
+            segment_ids?: string[];
             /** Trial Ids */
             trial_ids: string[];
             /** Vary */
-            vary?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
+            vary?: ("oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "burning_faces" | "burn_duration_s" | "test_end" | "test_configuration" | "aging_duration_s" | "ignition_power_w" | "ignition_duration_s")[];
             /**
              * X Condition
              * @default flow_velocity_cm_s
              * @enum {string}
              */
-            x_condition?: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
+            x_condition?: "oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "burning_faces" | "burn_duration_s" | "test_end" | "test_configuration" | "aging_duration_s" | "ignition_power_w" | "ignition_duration_s";
         };
         /** ComparisonResponse */
         ComparisonResponse: {
@@ -313,7 +376,7 @@ export interface components {
              * Metric
              * @enum {string}
              */
-            metric: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "other";
+            metric: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other";
             /** Points */
             points: components["schemas"]["PlotPoint"][];
             /** Unit */
@@ -325,12 +388,28 @@ export interface components {
              * @default flow_velocity_cm_s
              * @enum {string}
              */
-            x_condition?: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
+            x_condition?: "oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "burning_faces" | "burn_duration_s" | "test_end" | "test_configuration" | "aging_duration_s" | "ignition_power_w" | "ignition_duration_s";
             /**
              * X Unit
              * @default cm/s
              */
             x_unit?: string | null;
+        };
+        /**
+         * ConditionSegment
+         * @description Source-reported effective conditions within one physical trial.
+         */
+        ConditionSegment: {
+            /** Conditions */
+            conditions: {
+                [key: string]: components["schemas"]["ConditionValue"];
+            };
+            /** Evidence Ids */
+            evidence_ids: string[];
+            /** Id */
+            id: string;
+            /** Sequence */
+            sequence: number;
         };
         /** ConditionValue */
         ConditionValue: {
@@ -427,6 +506,43 @@ export interface components {
             /** Statement */
             statement: string;
         };
+        /** Observation */
+        Observation: {
+            /** Evidence Ids */
+            evidence_ids: string[];
+            /** Id */
+            id: string;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other";
+            /** Original Unit */
+            original_unit?: string | null;
+            /** Original Value */
+            original_value?: string | null;
+            /**
+             * Provenance
+             * @enum {string}
+             */
+            provenance: "published" | "digitized" | "derived" | "synthetic";
+            /** Segment Id */
+            segment_id?: string | null;
+            /**
+             * Status
+             * @default known
+             * @enum {string}
+             */
+            status?: "known" | "not_measured" | "not_reported" | "not_extracted" | "not_applicable";
+            /** Trial Id */
+            trial_id: string;
+            /** Uncertainty */
+            uncertainty?: null;
+            /** Unit */
+            unit: string;
+            /** Value */
+            value?: number | null;
+        };
         /** Panel */
         Panel: {
             /**
@@ -452,13 +568,25 @@ export interface components {
             group_id: string;
             /** Independent Unit Id */
             independent_unit_id: string;
+            /**
+             * Independent Unit Status
+             * @default identified
+             * @enum {string}
+             */
+            independent_unit_status?: "identified" | "unresolved";
             /** Observation Id */
             observation_id: string;
+            /** Original Unit */
+            original_unit?: string | null;
+            /** Original Value */
+            original_value?: string | null;
             /**
              * Provenance
              * @enum {string}
              */
             provenance: "published" | "digitized" | "derived" | "synthetic";
+            /** Segment Id */
+            segment_id?: string | null;
             /** Trial Id */
             trial_id: string;
             /** X */
@@ -478,6 +606,12 @@ export interface components {
                     [key: string]: number;
                 };
             };
+            /** Missing By Segment Condition */
+            missing_by_segment_condition?: {
+                [key: string]: {
+                    [key: string]: number;
+                };
+            };
             /** Missing By Study */
             missing_by_study?: {
                 [key: string]: {
@@ -490,10 +624,20 @@ export interface components {
             n_independent_units: number;
             /** N Observations */
             n_observations: number;
+            /**
+             * N Segments
+             * @default 0
+             */
+            n_segments?: number;
             /** N Studies */
             n_studies: number;
             /** N Trials */
             n_trials: number;
+            /**
+             * N Trials With Unresolved Independence
+             * @default 0
+             */
+            n_trials_with_unresolved_independence?: number;
             /** Synthetic Trials */
             synthetic_trials: number;
         };
@@ -508,6 +652,8 @@ export interface components {
              * @enum {string}
              */
             eligibility: "eligible" | "excluded" | "indeterminate";
+            /** Eligible Segment Ids */
+            eligible_segment_ids?: string[];
             /** Evidence Ids */
             evidence_ids: string[];
             /**
@@ -517,6 +663,8 @@ export interface components {
             provenance: "published" | "digitized" | "derived" | "synthetic";
             /** Reasons */
             reasons: string[];
+            /** Scored Segment Id */
+            scored_segment_id?: string | null;
             /** Similarity */
             similarity?: number | null;
             /** Trial Id */
@@ -536,7 +684,7 @@ export interface components {
              * Variable
              * @enum {string}
              */
-            variable: "oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime";
+            variable: "oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "burning_faces" | "burn_duration_s" | "test_end" | "test_configuration" | "aging_duration_s" | "ignition_power_w" | "ignition_duration_s";
             /** Weight */
             weight: number;
         };
@@ -548,6 +696,12 @@ export interface components {
              */
             allow_synthetic?: boolean;
             /**
+             * Condition Scope
+             * @default trial
+             * @enum {string}
+             */
+            condition_scope?: "trial" | "segment";
+            /**
              * Limit
              * @default 3
              */
@@ -558,7 +712,7 @@ export interface components {
              */
             minimum_coverage?: number;
             /** Required Match */
-            required_match?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
+            required_match?: ("oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "burning_faces" | "burn_duration_s" | "test_end" | "test_configuration" | "aging_duration_s" | "ignition_power_w" | "ignition_duration_s")[];
             /** Study Ids */
             study_ids?: string[];
             /** Target */
@@ -566,7 +720,7 @@ export interface components {
                 [key: string]: number | string;
             };
             /** Vary */
-            vary?: ("oxygen_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime")[];
+            vary?: ("oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "burning_faces" | "burn_duration_s" | "test_end" | "test_configuration" | "aging_duration_s" | "ignition_power_w" | "ignition_duration_s")[];
             /** Weights */
             weights?: {
                 [key: string]: number;
@@ -594,6 +748,40 @@ export interface components {
             /** Warnings */
             warnings: string[];
         };
+        /**
+         * ResearchPlan
+         * @description Inspectable deterministic plan; it is not a model-generated program.
+         */
+        ResearchPlan: {
+            /**
+             * Blocked
+             * @default false
+             */
+            blocked?: boolean;
+            /**
+             * Intent
+             * @enum {string}
+             */
+            intent: "explicit_filters" | "compare_varying_flow" | "scenario_change" | "assess_evidence" | "ambiguous" | "unsupported";
+            /** Limits */
+            limits?: string[];
+            /** Message */
+            message: string;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other";
+            /**
+             * Planning Mode
+             * @default explicit
+             * @enum {string}
+             */
+            planning_mode?: "explicit" | "catalog";
+            ranking: components["schemas"]["RankingRequest"];
+            /** X Condition */
+            x_condition?: ("oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "burning_faces" | "burn_duration_s" | "test_end" | "test_configuration" | "aging_duration_s" | "ignition_power_w" | "ignition_duration_s") | null;
+        };
         /** ResearchRequest */
         ResearchRequest: {
             /**
@@ -606,7 +794,13 @@ export interface components {
              * @default flame_spread_rate_mm_s
              * @enum {string}
              */
-            metric?: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "other";
+            metric?: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other";
+            /**
+             * Planning Mode
+             * @default explicit
+             * @enum {string}
+             */
+            planning_mode?: "explicit" | "catalog";
             /** Question */
             question: string;
             ranking?: components["schemas"]["RankingRequest"];
@@ -631,6 +825,7 @@ export interface components {
             id: string;
             /** Panels */
             panels: components["schemas"]["Panel"][];
+            plan?: components["schemas"]["ResearchPlan"] | null;
             /**
              * Provider
              * @enum {string}
@@ -657,6 +852,8 @@ export interface components {
         };
         /** ScenarioComparisonRequest */
         ScenarioComparisonRequest: {
+            /** Metric */
+            metric?: ("flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other") | null;
             /**
              * Name A
              * @default Scenario A
@@ -678,6 +875,8 @@ export interface components {
              * @constant
              */
             label?: "evidence_comparison_not_physical_simulation";
+            /** Metric */
+            metric?: ("flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other") | null;
             /** Name A */
             name_a: string;
             /** Name B */
@@ -708,6 +907,24 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** StudyEvidencePage */
+        StudyEvidencePage: {
+            /** Items */
+            items: components["schemas"]["Evidence"][];
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** StudyObservationPage */
+        StudyObservationPage: {
+            /** Items */
+            items: components["schemas"]["Observation"][];
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** Trial */
         Trial: {
             /** Conditions */
@@ -720,6 +937,12 @@ export interface components {
             id: string;
             /** Independent Unit Id */
             independent_unit_id: string;
+            /**
+             * Independent Unit Status
+             * @default identified
+             * @enum {string}
+             */
+            independent_unit_status?: "identified" | "unresolved";
             /** Label */
             label: string;
             /** Material Grade */
@@ -733,6 +956,8 @@ export interface components {
             provenance: "published" | "digitized" | "derived" | "synthetic";
             /** Sample Id */
             sample_id: string;
+            /** Segments */
+            segments?: components["schemas"]["ConditionSegment"][];
             /** Study Id */
             study_id: string;
         };
@@ -1151,6 +1376,75 @@ export interface operations {
             };
         };
     };
+    research_plan_api_v1_research_plan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchPlan"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_research_api_v1_research__run_id__get: {
         parameters: {
             query?: never;
@@ -1438,6 +1732,147 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Study"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    study_evidence_api_v1_studies__study_id__evidence_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyEvidencePage"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    study_observations_api_v1_studies__study_id__observations_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+                limit?: number;
+                metric?: ("flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other") | null;
+            };
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyObservationPage"];
                 };
             };
             /** @description Not Found */

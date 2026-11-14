@@ -2,6 +2,10 @@
 
 ## Base común
 
+Para el incremento actual P1/P3/P4 consultar [INTEGRATION_P134](INTEGRATION_P134.md).
+La referencia de primera incorporación descrita abajo es histórica; los avances
+se integran desde la entrega vigente indicada en TEAM_HANDOFF.
+
 Cada persona utiliza su propio clon y una rama de tarea. `main` integra el código
 compartido en GitHub. Los seis puestos crean su primera rama desde
 `origin/codex/team-start-v1`, no desde un `main` que puede haber avanzado. Esa rama

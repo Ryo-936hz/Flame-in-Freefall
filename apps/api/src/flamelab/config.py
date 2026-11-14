@@ -3,6 +3,8 @@ from typing import Literal, Self
 
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError
 
 ROOT = Path(__file__).resolve().parents[4]
 
@@ -21,8 +23,23 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def explicit_provider(self) -> Self:
-        if self.database_url.startswith("sqlite:") and self.database_url in ("sqlite://", "sqlite:///:memory:"):
-            raise ValueError("SQLite requires a file path; in-memory databases do not persist across engines")
-        if self.ai_provider == "openai" and (not self.openai_api_key or not self.openai_model):
+        try:
+            database = make_url(self.database_url)
+        except (ArgumentError, ValueError):
+            # Connection URLs may contain credentials; never echo the parser input.
+            raise ValueError("database_url must be a valid SQLAlchemy connection URL") from None
+        if database.get_backend_name() == "sqlite":
+            if database.database in (None, "", ":memory:"):
+                raise ValueError("SQLite requires a file path; in-memory databases do not persist across engines")
+            uri = database.query.get("uri", "false")
+            plain_file = isinstance(uri, str) and uri.strip().lower() in {"false", "0", "no", "off", "n", "f"}
+            if not plain_file or database.database.lower().startswith("file:"):
+                raise ValueError("SQLite URI mode is not supported; use a persistent sqlite:/// file URL")
+        if self.openai_model is not None:
+            self.openai_model = self.openai_model.strip()
+        if self.ai_provider == "openai" and (
+            not self.openai_api_key or not self.openai_api_key.get_secret_value().strip()
+            or not self.openai_model
+        ):
             raise ValueError("openai mode requires server key and explicit model")
         return self

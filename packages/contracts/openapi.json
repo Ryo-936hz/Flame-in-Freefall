@@ -146,8 +146,18 @@
             "title": "N Observations",
             "type": "integer"
           },
+          "n_segments": {
+            "default": 0,
+            "title": "N Segments",
+            "type": "integer"
+          },
           "n_trials": {
             "title": "N Trials",
+            "type": "integer"
+          },
+          "n_trials_with_unresolved_independence": {
+            "default": 0,
+            "title": "N Trials With Unresolved Independence",
             "type": "integer"
           },
           "trial_ids": {
@@ -195,10 +205,30 @@
               "flame_spread_rate_mm_s",
               "extinction_oxygen_pct",
               "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
               "other"
             ],
             "title": "Metric",
             "type": "string"
+          },
+          "segment_ids": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "title": "Segment Ids",
+            "type": "array"
           },
           "trial_ids": {
             "items": {
@@ -216,15 +246,25 @@
             "items": {
               "enum": [
                 "oxygen_pct",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
                 "pressure_kpa",
                 "flow_velocity_cm_s",
                 "material",
                 "geometry",
+                "combustion_face",
                 "thickness_mm",
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ],
               "type": "string"
             },
@@ -235,15 +275,25 @@
             "default": "flow_velocity_cm_s",
             "enum": [
               "oxygen_pct",
+              "oxygen_initial_pct",
+              "oxygen_final_pct",
               "pressure_kpa",
               "flow_velocity_cm_s",
               "material",
               "geometry",
+              "combustion_face",
               "thickness_mm",
               "diameter_mm",
               "sample_width_mm",
               "flow_direction",
-              "gravity_regime"
+              "gravity_regime",
+              "burning_faces",
+              "burn_duration_s",
+              "test_end",
+              "test_configuration",
+              "aging_duration_s",
+              "ignition_power_w",
+              "ignition_duration_s"
             ],
             "title": "X Condition",
             "type": "string"
@@ -270,6 +320,16 @@
               "flame_spread_rate_mm_s",
               "extinction_oxygen_pct",
               "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
               "other"
             ],
             "title": "Metric",
@@ -297,15 +357,25 @@
             "default": "flow_velocity_cm_s",
             "enum": [
               "oxygen_pct",
+              "oxygen_initial_pct",
+              "oxygen_final_pct",
               "pressure_kpa",
               "flow_velocity_cm_s",
               "material",
               "geometry",
+              "combustion_face",
               "thickness_mm",
               "diameter_mm",
               "sample_width_mm",
               "flow_direction",
-              "gravity_regime"
+              "gravity_regime",
+              "burning_faces",
+              "burn_duration_s",
+              "test_end",
+              "test_configuration",
+              "aging_duration_s",
+              "ignition_power_w",
+              "ignition_duration_s"
             ],
             "title": "X Condition",
             "type": "string"
@@ -331,6 +401,74 @@
           "warnings"
         ],
         "title": "ComparisonResponse",
+        "type": "object"
+      },
+      "ConditionSegment": {
+        "additionalProperties": false,
+        "description": "Source-reported effective conditions within one physical trial.",
+        "properties": {
+          "conditions": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ConditionValue"
+            },
+            "propertyNames": {
+              "enum": [
+                "oxygen_pct",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
+                "pressure_kpa",
+                "flow_velocity_cm_s",
+                "material",
+                "geometry",
+                "combustion_face",
+                "thickness_mm",
+                "diameter_mm",
+                "sample_width_mm",
+                "flow_direction",
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
+              ]
+            },
+            "title": "Conditions",
+            "type": "object"
+          },
+          "evidence_ids": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "id": {
+            "maxLength": 240,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "sequence": {
+            "minimum": 1.0,
+            "title": "Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "sequence",
+          "conditions",
+          "evidence_ids"
+        ],
+        "title": "ConditionSegment",
         "type": "object"
       },
       "ConditionValue": {
@@ -626,6 +764,146 @@
         "title": "Hypothesis",
         "type": "object"
       },
+      "Observation": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_ids": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Evidence Ids",
+            "type": "array"
+          },
+          "id": {
+            "maxLength": 240,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+            "title": "Id",
+            "type": "string"
+          },
+          "metric": {
+            "enum": [
+              "flame_spread_rate_mm_s",
+              "extinction_oxygen_pct",
+              "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
+              "other"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "original_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Unit"
+          },
+          "original_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Value"
+          },
+          "provenance": {
+            "enum": [
+              "published",
+              "digitized",
+              "derived",
+              "synthetic"
+            ],
+            "title": "Provenance",
+            "type": "string"
+          },
+          "segment_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segment Id"
+          },
+          "status": {
+            "default": "known",
+            "enum": [
+              "known",
+              "not_measured",
+              "not_reported",
+              "not_extracted",
+              "not_applicable"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "trial_id": {
+            "maxLength": 240,
+            "minLength": 3,
+            "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+            "title": "Trial Id",
+            "type": "string"
+          },
+          "uncertainty": {
+            "title": "Uncertainty",
+            "type": "null"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "id",
+          "trial_id",
+          "metric",
+          "unit",
+          "evidence_ids",
+          "provenance"
+        ],
+        "title": "Observation",
+        "type": "object"
+      },
       "Panel": {
         "additionalProperties": false,
         "properties": {
@@ -693,12 +971,43 @@
             "title": "Independent Unit Id",
             "type": "string"
           },
+          "independent_unit_status": {
+            "default": "identified",
+            "enum": [
+              "identified",
+              "unresolved"
+            ],
+            "title": "Independent Unit Status",
+            "type": "string"
+          },
           "observation_id": {
             "maxLength": 240,
             "minLength": 3,
             "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
             "title": "Observation Id",
             "type": "string"
+          },
+          "original_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Unit"
+          },
+          "original_value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Value"
           },
           "provenance": {
             "enum": [
@@ -709,6 +1018,20 @@
             ],
             "title": "Provenance",
             "type": "string"
+          },
+          "segment_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segment Id"
           },
           "trial_id": {
             "maxLength": 240,
@@ -783,6 +1106,16 @@
             "title": "Missing By Condition",
             "type": "object"
           },
+          "missing_by_segment_condition": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "title": "Missing By Segment Condition",
+            "type": "object"
+          },
           "missing_by_study": {
             "additionalProperties": {
               "additionalProperties": {
@@ -804,12 +1137,22 @@
             "title": "N Observations",
             "type": "integer"
           },
+          "n_segments": {
+            "default": 0,
+            "title": "N Segments",
+            "type": "integer"
+          },
           "n_studies": {
             "title": "N Studies",
             "type": "integer"
           },
           "n_trials": {
             "title": "N Trials",
+            "type": "integer"
+          },
+          "n_trials_with_unresolved_independence": {
+            "default": 0,
+            "title": "N Trials With Unresolved Independence",
             "type": "integer"
           },
           "synthetic_trials": {
@@ -855,6 +1198,16 @@
             "title": "Eligibility",
             "type": "string"
           },
+          "eligible_segment_ids": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "title": "Eligible Segment Ids",
+            "type": "array"
+          },
           "evidence_ids": {
             "items": {
               "maxLength": 240,
@@ -881,6 +1234,20 @@
             },
             "title": "Reasons",
             "type": "array"
+          },
+          "scored_segment_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scored Segment Id"
           },
           "similarity": {
             "anyOf": [
@@ -972,15 +1339,25 @@
           "variable": {
             "enum": [
               "oxygen_pct",
+              "oxygen_initial_pct",
+              "oxygen_final_pct",
               "pressure_kpa",
               "flow_velocity_cm_s",
               "material",
               "geometry",
+              "combustion_face",
               "thickness_mm",
               "diameter_mm",
               "sample_width_mm",
               "flow_direction",
-              "gravity_regime"
+              "gravity_regime",
+              "burning_faces",
+              "burn_duration_s",
+              "test_end",
+              "test_configuration",
+              "aging_duration_s",
+              "ignition_power_w",
+              "ignition_duration_s"
             ],
             "title": "Variable",
             "type": "string"
@@ -1015,6 +1392,15 @@
             "title": "Allow Synthetic",
             "type": "boolean"
           },
+          "condition_scope": {
+            "default": "trial",
+            "enum": [
+              "trial",
+              "segment"
+            ],
+            "title": "Condition Scope",
+            "type": "string"
+          },
           "limit": {
             "default": 3,
             "maximum": 50.0,
@@ -1033,15 +1419,25 @@
             "items": {
               "enum": [
                 "oxygen_pct",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
                 "pressure_kpa",
                 "flow_velocity_cm_s",
                 "material",
                 "geometry",
+                "combustion_face",
                 "thickness_mm",
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ],
               "type": "string"
             },
@@ -1075,15 +1471,25 @@
             "propertyNames": {
               "enum": [
                 "oxygen_pct",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
                 "pressure_kpa",
                 "flow_velocity_cm_s",
                 "material",
                 "geometry",
+                "combustion_face",
                 "thickness_mm",
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ]
             },
             "title": "Target",
@@ -1093,15 +1499,25 @@
             "items": {
               "enum": [
                 "oxygen_pct",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
                 "pressure_kpa",
                 "flow_velocity_cm_s",
                 "material",
                 "geometry",
+                "combustion_face",
                 "thickness_mm",
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ],
               "type": "string"
             },
@@ -1123,15 +1539,25 @@
             "propertyNames": {
               "enum": [
                 "oxygen_pct",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
                 "pressure_kpa",
                 "flow_velocity_cm_s",
                 "material",
                 "geometry",
+                "combustion_face",
                 "thickness_mm",
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ]
             },
             "title": "Weights",
@@ -1193,6 +1619,113 @@
         "title": "RankingResponse",
         "type": "object"
       },
+      "ResearchPlan": {
+        "additionalProperties": false,
+        "description": "Inspectable deterministic plan; it is not a model-generated program.",
+        "properties": {
+          "blocked": {
+            "default": false,
+            "title": "Blocked",
+            "type": "boolean"
+          },
+          "intent": {
+            "enum": [
+              "explicit_filters",
+              "compare_varying_flow",
+              "scenario_change",
+              "assess_evidence",
+              "ambiguous",
+              "unsupported"
+            ],
+            "title": "Intent",
+            "type": "string"
+          },
+          "limits": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limits",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "metric": {
+            "enum": [
+              "flame_spread_rate_mm_s",
+              "extinction_oxygen_pct",
+              "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
+              "other"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "planning_mode": {
+            "default": "explicit",
+            "enum": [
+              "explicit",
+              "catalog"
+            ],
+            "title": "Planning Mode",
+            "type": "string"
+          },
+          "ranking": {
+            "$ref": "#/components/schemas/RankingRequest"
+          },
+          "x_condition": {
+            "anyOf": [
+              {
+                "enum": [
+                  "oxygen_pct",
+                  "oxygen_initial_pct",
+                  "oxygen_final_pct",
+                  "pressure_kpa",
+                  "flow_velocity_cm_s",
+                  "material",
+                  "geometry",
+                  "combustion_face",
+                  "thickness_mm",
+                  "diameter_mm",
+                  "sample_width_mm",
+                  "flow_direction",
+                  "gravity_regime",
+                  "burning_faces",
+                  "burn_duration_s",
+                  "test_end",
+                  "test_configuration",
+                  "aging_duration_s",
+                  "ignition_power_w",
+                  "ignition_duration_s"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "X Condition"
+          }
+        },
+        "required": [
+          "intent",
+          "ranking",
+          "metric",
+          "message"
+        ],
+        "title": "ResearchPlan",
+        "type": "object"
+      },
       "ResearchRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1207,9 +1740,28 @@
               "flame_spread_rate_mm_s",
               "extinction_oxygen_pct",
               "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
               "other"
             ],
             "title": "Metric",
+            "type": "string"
+          },
+          "planning_mode": {
+            "default": "explicit",
+            "enum": [
+              "explicit",
+              "catalog"
+            ],
+            "title": "Planning Mode",
             "type": "string"
           },
           "question": {
@@ -1288,6 +1840,16 @@
             "title": "Panels",
             "type": "array"
           },
+          "plan": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResearchPlan"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "provider": {
             "enum": [
               "demo",
@@ -1351,6 +1913,33 @@
       "ScenarioComparisonRequest": {
         "additionalProperties": false,
         "properties": {
+          "metric": {
+            "anyOf": [
+              {
+                "enum": [
+                  "flame_spread_rate_mm_s",
+                  "extinction_oxygen_pct",
+                  "heat_release_w",
+                  "flex_burn_duration_s",
+                  "flex_visible_flame_extinction_diameter_mm",
+                  "same_reported_mass_loss_rate_mg_min",
+                  "samer_run_duration_s",
+                  "samer_net_aging_time_s",
+                  "samer_primary_aging_time_s",
+                  "samer_primary_mixing_time_s",
+                  "saffire_reported_burn_duration_s",
+                  "peak_burner_temperature_k",
+                  "cfig_reported_run_duration_s",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
           "name_a": {
             "default": "Scenario A",
             "title": "Name A",
@@ -1383,6 +1972,33 @@
             "default": "evidence_comparison_not_physical_simulation",
             "title": "Label",
             "type": "string"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "enum": [
+                  "flame_spread_rate_mm_s",
+                  "extinction_oxygen_pct",
+                  "heat_release_w",
+                  "flex_burn_duration_s",
+                  "flex_visible_flame_extinction_diameter_mm",
+                  "same_reported_mass_loss_rate_mg_min",
+                  "samer_run_duration_s",
+                  "samer_net_aging_time_s",
+                  "samer_primary_aging_time_s",
+                  "samer_primary_mixing_time_s",
+                  "saffire_reported_burn_duration_s",
+                  "peak_burner_temperature_k",
+                  "cfig_reported_run_duration_s",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
           },
           "name_a": {
             "title": "Name A",
@@ -1466,6 +2082,64 @@
         "title": "Study",
         "type": "object"
       },
+      "StudyEvidencePage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "offset",
+          "items"
+        ],
+        "title": "StudyEvidencePage",
+        "type": "object"
+      },
+      "StudyObservationPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Observation"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "offset",
+          "items"
+        ],
+        "title": "StudyObservationPage",
+        "type": "object"
+      },
       "Trial": {
         "additionalProperties": false,
         "properties": {
@@ -1476,15 +2150,25 @@
             "propertyNames": {
               "enum": [
                 "oxygen_pct",
+                "oxygen_initial_pct",
+                "oxygen_final_pct",
                 "pressure_kpa",
                 "flow_velocity_cm_s",
                 "material",
                 "geometry",
+                "combustion_face",
                 "thickness_mm",
                 "diameter_mm",
                 "sample_width_mm",
                 "flow_direction",
-                "gravity_regime"
+                "gravity_regime",
+                "burning_faces",
+                "burn_duration_s",
+                "test_end",
+                "test_configuration",
+                "aging_duration_s",
+                "ignition_power_w",
+                "ignition_duration_s"
               ]
             },
             "title": "Conditions",
@@ -1513,6 +2197,15 @@
             "minLength": 3,
             "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
             "title": "Independent Unit Id",
+            "type": "string"
+          },
+          "independent_unit_status": {
+            "default": "identified",
+            "enum": [
+              "identified",
+              "unresolved"
+            ],
+            "title": "Independent Unit Status",
             "type": "string"
           },
           "label": {
@@ -1553,6 +2246,13 @@
             "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
             "title": "Sample Id",
             "type": "string"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/ConditionSegment"
+            },
+            "title": "Segments",
+            "type": "array"
           },
           "study_id": {
             "maxLength": 240,
@@ -2048,6 +2748,84 @@
         "summary": "Research"
       }
     },
+    "/api/v1/research/plan": {
+      "post": {
+        "operationId": "research_plan_api_v1_research_plan_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchPlan"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Research Plan"
+      }
+    },
     "/api/v1/research/{run_id}": {
       "get": {
         "operationId": "get_research_api_v1_research__run_id__get",
@@ -2438,6 +3216,242 @@
           }
         },
         "summary": "Studies"
+      }
+    },
+    "/api/v1/studies/{study_id}/evidence": {
+      "get": {
+        "operationId": "study_evidence_api_v1_studies__study_id__evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "study_id",
+            "required": true,
+            "schema": {
+              "title": "Study Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyEvidencePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Study Evidence"
+      }
+    },
+    "/api/v1/studies/{study_id}/observations": {
+      "get": {
+        "operationId": "study_observations_api_v1_studies__study_id__observations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "study_id",
+            "required": true,
+            "schema": {
+              "title": "Study Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "metric",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "flame_spread_rate_mm_s",
+                    "extinction_oxygen_pct",
+                    "heat_release_w",
+                    "flex_burn_duration_s",
+                    "flex_visible_flame_extinction_diameter_mm",
+                    "same_reported_mass_loss_rate_mg_min",
+                    "samer_run_duration_s",
+                    "samer_net_aging_time_s",
+                    "samer_primary_aging_time_s",
+                    "samer_primary_mixing_time_s",
+                    "saffire_reported_burn_duration_s",
+                    "peak_burner_temperature_k",
+                    "cfig_reported_run_duration_s",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Metric"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyObservationPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Study Observations"
       }
     },
     "/api/v1/trials": {

@@ -1,0 +1,8 @@
+{
+  "planning_mode": "catalog",
+  "question": "Cambia el escenario a gravedad lunar.",
+  "ranking": {
+    "allow_synthetic": true
+  },
+  "include_hypotheses": true
+}

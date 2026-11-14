@@ -1,0 +1,41 @@
+{
+  "bass_6": {
+    "question": "Show the published BASS-II observations at an opposed flow of 6 cm/s.",
+    "metric": "flame_spread_rate_mm_s",
+    "include_hypotheses": false,
+    "ranking": {
+      "study_ids": ["psi:PSI-25"],
+      "condition_scope": "segment",
+      "target": { "gravity_regime": "microgravity", "flow_velocity_cm_s": 6 },
+      "required_match": ["gravity_regime", "flow_velocity_cm_s"],
+      "allow_synthetic": false,
+      "limit": 20
+    }
+  },
+  "bass_5": {
+    "question": "Show the published BASS-II observations at an opposed flow of 5 cm/s.",
+    "metric": "flame_spread_rate_mm_s",
+    "include_hypotheses": false,
+    "ranking": {
+      "study_ids": ["psi:PSI-25"],
+      "condition_scope": "segment",
+      "target": { "gravity_regime": "microgravity", "flow_velocity_cm_s": 5 },
+      "required_match": ["gravity_regime", "flow_velocity_cm_s"],
+      "allow_synthetic": false,
+      "limit": 20
+    }
+  },
+  "lunar": {
+    "question": "Does the BASS-II corpus contain observations under lunar gravity?",
+    "metric": "flame_spread_rate_mm_s",
+    "include_hypotheses": false,
+    "ranking": {
+      "study_ids": ["psi:PSI-25"],
+      "condition_scope": "segment",
+      "target": { "gravity_regime": "lunar" },
+      "required_match": ["gravity_regime"],
+      "allow_synthetic": false,
+      "limit": 20
+    }
+  }
+}

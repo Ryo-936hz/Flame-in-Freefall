@@ -3,7 +3,7 @@ import logging
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
@@ -12,14 +12,16 @@ from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException
 
 from flamelab.ai.engine import run_research
+from flamelab.ai.planner import plan_research
 from flamelab.ai.provider import ProviderFailure
 from flamelab.ai.report import render_report
 from flamelab.config import Settings
 from flamelab.data.loader import load_bundle
 from flamelab.domain.contracts import (
     ComparisonRequest, ComparisonResponse, ErrorResponse, Evidence, HealthResponse,
-    ProfileResponse, RankingRequest, RankingResponse, ResearchRequest, ResearchResponse,
-    ScenarioComparisonRequest, ScenarioComparisonResponse, Study, Trial,
+    Metric, ProfileResponse, RankingRequest, RankingResponse, ResearchPlan, ResearchRequest, ResearchResponse,
+    ScenarioComparisonRequest, ScenarioComparisonResponse, Study, StudyEvidencePage,
+    StudyObservationPage, Trial,
 )
 from flamelab.science.comparison import compare_trials
 from flamelab.science.profiling import profile_dataset
@@ -104,11 +106,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             data = Repository(session).get_bundle()
         synthetic = sum(trial.provenance == "synthetic" for trial in data.trials)
         mode = "empty" if not data.studies else "metadata_only" if not data.trials else "synthetic" if synthetic == len(data.trials) else "mixed" if synthetic else "scientific_unverified"
-        return HealthResponse(status="ok", version="0.1.0", schema_version="1.0", database=app.state.engine.dialect.name, ai_provider=config.ai_provider, data_mode=mode)
+        return HealthResponse(status="ok", version="0.1.0", schema_version="1.1", database=app.state.engine.dialect.name, ai_provider=config.ai_provider, data_mode=mode)
 
     @app.get("/api/v1/studies", response_model=list[Study])
     def studies():
         return bundle().studies
+
+    @app.get("/api/v1/studies/{study_id}/evidence", response_model=StudyEvidencePage)
+    def study_evidence(study_id: str, offset: int = Query(0, ge=0),
+                       limit: int = Query(50, ge=1, le=200)):
+        data = bundle()
+        if not any(study.id == study_id for study in data.studies):
+            raise KeyError(study_id)
+        items = [entry for entry in data.evidence if entry.study_id == study_id]
+        return StudyEvidencePage(total=len(items), offset=offset, items=items[offset:offset + limit])
+
+    @app.get("/api/v1/studies/{study_id}/observations", response_model=StudyObservationPage)
+    def study_observations(study_id: str, offset: int = Query(0, ge=0),
+                           limit: int = Query(50, ge=1, le=200), metric: Metric | None = None):
+        data = bundle()
+        if not any(study.id == study_id for study in data.studies):
+            raise KeyError(study_id)
+        trial_ids = {entry.id for entry in data.trials if entry.study_id == study_id}
+        items = [entry for entry in data.observations
+                 if entry.trial_id in trial_ids and (metric is None or entry.metric == metric)]
+        return StudyObservationPage(total=len(items), offset=offset, items=items[offset:offset + limit])
 
     @app.get("/api/v1/trials", response_model=list[Trial])
     def trials(study_id: str | None = None):
@@ -142,6 +164,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def compare(request: ComparisonRequest):
         return compare_trials(bundle(), request)
 
+    @app.post("/api/v1/research/plan", response_model=ResearchPlan)
+    def research_plan(request: ResearchRequest):
+        # Preview is pure: no corpus read, analysis, persistence or provider call.
+        return plan_research(request)
+
     @app.post("/api/v1/research", response_model=ResearchResponse)
     async def research(request: ResearchRequest):
         data = bundle()
@@ -170,7 +197,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/api/v1/scenarios/compare", response_model=ScenarioComparisonResponse)
     def scenarios(request: ScenarioComparisonRequest):
         data = bundle()
-        return ScenarioComparisonResponse(name_a=request.name_a, name_b=request.name_b, ranking_a=rank_trials(data, request.scenario_a), ranking_b=rank_trials(data, request.scenario_b), warnings=["Compara aplicabilidad de evidencia; no simula la combustión ni predice seguridad."])
+        scope = (
+            "La métrica explícita exige observaciones conocidas antes de aplicar el límite."
+            if request.metric is not None else
+            "Selección por condiciones: no exige disponibilidad de una métrica; indique metric para comprobarla."
+        )
+        return ScenarioComparisonResponse(
+            metric=request.metric, name_a=request.name_a, name_b=request.name_b,
+            ranking_a=rank_trials(data, request.scenario_a, metric=request.metric),
+            ranking_b=rank_trials(data, request.scenario_b, metric=request.metric),
+            warnings=[scope, "Compara aplicabilidad de evidencia; no simula la combustión ni predice seguridad."],
+        )
 
     return app
 
