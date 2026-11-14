@@ -1,7 +1,8 @@
 # Registro de verificaciones
 
-14 de noviembre de 2026, Windows, zona Europe/Madrid. Los resultados corresponden
-al código local integrado; no son resultados de CI remota ni validación científica.
+14 de noviembre de 2026, zona Europe/Madrid. Las primeras secciones registran la
+construcción local Windows; la última registra la publicación y CI remota.
+Ninguna de estas verificaciones equivale a validación científica.
 
 ## Entorno observado
 
@@ -51,7 +52,7 @@ No son ensayos científicos. Las observaciones sintéticas prueban conexiones.
   verifica además HTTP real. Revisar al actualizar dependencias.
 - El script de navegador usó Playwright preinstalado; no se añadió a dependencias
   ni CI. Reproducción manual documentada en apps/web/README.md.
-- Ninguna llamada real a OpenAI, prueba PostgreSQL/Docker, CI GitHub, despliegue,
+- Ninguna llamada real a OpenAI, prueba PostgreSQL/Docker, despliegue,
   móvil, validación semántica automática o revisión científica completa del corpus.
 
 ## Instalación limpia
@@ -72,3 +73,33 @@ Inventario versionado en data/catalog/zip_inventory.json; documentación detalla
 en DATA_INSPECTION. Logs temporales/smoke/capturas están en work, excluidos de Git.
 El paquete de entrega copia los resultados relevantes sin claves, bases ni archivos
 NASA originales. Las capturas son un arnés de software, no el frontend final.
+
+## Publicación GitHub y CI Windows/Linux
+
+Publicación autorizada por el usuario. Git local no tenía credenciales y el
+conector respondió 403 `Resource not accessible by integration`; no llegó a crear
+archivos. El usuario eligió autenticar Git local en Windows. Git Credential Manager
+completó el inicio de sesión y el push publicó el historial completo en `main` y
+el tag histórico. No se pidieron ni copiaron claves/tokens al chat o al repositorio.
+
+Primera ejecución remota: [Verify integrated skeleton #1](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43592863296),
+commit `df6e0454168f4e87844351ec32df65bd0933fe0a`, estado **success**.
+
+| Job | Resultado observado en GitHub |
+|---|---|
+| `verify (ubuntu-latest)` — 132441106675 | Dependencias locked, Ruff, **112 pruebas Python**, **6 cliente**, OpenAPI/TS sin deriva, typecheck, build y HTTP con reinicio aprobados. |
+| `verify (windows-latest)` — 132441106948 | Mismas comprobaciones aprobadas: **112 Python**, **6 cliente** y recorrido HTTP. |
+
+Se consultaron estado, pasos y logs de ambos jobs, no solo la insignia del README.
+El aviso Starlette/TestClient también aparece en CI. El workflow se ejecuta con
+proveedor demo y SQLite; no prueba PostgreSQL ni llama a OpenAI.
+
+Además se clonó desde la URL real de GitHub en `work/github-checkout` y se ejecutó
+`scripts/setup.ps1` en ese clon con su propio entorno, herramientas, `.env` y
+dependencias. El checkout remoto coincide con el contenido publicado. La referencia
+de equipo incorpora esta documentación; consultar su ejecución propia en Actions.
+`codex/team-start-v1` y `flamelab-team-start-v1` se fijan al mismo commit final.
+
+Para nuevos cambios, revisar la ejecución asociada a su SHA: el éxito de #1 no
+acredita automáticamente futuras modificaciones. Los permisos de colaboradores,
+visibilidad y reglas de protección del repositorio no se han cambiado.

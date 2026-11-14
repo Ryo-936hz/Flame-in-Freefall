@@ -5,8 +5,9 @@ La rama de integración es `main`. Para el primer reparto, los seis parten de
 **`origin/codex/team-start-v1`**, aunque `main` avance después. Esta rama de referencia
 identifica el commit común: el equipo acuerda no moverla y utilizar otro nombre
 para el próximo hito. Es una convención de trabajo, no una protección técnica
-configurada. El SHA definitivo también se comunica en la entrega. El tag local
-anterior `flamelab-skeleton-2026-11-14` conserva la entrega histórica.
+configurada. La etiqueta `flamelab-team-start-v1` identifica el mismo commit común;
+conservar también esa etiqueta sin mover. El SHA definitivo se comunica en la entrega.
+El tag anterior `flamelab-skeleton-2026-11-14` conserva la entrega histórica publicada.
 
 Cada persona tiene su clon y su rama de trabajo. No hace falta el ZIP NASA, una
 clave de IA, Docker ni PostgreSQL para instalar y ejecutar esta base.

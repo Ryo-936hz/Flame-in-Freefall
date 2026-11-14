@@ -19,6 +19,7 @@ Ver [TEAM_START](TEAM_START.md). El historial local anterior y el tag
 | IA demo | Flujo Python de herramientas acotado y determinista, citas, hipótesis preparada, informe. | No necesita clave y no llama a LLM; insuficiencia explícita sin datos/X. |
 | Cliente | React/TS, openapi-fetch, filtros editables, tablas, evidencia histórica, A/B, informe/eventos. | 6 pruebas cliente, build/tipos y recorrido de navegador real. |
 | Windows | Setup sin sobrescribir .env, scripts API/web/check, lockfiles. | Setup y check ejecutados en Windows; ver VERIFICATION. |
+| GitHub/CI | Código publicado en main, historial conservado, guía para seis y CI Windows/Linux. | Primera ejecución remota 43592863296: ambos trabajos aprobados; detalle en VERIFICATION. |
 
 ## Preparado, sin validación real del servicio
 
@@ -27,9 +28,6 @@ Ver [TEAM_START](TEAM_START.md). El historial local anterior y el tag
   Validar IDs no demuestra que una afirmación esté respaldada científicamente.
 - SQLAlchemy, dependencia opcional psycopg y Compose PostgreSQL/pgvector: no se
   ejecutó servidor PostgreSQL/Docker. No se creó ni pobló un índice vectorial.
-- CI Windows/Linux configurada en GitHub para push/PR a main. Consultar el registro
-  de publicación en VERIFICATION y Actions para el resultado observado; configurar
-  un workflow por sí solo no acredita una ejecución satisfactoria.
 - P5/P6 tienen carpetas y cliente común. DESIGN_ANDURIL conserva la dirección visual;
   no se ha construido frontend de producto ni una escena física.
 

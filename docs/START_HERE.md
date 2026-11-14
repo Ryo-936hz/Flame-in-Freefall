@@ -8,7 +8,7 @@ elegir tarea, usar [TEAM_START](TEAM_START.md). El frontend de producto sigue pe
 
 - Integración: `main` en GitHub; referencia de arranque para los seis: `origin/codex/team-start-v1`. Crear rama propia desde ella según [TEAM_START](TEAM_START.md).
 - La demo usa 2 estudios, 5 ensayos y 6 observaciones **sintéticos**. El catálogo real contiene 24 investigaciones `metadata_only`, en un bundle separado; no hay una serie NASA cuantitativa importada.
-- SQLite y modo demo comprobados localmente. Proveedor externo probado con HTTP simulado, sin llamadas reales. PostgreSQL/pgvector pendiente; CI registrada en [VERIFICATION](VERIFICATION.md).
+- SQLite y modo demo comprobados localmente y en CI GitHub Windows/Linux. Proveedor externo probado con HTTP simulado, sin llamadas reales. PostgreSQL/pgvector pendiente; ejecuciones en [VERIFICATION](VERIFICATION.md).
 - [README](../README.md) y [SETUP_WINDOWS](SETUP_WINDOWS.md) contienen comandos reales; [VERIFICATION](VERIFICATION.md) conserva resultados, entorno y límites.
 
 ## Primera lectura para cualquier asistente

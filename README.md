@@ -2,6 +2,8 @@
 
 Los TTS · 14 de noviembre de 2026.
 
+[![Verificación Windows y Linux](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/workflows/verify.yml)
+
 Esqueleto local conectado: FastAPI/Pydantic, SQLite con migraciones y snapshots,
 ingesta CLI, perfil, ranking Gower, comparación, coordinador determinista, adaptador
 externo configurable y cliente React/TypeScript generado desde OpenAPI.
