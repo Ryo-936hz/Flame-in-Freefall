@@ -37,6 +37,7 @@ def _summary(response, bundle) -> dict:
         group["geometry"] or "", group["combustion_face"] or "", tuple(group["trial_ids"]),
     ))
     return {
+        "n_quantitative_pairs": sum(point.x is not None for point in points),
         "status": response.status, "provider": response.provider,
         "selected_trial_ids": [item.trial_id for item in response.ranking.items],
         "selected_segments": [{
@@ -91,7 +92,7 @@ def evaluate(suite_path: Path, fixture_path: Path) -> dict:
         "n_segments", "n_trials_with_unresolved_independence",
     )}
     profile_failures = _differences(suite["expected_profile"], profile_summary, "profile")
-    settings = Settings(ai_provider="demo", seed_demo=False)
+    settings = Settings(_env_file=None, ai_provider="demo", seed_demo=False)
     results = []
     for case in cases:
         request = ResearchRequest.model_validate(case["request"])

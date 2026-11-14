@@ -102,6 +102,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/research/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Research Plan */
+        post: operations["research_plan_api_v1_research_plan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/research/{run_id}": {
         parameters: {
             query?: never;
@@ -731,6 +748,40 @@ export interface components {
             /** Warnings */
             warnings: string[];
         };
+        /**
+         * ResearchPlan
+         * @description Inspectable deterministic plan; it is not a model-generated program.
+         */
+        ResearchPlan: {
+            /**
+             * Blocked
+             * @default false
+             */
+            blocked?: boolean;
+            /**
+             * Intent
+             * @enum {string}
+             */
+            intent: "explicit_filters" | "compare_varying_flow" | "scenario_change" | "assess_evidence" | "ambiguous" | "unsupported";
+            /** Limits */
+            limits?: string[];
+            /** Message */
+            message: string;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other";
+            /**
+             * Planning Mode
+             * @default explicit
+             * @enum {string}
+             */
+            planning_mode?: "explicit" | "catalog";
+            ranking: components["schemas"]["RankingRequest"];
+            /** X Condition */
+            x_condition?: ("oxygen_pct" | "oxygen_initial_pct" | "oxygen_final_pct" | "pressure_kpa" | "flow_velocity_cm_s" | "material" | "geometry" | "combustion_face" | "thickness_mm" | "diameter_mm" | "sample_width_mm" | "flow_direction" | "gravity_regime" | "burning_faces" | "burn_duration_s" | "test_end" | "test_configuration" | "aging_duration_s" | "ignition_power_w" | "ignition_duration_s") | null;
+        };
         /** ResearchRequest */
         ResearchRequest: {
             /**
@@ -744,6 +795,12 @@ export interface components {
              * @enum {string}
              */
             metric?: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other";
+            /**
+             * Planning Mode
+             * @default explicit
+             * @enum {string}
+             */
+            planning_mode?: "explicit" | "catalog";
             /** Question */
             question: string;
             ranking?: components["schemas"]["RankingRequest"];
@@ -768,6 +825,7 @@ export interface components {
             id: string;
             /** Panels */
             panels: components["schemas"]["Panel"][];
+            plan?: components["schemas"]["ResearchPlan"] | null;
             /**
              * Provider
              * @enum {string}
@@ -794,6 +852,8 @@ export interface components {
         };
         /** ScenarioComparisonRequest */
         ScenarioComparisonRequest: {
+            /** Metric */
+            metric?: ("flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other") | null;
             /**
              * Name A
              * @default Scenario A
@@ -815,6 +875,8 @@ export interface components {
              * @constant
              */
             label?: "evidence_comparison_not_physical_simulation";
+            /** Metric */
+            metric?: ("flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other") | null;
             /** Name A */
             name_a: string;
             /** Name B */
@@ -1265,6 +1327,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResearchResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    research_plan_api_v1_research_plan_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchPlan"];
                 };
             };
             /** @description Not Found */

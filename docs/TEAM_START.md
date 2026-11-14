@@ -1,5 +1,9 @@
 # Arranque común de los seis puestos — Los TTS
 
+> Esta guía conserva la referencia inicial congelada. Para el incremento actual,
+> usar [INTEGRATION_P134](INTEGRATION_P134.md) y el commit comunicado de `raul`.
+> No volver a la base antigua al continuar una rama con trabajo existente.
+
 Repositorio: [Ryo-936hz/Flame-in-Freefall](https://github.com/Ryo-936hz/Flame-in-Freefall).
 La rama de integración es `main`. Para el primer reparto, los seis parten de
 **`origin/codex/team-start-v1`**, aunque `main` avance después. Esta rama de referencia

@@ -75,7 +75,7 @@ async def main():
         "expected": "Metric availability is checked for eligible segments before applying limit; "
                     "limit=1 should retain the supported second trial.",
     }
-    # Nonzero until the coordinator forwards the metric into ranking before top-k.
+    # Fail if the coordinator stops forwarding the metric before top-k.
     output["passed"] = (
         one.status == "completed" and two.status == "completed"
         and [item.trial_id for item in one.ranking.items] == [second["id"]]

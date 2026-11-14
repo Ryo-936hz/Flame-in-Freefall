@@ -1,4 +1,29 @@
-# Relevo de ingeniería — Los TTS
+# Relevo vigente — integración P1/P3/P4
+
+El usuario asume P1/P3/P4. Entrega en `raul`; el commit se consulta con
+`git log -1 --format=%H`. [Guía reproducible](INTEGRATION_P134.md),
+[estado](IMPLEMENTATION_STATUS.md), [verificación](VERIFICATION.md).
+
+P1 publica el contrato/preview/snapshots/CI; P3 conserva identidad, controles,
+métricas y evaluaciones; P4 conecta plan, herramientas y revisión acotada con
+funcionamiento sin credenciales. El pendiente de métrica por segmento está cerrado.
+Los nuevos tipos son aditivos y generados. Los expedientes antiguos permanecen
+legibles con `plan=null`, sin recalcular resultados.
+
+| Puesto | Siguiente trabajo propio |
+|---|---|
+| P1/P3/P4 | Mantener las puertas de check/CI y revisar cambios de datos/consumidores; no quedan stubs de su recorrido demo. |
+| P2 | Resolver las dudas científicas de la auditoría con evidencia; no cambiar revisado/unverified por pasar software. |
+| P5 | Consumir preview/plan, mostrar filtros/bloqueos y conectar Evidence Canvas con tipos regenerados. |
+| P6 | Conectar A/B, informe y recuperación; probar el recorrido visual junto a P5. |
+
+No se han enviado mensajes en nombre del equipo ni movido referencias iniciales.
+La rama `main` se integra mediante el proceso de revisión acordado; usar el commit
+exacto entregado, preservando ramas/cambios propios. El historial inferior conserva
+el estado de la primera base y no sustituye esta sección.
+
+## Histórico de la base inicial
+
 
 Integrador P1. [Repositorio compartido](https://github.com/Ryo-936hz/Flame-in-Freefall),
 rama de integración `main`. La referencia común de arranque es

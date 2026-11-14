@@ -33,10 +33,21 @@ pertenecen a VERIFICATION y la referencia común a TEAM_HANDOFF.
 | D-19 histórica | Primera entrega local y referencia común. | Se conservan commit/bundle locales. La publicación posterior fue autorizada por el usuario en D-20. | P1 + equipo |
 | D-20 | Publicar en main y conservar codex/team-start-v1 como referencia común del equipo. | El conector rechazó escritura con 403. El usuario eligió autenticar Git local; Git Credential Manager completó la autenticación y permitió publicar conservando el historial. Todos crean su primera rama desde la referencia común; no moverla. TEAM_START documenta arranque y tareas. | P1 + equipo |
 
-La propuesta de matriz relacional por observación, el índice pgvector, planificación de lenguaje natural,
-diseño inverso validado y frontend de producto siguen pendientes. Su presencia en la visión no los convierte
-en capacidades de esta base. El camino PostgreSQL configurado tampoco equivale a un servidor probado.
+Las decisiones anteriores conservan su contexto histórico. La planificación acotada
+y PostgreSQL tienen avances posteriores descritos en IMPLEMENTATION_STATUS y
+VERIFICATION; no equivalen a lenguaje natural general ni pgvector operativo.
+Matriz analítica relacional, diseño inverso validado y frontend final siguen fuera de esta base.
 
 ## Añadir una decisión
 
 Fecha, responsable, contexto, alternativas consideradas, decisión, consecuencias y archivos afectados. Para cambios estructurales usar un ADR. Los resultados de pruebas pertenecen a la entrega y al estado de implementación, no se inventan como motivo retrospectivo.
+
+
+## Cierre conjunto P1/P3/P4 de la demo
+
+Por petición explícita del usuario, los tres puestos se trabajan en `raul`,
+preservando `main` y el historial de P4. [ADR 0009](adr/0009-visible-plans-and-metric-availability.md)
+acuerda plan público aditivo, modo explícito compatible, catálogo determinista,
+disponibilidad de métrica por segmento antes del límite y revisión externa acotada.
+Las evaluaciones científicas y de IA pasan a ser puertas de check/CI. P5/P6 reciben
+los contratos generados para su interfaz; no se reasigna su implementación visual.

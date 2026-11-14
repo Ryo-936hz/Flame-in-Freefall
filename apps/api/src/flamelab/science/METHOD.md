@@ -6,8 +6,8 @@ ejecutan instrucciones de documentos y no convierten fixtures en datos NASA.
 ## Ranking `compatibility_then_weighted_gower_v1`
 
 Primero se aplican estudio, permiso de sintéticos y `required_match`. Una diferencia
-obligatoria excluye; una condición obligatoria ausente produce `indeterminate`. Estas
-restricciones también se comprueban con peso cero. La elegibilidad solo acredita los
+obligatoria excluye; una condición obligatoria ausente produce `indeterminate`
+si no concurre otro motivo de exclusión. Estas restricciones también se comprueban con peso cero. La elegibilidad solo acredita los
 filtros explícitos: no es una certificación de compatibilidad física.
 
 Se evalúan las claves de `target`, con peso 1 salvo configuración. `vary` queda fuera
@@ -200,14 +200,33 @@ Una fila por ensayo conserva su mejor segmento elegible; no crea réplicas.
 El argumento anterior `metric_trial_ids` se conserva por compatibilidad, pero no
 puede acreditar disponibilidad por segmento y emite un aviso en ese modo.
 
-**Conexión pendiente P1/P4:** `ai/engine.py` aún pasa solo `metric_trial_ids` para
-algunas métricas. Debe pasar `metric=request.metric` para todas las investigaciones
-y probar la selección antes del top-k. `evals/science/metric_availability_run.py`
-reproduce la carencia con datos sintéticos y devuelve 1 hasta que se conecte.
-Esto no afecta la ausencia explícita de resultados en el catálogo ni autoriza
-inferir tasas para configuraciones de Flame Design.
+**Conexión P1/P3/P4 integrada:** `ai/engine.py` pasa `metric=request.metric`
+para todas las investigaciones, usando el ranking del plan resuelto. La ausencia
+de medición se excluye antes del top-k, incluso si las condiciones coincidían.
+`evals/science/metric_availability_run.py` verifica el caso sintético de dos ensayos:
+el primero solo tiene la métrica en un segmento rechazado; el segundo sí la tiene
+en el segmento elegible. Ambos límites 1/2 devuelven únicamente el segundo y el
+runner devuelve 0. También se ejecuta dentro de pytest.
+El endpoint de ranking sin métrica conserva su selección por condiciones. No se
+infieren tasas para configuraciones de Flame Design ni para medidas ausentes.
 
 La auditoría real y sus límites están en `evals/science/P2_INTEGRATION_REVIEW.md`.
 No se han cambiado importadores ni marcado evidencia NASA como revisada. Duraciones
 censuradas, anchuras nominales/efectivas y estimaciones de O₂ requieren revisión
 P2 y, si necesitan campos nuevos, acuerdo contractual P1.
+
+
+## Escenarios A/B y coordenadas ausentes
+
+El endpoint de escenarios conserva su modo por condiciones cuando `metric=null`
+o se omite: ordena candidatos, sin prometer que tengan una medición particular.
+Cuando se indica `metric`, ambos escenarios usan el mismo filtro de disponibilidad
+que investigación antes de puntuar/aplicar el límite, y la respuesta conserva la
+métrica solicitada. Así el consumidor puede pedir conjuntos coherentes sin cambiar
+la semántica de los clientes anteriores. A/B no calcula pares X/Y ni simula física;
+que una métrica exista no acredita una coordenada X conocida o comparabilidad causal.
+
+En comparación, `x=null` continúa visible por contrato, acompañado de advertencias,
+y no es un par cuantitativo. La coordinación exige al menos un X conocido para
+declarar evidencia suficiente para el recorrido; las suites sintéticas cuentan
+estos pares por separado como `n_quantitative_pairs` y verifican el caso sin X.

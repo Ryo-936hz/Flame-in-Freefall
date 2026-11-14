@@ -1,4 +1,4 @@
-# Evaluación inicial P3: solo regresión sintética
+# Evaluaciones P3: regresión sintética e integración del corpus
 
 Los seis casos usan `data/fixtures/demo.json` sin modificarlo. Sus expectativas
 se escribieron a partir de los valores/identidades explícitos del fixture, antes
@@ -29,8 +29,8 @@ ranking/comparación del proyecto; no hay implementación paralela de los cálcu
 | Cambio a gravedad terrestre | Solo ensayo sintético 4 | Una observación de valor cero; una unidad independiente | Cero conocido se conserva. Cambia la selección, no se simula un cambio físico. |
 | Gravedad lunar | Ninguno | Estado `insufficient_evidence`, sin comparación | No hay ensayo lunar; gravedad desconocida no equivale a coincidencia. |
 | Sintéticos deshabilitados | Ninguno | Estado `insufficient_evidence`, sin comparación ni fuentes recuperadas | Todos los ensayos del fixture son sintéticos; el permiso explícito se respeta. |
-| Métrica `other` | Ensayos sintéticos 1, 2 y 3 | Sin puntos/grupos, unidad Y `unsupported`, estado insuficiente | Tener candidatos no define la semántica de una métrica desconocida. |
-| Tasa no medida | Solo ensayo sintético 5 | Cero observaciones conocidas, mediana nula y estado insuficiente | Se selecciona por estudio/material/geometría conocidos; gravedad/flujo ausentes y tasa `not_measured` no se imputan. |
+| Métrica `other` | Ninguno | Sin comparación, estado insuficiente | La métrica carece de unidad semántica; no acredita disponibilidad antes del ranking. |
+| Tasa no medida | Ninguno | Sin comparación, estado insuficiente | El ensayo 5 cumple condiciones, pero su tasa `not_measured` lo excluye antes de top-k. |
 
 La suite comprueba perfil, selección/orden del ranking, cobertura y similitud,
 motivos de exclusión, coordenadas/unidades, fuentes, procedencia, denominadores y
@@ -39,8 +39,9 @@ Las listas de puntos/grupos se comparan en un orden normalizado; la estabilidad 
 orden del servicio se prueba aparte en las pruebas científicas del módulo.
 
 Los controles de material y gravedad son explícitos. `minimum_coverage=0.4` permite
-comprobar que el ensayo 5 sigue indeterminado por faltar gravedad obligatoria aun
-con cobertura 0.5. No es una recomendación de umbral científico. Los empates entre
+comprobar la cobertura 0.5 del ensayo 5 y el motivo de gravedad obligatoria ausente.
+La investigación lo excluye además por no tener la métrica conocida; el ranking
+directo sin métrica conserva el estado indeterminado por esa condición. No es una recomendación de umbral científico. Los empates entre
 los tres ensayos de microgravedad se resuelven por ID. La igualdad numérica permite
 solo tolerancia de redondeo software (`1e-12` relativa/absoluta), no incertidumbre
 experimental ni una cifra de precisión de medidas reales.
@@ -149,17 +150,39 @@ Los detalles de extracción y las dudas científicas están en
 [P2_INTEGRATION_REVIEW.md](P2_INTEGRATION_REVIEW.md). Todas las evidencias siguen
 sin revisión científica aprobada; pasar estos checks no acredita comparabilidad.
 
-## Diagnóstico pendiente de integración P1/P4
+## Regresión integrada de disponibilidad antes del límite
 
 ```powershell
 .venv\Scripts\python.exe evals/science/metric_availability_run.py
 ```
 
 Usa únicamente datos sintéticos y el coordinador demo. Comprueba que el límite
-no descarte el único ensayo que tiene la métrica en su segmento elegible. En esta
-entrega **devuelve 1**: el coordinador aún no pasa `metric=request.metric` al
-ranking P3, aunque la función científica y sus pruebas ya están corregidas.
-El informe muestra `limit=1` insuficiente y `limit=2` con evidencia. Tras conectar
-la llamada debe devolver 0 y conservar el ensayo respaldado con ambos límites.
-La suite verde de 6+6 casos y los siete checks reales no cubren ni ocultan ese
-pendiente. Detalles y aceptación en [relevo P3](../../docs/handoffs/P3.md).
+no descarte el único ensayo que tiene la métrica en su segmento elegible. P4 ya
+pasa `metric=request.metric` al ranking y conserva el plan resuelto. El caso
+**devuelve 0**: tanto `limit=1` como `limit=2` conservan únicamente el ensayo con
+medición en el segmento elegible, con identidad de ensayo/segmento y coordenadas
+exactas comprobadas. La prueba se ejecuta también en `test_science_evaluation.py`;
+desconectar el gate vuelve a producir un fallo, no un aprobado vacío.
+Resultados y límites en [relevo P3](../../docs/handoffs/P3.md).
+
+
+## Pares X/Y válidos y coherencia de selección
+
+Las suites sintéticas exponen `n_quantitative_pairs`: se cuentan únicamente los
+puntos cuyo X es conocido. El caso de flujo ausente conserva la observación Y
+con `x=null` por compatibilidad, pero cuenta **cero pares** y devuelve insuficiencia.
+La selección combinada conserva seis observaciones y solo cinco pares válidos.
+Esto evita equiparar registros mostrados con puntos utilizables en un gráfico.
+
+Las expectativas de disponibilidad de métrica se revisaron desde el fixture:
+los ensayos 1–4 tienen una tasa conocida (incluido cero en el 4); el 5 no la tiene.
+Sin permiso sintético ninguna medida es elegible, y `other` no define una unidad
+semántica. No se regeneraron resultados esperados automáticamente desde el motor.
+La prueba de disponibilidad antes del límite usa el coordinador real en modo demo.
+
+Las reglas de procedencia, unidades y campaña se comprueban también en
+`test_science.py`, `test_condition_segments.py`, `test_science_selection.py` y
+`corpus_run.py`: representaciones publicadas/digitalizadas/derivadas no comparten
+mediana; valores incompatibles no se mezclan; un registro de otra campaña no altera
+el grupo de la métrica solicitada. Son pruebas de esas reglas, no etiquetas humanas
+de relevancia ni una reserva independiente para ajustar pesos o prompts.

@@ -133,7 +133,8 @@
             "scored_segment_id": null,
             "eligible_segment_ids": []
           }
-        ]
+        ],
+        "n_quantitative_pairs": 3
       }
     },
     {
@@ -258,7 +259,8 @@
             "scored_segment_id": null,
             "eligible_segment_ids": []
           }
-        ]
+        ],
+        "n_quantitative_pairs": 2
       }
     },
     {
@@ -349,7 +351,8 @@
             "scored_segment_id": null,
             "eligible_segment_ids": []
           }
-        ]
+        ],
+        "n_quantitative_pairs": 0
       }
     },
     {
@@ -443,7 +446,8 @@
               "synthetic:changed-segment-a"
             ]
           }
-        ]
+        ],
+        "n_quantitative_pairs": 1
       }
     },
     {
@@ -698,7 +702,8 @@
               "synthetic:reference-segment-a"
             ]
           }
-        ]
+        ],
+        "n_quantitative_pairs": 5
       }
     },
     {
@@ -731,7 +736,8 @@
         "observed_independent_units": 0,
         "retrieved_evidence_ids": [],
         "missing_x_reported": false,
-        "hypothesis_count": 0
+        "hypothesis_count": 0,
+        "n_quantitative_pairs": 0
       }
     }
   ]

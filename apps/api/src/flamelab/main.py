@@ -12,13 +12,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from starlette.exceptions import HTTPException
 
 from flamelab.ai.engine import run_research
+from flamelab.ai.planner import plan_research
 from flamelab.ai.provider import ProviderFailure
 from flamelab.ai.report import render_report
 from flamelab.config import Settings
 from flamelab.data.loader import load_bundle
 from flamelab.domain.contracts import (
     ComparisonRequest, ComparisonResponse, ErrorResponse, Evidence, HealthResponse,
-    Metric, ProfileResponse, RankingRequest, RankingResponse, ResearchRequest, ResearchResponse,
+    Metric, ProfileResponse, RankingRequest, RankingResponse, ResearchPlan, ResearchRequest, ResearchResponse,
     ScenarioComparisonRequest, ScenarioComparisonResponse, Study, StudyEvidencePage,
     StudyObservationPage, Trial,
 )
@@ -163,6 +164,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def compare(request: ComparisonRequest):
         return compare_trials(bundle(), request)
 
+    @app.post("/api/v1/research/plan", response_model=ResearchPlan)
+    def research_plan(request: ResearchRequest):
+        # Preview is pure: no corpus read, analysis, persistence or provider call.
+        return plan_research(request)
+
     @app.post("/api/v1/research", response_model=ResearchResponse)
     async def research(request: ResearchRequest):
         data = bundle()
@@ -191,7 +197,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/api/v1/scenarios/compare", response_model=ScenarioComparisonResponse)
     def scenarios(request: ScenarioComparisonRequest):
         data = bundle()
-        return ScenarioComparisonResponse(name_a=request.name_a, name_b=request.name_b, ranking_a=rank_trials(data, request.scenario_a), ranking_b=rank_trials(data, request.scenario_b), warnings=["Compara aplicabilidad de evidencia; no simula la combustión ni predice seguridad."])
+        scope = (
+            "La métrica explícita exige observaciones conocidas antes de aplicar el límite."
+            if request.metric is not None else
+            "Selección por condiciones: no exige disponibilidad de una métrica; indique metric para comprobarla."
+        )
+        return ScenarioComparisonResponse(
+            metric=request.metric, name_a=request.name_a, name_b=request.name_b,
+            ranking_a=rank_trials(data, request.scenario_a, metric=request.metric),
+            ranking_b=rank_trials(data, request.scenario_b, metric=request.metric),
+            warnings=[scope, "Compara aplicabilidad de evidencia; no simula la combustión ni predice seguridad."],
+        )
 
     return app
 

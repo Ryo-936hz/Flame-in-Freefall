@@ -433,7 +433,24 @@ class Panel(Contract):
     data_ref: Literal["ranking", "comparison", "evidence", "hypotheses", "warnings"]
 
 
+class ResearchPlan(Contract):
+    """Inspectable deterministic plan; it is not a model-generated program."""
+
+    planning_mode: Literal["explicit", "catalog"] = "explicit"
+    intent: Literal[
+        "explicit_filters", "compare_varying_flow", "scenario_change",
+        "assess_evidence", "ambiguous", "unsupported",
+    ]
+    ranking: RankingRequest
+    metric: Metric
+    x_condition: ConditionKey | None = None
+    message: str
+    blocked: bool = False
+    limits: list[str] = Field(default_factory=list)
+
+
 class ResearchRequest(Contract):
+    planning_mode: Literal["explicit", "catalog"] = "explicit"
     question: str = Field(min_length=3, max_length=4000)
     ranking: RankingRequest = Field(default_factory=RankingRequest)
     metric: Metric = "flame_spread_rate_mm_s"
@@ -442,6 +459,8 @@ class ResearchRequest(Contract):
 
 class ResearchResponse(Contract):
     schema_version: Literal["1.0"] = "1.0"
+    # Optional to preserve pre-planner research snapshots without recalculation.
+    plan: ResearchPlan | None = None
     id: Identifier
     created_at: datetime
     provider: Literal["demo", "openai"]
@@ -459,6 +478,17 @@ class ResearchResponse(Contract):
 
     @model_validator(mode="after")
     def response_integrity(self) -> Self:
+        if self.plan is not None:
+            if self.plan.blocked and (
+                self.status != "insufficient_evidence" or self.ranking.items
+                or self.comparison is not None or self.claims or self.evidence or self.hypotheses
+            ):
+                raise ValueError("blocked plan cannot contain executed analysis")
+            if self.comparison is not None and self.comparison.metric != self.plan.metric:
+                raise ValueError("comparison metric differs from the inspected plan")
+            if (self.comparison is not None and self.plan.x_condition is not None
+                    and self.comparison.x_condition != self.plan.x_condition):
+                raise ValueError("comparison axis differs from the inspected plan")
         if self.created_at.utcoffset() is None or self.created_at.utcoffset().total_seconds() != 0:
             raise ValueError("created_at requires UTC timezone")
         if [x.sequence for x in self.events] != list(range(1, len(self.events) + 1)):
@@ -486,6 +516,7 @@ class ResearchResponse(Contract):
 
 
 class ScenarioComparisonRequest(Contract):
+    metric: Metric | None = None
     name_a: str = "Scenario A"
     name_b: str = "Scenario B"
     scenario_a: RankingRequest
@@ -493,6 +524,7 @@ class ScenarioComparisonRequest(Contract):
 
 
 class ScenarioComparisonResponse(Contract):
+    metric: Metric | None = None
     name_a: str
     name_b: str
     ranking_a: RankingResponse
