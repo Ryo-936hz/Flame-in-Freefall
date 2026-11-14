@@ -60,6 +60,8 @@ export function providerText(provider: Models["ResearchResponse"]["provider"]): 
       return "Deterministic demo coordinator · no external model";
     case "openai":
       return "External model synthesis · requires verification";
+    case "qwen":
+      return "Qwen local · cited measurement selection";
     default:
       return `Unrecognized provider (${String(provider)}) · requires verification`;
   }

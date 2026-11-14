@@ -1,5 +1,22 @@
 // Generated from packages/contracts/openapi.json. Do not edit.
 export interface paths {
+    "/api/v1/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Chat */
+        post: operations["chat_api_v1_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/comparisons": {
         parameters: {
             query?: never;
@@ -204,6 +221,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/studies/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Search Studies */
+        post: operations["search_studies_api_v1_studies_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/studies/{study_id}/chart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Study Chart */
+        get: operations["study_chart_api_v1_studies__study_id__chart_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/studies/{study_id}/evidence": {
         parameters: {
             query?: never;
@@ -289,6 +340,53 @@ export interface components {
              * @enum {string}
              */
             stage: "plan" | "retrieve" | "analyze" | "review" | "complete" | "error";
+        };
+        /** ChatRequest */
+        ChatRequest: {
+            /** Previous Question */
+            previous_question?: string | null;
+            /** Question */
+            question: string;
+            /** Research Id */
+            research_id?: string | null;
+        };
+        /** ChatResponse */
+        ChatResponse: {
+            /** Answer */
+            answer: string;
+            /** Comparison Studies */
+            comparison_studies?: string[];
+            /** Elapsed Ms */
+            elapsed_ms: number;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "catalog" | "qwen";
+            /** Sources */
+            sources: components["schemas"]["ChatSource"][];
+            /** Suggested Question */
+            suggested_question?: string | null;
+            /** Technical Details */
+            technical_details?: string[];
+        };
+        /** ChatSource */
+        ChatSource: {
+            /** Evidence Id */
+            evidence_id?: string | null;
+            /** Research Id */
+            research_id?: string | null;
+            /**
+             * Section
+             * @enum {string}
+             */
+            section: "dashboard" | "brief" | "canvas" | "ranking" | "lab" | "catalog" | "evidence" | "synthesis";
+            /** Study Id */
+            study_id?: string | null;
+            /** Text */
+            text: string;
+            /** Title */
+            title: string;
         };
         /** Citation */
         Citation: {
@@ -830,7 +928,7 @@ export interface components {
              * Provider
              * @enum {string}
              */
-            provider: "demo" | "openai";
+            provider: "demo" | "openai" | "qwen";
             /** Question */
             question: string;
             ranking: components["schemas"]["RankingResponse"];
@@ -864,11 +962,15 @@ export interface components {
              * @default Scenario B
              */
             name_b?: string;
+            /** Question */
+            question?: string | null;
             scenario_a: components["schemas"]["RankingRequest"];
             scenario_b: components["schemas"]["RankingRequest"];
         };
         /** ScenarioComparisonResponse */
         ScenarioComparisonResponse: {
+            /** Highlighted Trial Ids */
+            highlighted_trial_ids?: string[] | null;
             /**
              * Label
              * @default evidence_comparison_not_physical_simulation
@@ -907,6 +1009,12 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** StudyChartData */
+        StudyChartData: {
+            /** Metrics */
+            metrics: components["schemas"]["StudyMetricSummary"][];
+            study: components["schemas"]["Study"];
+        };
         /** StudyEvidencePage */
         StudyEvidencePage: {
             /** Items */
@@ -916,6 +1024,20 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** StudyMetricSummary */
+        StudyMetricSummary: {
+            /** Known Observations */
+            known_observations: number;
+            /** Median */
+            median: number;
+            /**
+             * Metric
+             * @enum {string}
+             */
+            metric: "flame_spread_rate_mm_s" | "extinction_oxygen_pct" | "heat_release_w" | "flex_burn_duration_s" | "flex_visible_flame_extinction_diameter_mm" | "same_reported_mass_loss_rate_mg_min" | "samer_run_duration_s" | "samer_net_aging_time_s" | "samer_primary_aging_time_s" | "samer_primary_mixing_time_s" | "saffire_reported_burn_duration_s" | "peak_burner_temperature_k" | "cfig_reported_run_duration_s" | "other";
+            /** Unit */
+            unit: string;
+        };
         /** StudyObservationPage */
         StudyObservationPage: {
             /** Items */
@@ -924,6 +1046,21 @@ export interface components {
             offset: number;
             /** Total */
             total: number;
+        };
+        /** StudySearchRequest */
+        StudySearchRequest: {
+            /** Question */
+            question: string;
+        };
+        /** StudySearchResponse */
+        StudySearchResponse: {
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "catalog" | "qwen";
+            /** Studies */
+            studies: components["schemas"]["Study"][];
         };
         /** Trial */
         Trial: {
@@ -970,6 +1107,75 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    chat_api_v1_chat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     compare_api_v1_comparisons_post: {
         parameters: {
             query?: never;
@@ -1732,6 +1938,142 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Study"][];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    search_studies_api_v1_studies_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StudySearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudySearchResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Gateway Timeout */
+            504: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    study_chart_api_v1_studies__study_id__chart_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                study_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyChartData"];
                 };
             };
             /** @description Not Found */

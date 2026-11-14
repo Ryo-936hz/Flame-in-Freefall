@@ -98,19 +98,7 @@ code, pre, .num, .id { font-family: var(--font-num); font-variant-numeric: tabul
 .bracket:hover::before { top: -3px; left: -3px; }
 .bracket:hover::after { bottom: -3px; right: -3px; }
 
-/* Hover roll */
-.roll { display: inline-flex; overflow: hidden; height: 1.25em; line-height: 1.25em; vertical-align: top; }
-.roll-c { display: inline-block; white-space: pre; text-shadow: 0 1.25em currentColor; transition: transform 0.55s cubic-bezier(0.65, 0, 0.15, 1); transition-delay: calc(var(--i) * 16ms); }
-.roll-host:hover .roll-c, .roll-host:focus-visible .roll-c { transform: translateY(-1.25em); }
-
 /* ---------- Layout ---------- */
-.shell {
-  display: grid; grid-template-columns: minmax(280px, 3fr) minmax(0, 6fr) minmax(300px, 3fr); gap: 10px;
-  padding: 10px clamp(14px, 2.4vw, 32px) 40px; align-items: start;
-}
-.col-brief, .col-evidence { position: sticky; top: 68px; max-height: calc(100vh - 78px); overflow-y: auto; }
-.col-work { display: grid; gap: 10px; min-width: 0; }
-.corpus { color: var(--ink-3); font-size: 11px; margin: 8px 2px 0; }
 .run-id { margin: 2px 2px -2px; color: var(--ink-3); font-size: 11px; overflow-wrap: anywhere; }
 
 .panel { background: var(--surface); border: 1px solid var(--panel-border); border-radius: var(--radius); min-width: 0; }
@@ -282,21 +270,14 @@ table.sub td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
 .foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 14px clamp(14px, 2.4vw, 32px) 24px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 12px; }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1280px) {
-  .shell { grid-template-columns: minmax(280px, 4fr) minmax(0, 8fr); }
-  .col-evidence { grid-column: 2; position: static; max-height: none; }
-}
 @media (max-width: 900px) {
   .topbar { grid-template-columns: 1fr auto; }
   .nav { grid-column: 1 / -1; grid-row: 2; justify-self: start; overflow-x: auto; max-width: 100%; }
   .status-db { display: none; }
-  .shell { grid-template-columns: 1fr; }
-  .col-brief, .col-evidence { position: static; max-height: none; grid-column: auto; }
   .synth-grid, .lab-grid, .ab { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
-  .roll-c { transition: none; }
 }
 .cov, .ranking .btn.ghost { white-space: nowrap; }
 .row-link .tag { margin-top: 4px; }
@@ -314,7 +295,7 @@ table.sub td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
 }
 .panel h2:focus { outline: none; }
 
-/* Investigate stays reachable: the action bar sticks to the bottom of the brief column. */
+/* Keep the investigation action reachable while scrolling. */
 .brief-actions {
   position: sticky; bottom: 0; z-index: 2; align-items: center;
   margin: 14px -16px -16px; padding: 12px 16px;
@@ -324,27 +305,9 @@ table.sub td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
 .brief-actions .btn.primary { flex: 1 1 auto; justify-content: center; }
 .brief-error { flex-basis: 100%; margin: 0 0 4px; }
 .kbd-hint { font-family: var(--font-num); font-size: 10.5px; color: var(--ink-3); margin-left: auto; }
-.col-brief { scroll-padding-bottom: 72px; }
-
-/* ---------- Fixed app shell (desktop): the page never scrolls, footer always visible ---------- */
 @media (min-width: 901px) {
-  html, body, #root { height: 100%; overflow: hidden; }
-  .app { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
   .topbar { position: relative; }
-  .shell { min-height: 0; height: 100%; padding-bottom: 10px; align-items: stretch; }
-  .col-brief, .col-work, .col-evidence {
-    position: relative; top: auto; max-height: none; height: 100%; min-height: 0;
-    overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
-  }
-  .col-work { align-content: start; padding-right: 2px; }
-  .col-evidence .panel { min-height: 100%; }
   .foot { padding: 8px clamp(14px, 2.4vw, 32px); }
-}
-@media (min-width: 901px) and (max-width: 1280px) {
-  .shell { grid-template-columns: minmax(280px, 4fr) minmax(0, 8fr); grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); }
-  .col-brief { grid-column: 1; grid-row: 1 / span 2; }
-  .col-work { grid-column: 2; grid-row: 1; }
-  .col-evidence { grid-column: 2; grid-row: 2; }
 }
 
 /* ---------- Day/night switch ---------- */
@@ -482,16 +445,13 @@ body { background: var(--bg); }
 .app::before { z-index: -2; }
 .app::after { z-index: -1; }
 .topbar { z-index: 20; }
-.shell, .foot { position: relative; z-index: 1; }
+.foot { position: relative; z-index: 1; }
 @media (prefers-reduced-transparency: reduce) {
   .panel, .topbar, .theme-switch { background-color: var(--surface); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .app::before { background: var(--bg); }
   .app::after { display: none; }
 }
 
-/* Flame explainer lives in the evidence column before the first investigation. */
-.col-evidence { display: grid; align-content: start; gap: 10px; }
-.col-evidence .panel.evidence { min-height: 0; }
 .flame-panel .panel-b { padding: 12px 14px 14px; }
 .flame-ill { margin: 0; }
 .flame-title { margin: 0 0 8px; color: var(--ink-3); }
@@ -502,7 +462,6 @@ body { background: var(--bg); }
 .flame-lbl.r { left: calc(50% + 10px); }
 .flame-lbl span { font-size: 9px; margin-top: 2px; }
 .flame-ill figcaption { font-size: 12px; line-height: 1.45; }
-.col-evidence .panel { min-height: 0; }
 
 /* ---------- Ambient glow: day = green behind solid white panels; night = peach/rose ---------- */
 :root {

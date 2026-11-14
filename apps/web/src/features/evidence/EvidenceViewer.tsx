@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { gsap, prefersReducedMotion, useGSAP } from "../../lib/motion";
 import type { Api, Evidence } from "../../lib/client";
 import { ApiError, sourceLink } from "../../lib/client";
 import { createLatest } from "../../lib/latest";
-import { shortId } from "../../lib/format";
+import { sourceLabel } from "../../lib/format";
 import { tx } from "../../lib/backendText";
 import { Panel, ProvenanceTag, StateMessage, Tag } from "../../components/ui";
 
@@ -47,18 +46,12 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
 
   const shown: Load = load.state !== "idle" && load.key !== requestKey ? { state: "idle" } : load;
   const evidence = shown.state === "ready" ? shown.evidence : null;
-  const body = useRef<HTMLDivElement>(null);
-  // New evidence slides in: tags, title, metadata and text cascade.
-  useGSAP(() => {
-    if (!evidence || prefersReducedMotion()) return;
-    gsap.from(".ev > *", { opacity: 0, y: 10, stagger: 0.05, duration: 0.45, ease: "expo.out", clearProps: "opacity,transform" });
-  }, { scope: body, dependencies: [evidence?.id] });
   const link = sourceLink(evidence?.source_url);
 
   return <Panel id="evidence" title="Evidence" className="evidence" meta={context && <span className="id">{context}</span>}>
-    <div className="panel-b" ref={body}>
+    <div className="panel-b">
       {ids.length > 1 && <div className="ev-tabs" role="group" aria-label="Evidence for the selection">
-        {ids.map((id) => <button type="button" key={id} className="chip" aria-pressed={id === activeId} onClick={() => onPick(id)}>{shortId(id)}</button>)}
+        {ids.map((id, index) => <button type="button" key={id} className="chip" title={id} aria-pressed={id === activeId} onClick={() => onPick(id)}>{sourceLabel(id) === "Source document" ? `Source ${index + 1}` : sourceLabel(id)}</button>)}
       </div>}
       {shown.state === "idle" && <StateMessage kind="empty" title="Nothing selected">
         <p>Pick a chart point, a table row or a citation to see its source.</p>
@@ -68,23 +61,23 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
         <p>{shown.message}</p>
       </StateMessage>}
       {evidence && <article className="ev">
+        <h3>{tx(evidence.title)}</h3>
+        {link && <a className="ev-source-link" href={link} target="_blank" rel="noreferrer">Open public source <span aria-hidden="true">↗</span></a>}
         <div className="ev-tags">
           <ProvenanceTag value={evidence.provenance} />
           <Tag tone={evidence.reviewed ? "neutral" : "warn"}>{evidence.reviewed ? "Reviewed" : "Review pending"}</Tag>
           {!retrieved && <Tag tone="warn">Active corpus · not in this research record</Tag>}
         </div>
-        <h3>{tx(evidence.title)}</h3>
         <dl className="ev-meta">
-          <div><dt>ID</dt><dd className="id">{evidence.id}</dd></div>
           <div><dt>Study</dt><dd className="id">{evidence.study_id}</dd></div>
           <div><dt>Locator</dt><dd className="id">{evidence.locator}{evidence.page != null ? ` · PDF page ${evidence.page}` : ""}</dd></div>
         </dl>
-        <pre className="ev-text">{evidence.text}</pre>
-        {link
-          ? <a className="btn" href={link} target="_blank" rel="noreferrer">Open public source ↗</a>
-          : <p className="hint">{evidence.provenance === "synthetic"
+        <details><summary>Record identifier</summary><code>{evidence.id}</code></details>
+        <p className="ev-excerpt-label">Source excerpt</p>
+        <div className="ev-text">{evidence.text}</div>
+        {!link && <p className="hint">{evidence.provenance === "synthetic"
             ? "Synthetic fixture: it does not link to any NASA measurement."
-            : "No public URL. The source can be found with the file locator; no link is invented."}</p>}
+            : "Use the locator above to find this source."}</p>}
       </article>}
     </div>
   </Panel>;

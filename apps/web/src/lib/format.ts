@@ -13,6 +13,7 @@ export function reasonText(code: string): string {
     case "coverage_below_minimum": return "Coverage below minimum";
     case "no_known_target_conditions": return "No known target conditions";
     case "no_active_target_weights": return "No conditions to score";
+    case "requested_metric_unavailable": return "The selected measurement is unavailable for this trial";
     default: return code;
   }
 }
@@ -59,4 +60,13 @@ export function pct(value: number): string {
 
 export function shortId(id: string): string {
   return id.replace(/^synthetic:/, "");
+}
+
+export function sourceLabel(id: string): string {
+  if (id.includes(":stage:") && id.endsWith(":table51")) return `Table 5.1 · ${id.split(":")[2]}, segment ${id.split(":")[4]}`;
+  if (id.endsWith(":table51")) return "Table 5.1 · trial record";
+  if (id.endsWith(":operational")) return "Operating conditions";
+  if (id.endsWith(":method:configuration")) return "Experimental setup";
+  if (id.endsWith(":method:oxygen")) return "Oxygen measurement method";
+  return "Source document";
 }

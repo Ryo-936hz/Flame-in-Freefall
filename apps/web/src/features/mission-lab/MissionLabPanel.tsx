@@ -4,6 +4,9 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { BassCasesPanel } from "./BassCasesPanel";
 import { ApiError } from "../../lib/client";
+import { metricLabel } from "../../lib/filters";
+import { reasonText, sourceLabel } from "../../lib/format";
+import { metricPreset } from "../../lib/metricPresets";
 import type { RankingRequest, ResearchResponse } from "../../lib/client";
 import { createRequestGuard, describeRequest } from "./comparisonState";
 import { providerText, summarizeProvenance } from "./provenance";
@@ -82,8 +85,8 @@ function ProvenanceLine({ items, scope }: { items: RankedTrial[]; scope: string 
 
 function EvidenceButtons({ ids, onOpen, context }: { ids: string[]; onOpen(id: string): void; context: string }) {
   if (!ids.length) return <span className="ml-muted">no linked evidence</span>;
-  return <>{ids.map((id) => <button type="button" className="reference" key={id}
-    aria-label={`Open evidence ${id} (${context})`} onClick={() => onOpen(id)}>{id}</button>)}</>;
+  return <>{ids.map((id, index) => <button type="button" className="reference" key={id} title={id}
+    aria-label={`Open evidence ${id} (${context})`} onClick={() => onOpen(id)}>{sourceLabel(id) === "Source document" ? `Source ${index + 1}` : sourceLabel(id)}</button>)}</>;
 }
 
 function FiltersList({ request }: { request: RankingRequest }) {
@@ -145,8 +148,8 @@ function ScenarioColumn({ side, name, selected, excluded, noEvidence, metric }: 
     </dl>
     <ProvenanceLine items={selected} scope={`Scenario ${side} provenance`} />
     {noEvidence && <div className="ml-insufficient" role="note">
-      <p><strong>Insufficient applicable evidence.</strong> No eligible candidates with these explicit filters, minimum coverage{metric ? <> and an available measurement of <code>{metric}</code></> : " (the API did not confirm metric availability)"}.</p>
-      <p>What is missing: {uniqueReasons(excluded).length ? uniqueReasons(excluded).map((reason) => <code key={reason}>{reason}</code>) : "the API returned no exclusion reasons."}</p>
+      <p><strong>Insufficient applicable evidence.</strong> No eligible trials{metric ? ` with ${metricLabel(metric).toLowerCase()}` : ""} match this scenario.</p>
+      <ul>{uniqueReasons(excluded).slice(0, 6).map((reason) => <li key={reason}>{reasonText(reason)}</li>)}</ul>
     </div>}
     {selected.length > 0 && <ul className="ml-list">
       {selected.map((item) => <li key={item.trial_id}>
@@ -160,7 +163,7 @@ function ScenarioColumn({ side, name, selected, excluded, noEvidence, metric }: 
       <ul className="ml-list">
         {excluded.map((item) => <li key={item.trial_id}>
           <code>{item.trial_id}</code> <span className="ml-tag">{item.provenance}</span> · {item.eligibility}
-          <span className="ml-metrics">{item.reasons.join("; ") || "no reason declared"}</span>
+          <span className="ml-metrics">{item.reasons.map(reasonText).join(" · ") || "No reason recorded"}</span>
         </li>)}
       </ul>
     </details>}
@@ -171,6 +174,7 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
   const uid = useId();
   const researchId = research?.id ?? null;
   const [presetId, setPresetId] = useState<string>(scenarioPresets[0]?.id ?? "");
+  const [baseline, setBaseline] = useState("");
   const [comparison, setComparison] = useState<ComparisonEntry | null>(null);
   const [comparePending, setComparePending] = useState<Pending | null>(null);
   const [compareError, setCompareError] = useState("");
@@ -185,20 +189,28 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
   const focusQuery = useRef(false);
 
   const preset = scenarioPresets.find((item) => item.id === presetId) ?? null;
+  const [showPresetDetails, setShowPresetDetails] = useState(false);
+  const campaign = metricPreset(metric);
+  const baselinePreset = scenarioPresets.find((item) => item.id === baseline);
+  const baselineInput = baseline.startsWith("flow_") && metric === "flame_spread_rate_mm_s" && !request?.allow_synthetic
+    ? campaign?.request ?? request : request;
+  const baseRequest = baseline === "campaign" ? campaign?.request ?? request
+    : baselineInput && baselinePreset ? baselinePreset.build(baselineInput) : request;
   const queryQuestion = question !== undefined ? question.trim() : research?.question || FALLBACK_QUESTION;
   const queryQuestionValid = queryQuestion.length >= 3 && queryQuestion.length <= 4000;
 
   useEffect(() => () => { compareGuard.current.cancel(); queryGuard.current.cancel(); }, []);
 
   async function compare(id: string) {
-    const base = request ? structuredClone(request) : null;
+    const base = baseRequest ? structuredClone(baseRequest) : null;
     const item = scenarioPresets.find((entry) => entry.id === id);
     if (!base) { setCompareError("The current filters are not valid. Fix them before comparing."); return; }
     if (!item) { setCompareError(`Unknown scenario: ${id}.`); return; }
     let body;
     try {
       // A se nombra al mostrarse según su vigencia; nunca se envía como "current filters".
-      body = { ...buildScenarioRequest(base, id, metric), name_a: "A · base filters" };
+      const baselineName = baseline === "campaign" ? campaign?.name : scenarioPresets.find((option) => option.id === baseline)?.title;
+      body = { ...buildScenarioRequest(base, id, metric), name_a: baselineName ? `A · ${baselineName}` : "A · base filters" };
     } catch (error) { setCompareError(errorText(error)); return; }
     const context: ComputedContext = { request: base, metric, at: new Date(), researchId };
     const token = compareGuard.current.begin();
@@ -257,14 +269,14 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
   }, [query]);
 
   // Vigencia del A/B: filtros usados frente a los actuales y expediente activo al enviarlo.
-  const compareStatus = comparison ? resultStatus(comparison, request, researchId, metric) : null;
+  const compareStatus = comparison ? resultStatus(comparison, baseRequest, researchId, metric) : null;
   const shownResponse = comparison && compareStatus
-    ? { ...comparison.response, name_a: scenarioAName(compareStatus, comparison.at) } : null;
+    ? { ...comparison.response, name_a: baseline && compareStatus === "current" ? comparison.response.name_a : scenarioAName(compareStatus, comparison.at) } : null;
   const diff = shownResponse ? diffScenarioRankings(shownResponse) : null;
   const rows = diff ? [...diff.left, ...diff.entered, ...diff.kept] : [];
   const comparedPreset = comparison ? scenarioPresets.find((item) => item.id === comparison.presetId) ?? null : null;
   const scenarioChanges = comparison ? describeScenarioChanges(comparison.request, comparison.scenarioB) : [];
-  const pendingStale = comparePending ? resultStatus(comparePending, request, researchId, metric) !== "current" : false;
+  const pendingStale = comparePending ? resultStatus(comparePending, baseRequest, researchId, metric) !== "current" : false;
 
   // La consulta abierta como expediente activo no se marca como "otro expediente".
   const queryResearchId = query && researchId === query.response.id ? query.researchId : researchId;
@@ -289,18 +301,25 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
 
     <div className="ml-block" role="group" aria-labelledby={`${uid}-scenario`}>
       <h3 id={`${uid}-scenario`}>Scenario B versus A</h3>
-      <p className="ml-muted">Selected metric: <code>{metric}</code>. Both scenarios require an available measurement of this metric before applying the result limit.</p>
+      <p className="ml-muted">Measurement: <strong>{metricLabel(metric)}</strong></p>
+      <label className="ml-baseline">Scenario A
+        <select className="select" aria-label="Scenario A" value={baseline} onChange={(event) => setBaseline(event.target.value)}>
+          <option value="">Current investigation filters</option>
+          {campaign && <option value="campaign">{campaign.name} study preset</option>}
+          {scenarioPresets.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
+        </select>
+      </label>
       {!request && <p className="ml-warn" role="note">The current filters are not valid; A/B comparisons need valid filters.</p>}
       <fieldset className="ml-presets">
         <legend>Explicit change for B</legend>
         {scenarioPresets.map((item) => <label key={item.id} className={item.id === presetId ? "ml-preset ml-preset-active" : "ml-preset"}>
           <input type="radio" name={`${uid}-preset`} value={item.id} checked={item.id === presetId} onChange={() => setPresetId(item.id)} />
           <span className="ml-preset-title">B · {item.title}</span>
-          <span className="ml-preset-text"><em>Change:</em> {item.change}</span>
-          <span className="ml-preset-text"><em>Expected:</em> {item.expectation}</span>
+          {showPresetDetails && <span className="ml-preset-text">{item.change}</span>}
         </label>)}
       </fieldset>
       <div className="actions">
+        <button type="button" aria-pressed={showPresetDetails} onClick={() => setShowPresetDetails(!showPresetDetails)}>Preset details</button>
         <button type="button" disabled={!request || !preset || !!comparePending} onClick={() => preset && void compare(preset.id)}>
           Compare A vs B{preset ? ` · ${preset.title}` : ""}
         </button>
@@ -318,7 +337,7 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
         <h4 ref={comparisonHeading} tabIndex={-1} className="ml-result-title">
           {compareStatus === "current" ? "A/B result" : "Previous A/B result"}{comparedPreset ? ` · ${comparedPreset.title}` : ""}
         </h4>
-        <p className="ml-label"><span className="ml-tag ml-tag-strong">{LABEL_TEXT[comparison.response.label ?? ""] ?? "Unrecognized comparison label · treat as an evidence comparison"}</span> <code>{comparison.response.label ?? "no label"}</code></p>
+        <p className="ml-label"><span className="ml-tag ml-tag-strong">{LABEL_TEXT[comparison.response.label ?? ""] ?? "Evidence comparison"}</span></p>
         <ContextBlock entry={comparison} status={compareStatus} subject="comparison" filtersTitle="Filters used for A"
           currentResearchId={researchId} canRecompute={!!request && !comparePending}
           onRecompute={() => void compare(comparison.presetId)} />
@@ -345,13 +364,13 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
             const item = change.b ?? change.a;
             const ids = [...new Set([...(change.a?.evidence_ids ?? []), ...(change.b?.evidence_ids ?? [])])];
             return <tr key={change.trial_id} className={`ml-row-${change.status}`}>
-              <th scope="row" data-label="Trial"><code>{change.trial_id}</code><br /><span className="ml-tag">{item?.provenance ?? "no provenance"}</span></th>
+              <th scope="row" data-label="Trial" title={change.trial_id}>{change.trial_id.split(":").at(-1)}<br /><span className="ml-tag">{item?.provenance ?? "no provenance"}</span></th>
               <td data-label="Change">{STATUS_TEXT[change.status]}</td>
               <td data-label="Similarity A">{change.a ? num(change.a.similarity) : "—"}</td>
               <td data-label="Similarity B">{change.b ? num(change.b.similarity) : "—"}</td>
               <td data-label="Δ similarity">{change.status === "kept" ? signed(change.similarityDelta) : "not applicable"}</td>
               <td data-label="Coverage A / B">{change.a ? num(change.a.coverage) : "—"} / {change.b ? num(change.b.coverage) : "—"}</td>
-              <td data-label="Reasons in B">{change.reasonsB.length ? change.reasonsB.map((reason) => <code key={reason}>{reason}</code>) : change.selectionNote ?? "—"}</td>
+              <td data-label="Reasons in B">{change.reasonsB.length ? change.reasonsB.map(reasonText).join(" · ") : change.selectionNote ?? "—"}</td>
               <td data-label="Segment context A / B"><p><strong>A:</strong> {describeSegments(change.a)}</p><p><strong>B:</strong> {describeSegments(change.b)}</p></td>
               <td data-label="Evidence"><EvidenceButtons ids={ids} context="current corpus"
                 onOpen={(id) => onOpenEvidence(id, change.trial_id, "corpus")} /></td>
@@ -429,10 +448,7 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
         </div>
         <h5>What is missing</h5>
         {query.response.ranking.excluded.length ? <ul className="ml-list">
-          {query.response.ranking.excluded.map((item) => <li key={item.trial_id}>
-            <code>{item.trial_id}</code> <span className="ml-tag">{item.provenance}</span> · {item.eligibility}
-            <span className="ml-metrics">{item.reasons.join("; ") || "no reason declared"}</span>
-          </li>)}
+          {uniqueReasons(query.response.ranking.excluded).slice(0, 8).map((reason) => <li key={reason}>{reasonText(reason)}</li>)}
         </ul> : <p>The API returned no excluded candidates with reasons.</p>}
         <h5>Warnings</h5>
         {query.response.warnings.length

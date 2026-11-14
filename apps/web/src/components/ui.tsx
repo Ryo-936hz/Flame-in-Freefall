@@ -1,14 +1,6 @@
 import type { ReactNode } from "react";
 import { PROVENANCE_LABEL } from "../lib/format";
 
-/** Hover roll: letters slide up and their copy rises from below (CSS in style.css). */
-export function RollText({ children }: { children: string }) {
-  return <span className="roll">
-    <span className="sr-only">{children}</span>
-    {[...children].map((char, index) => <span key={index} className="roll-c" aria-hidden="true" style={{ ["--i" as string]: index }}>{char === " " ? " " : char}</span>)}
-  </span>;
-}
-
 export function Mark({ className }: { className?: string }) {
   return <svg viewBox="0 0 32 32" aria-hidden="true" className={className}>
     <circle cx="16" cy="16" r="13.5" fill="none" stroke="currentColor" strokeWidth="2" />

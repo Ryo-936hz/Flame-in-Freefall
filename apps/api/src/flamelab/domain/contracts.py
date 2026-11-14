@@ -457,13 +457,59 @@ class ResearchRequest(Contract):
     include_hypotheses: bool = True
 
 
+class StudySearchRequest(Contract):
+    question: str = Field(min_length=3, max_length=500)
+
+
+class StudySearchResponse(Contract):
+    provider: Literal["catalog", "qwen"]
+    studies: list[Study]
+
+
+class ChatRequest(Contract):
+    question: str = Field(min_length=3, max_length=500)
+    previous_question: str | None = Field(default=None, max_length=500)
+    research_id: Identifier | None = None
+
+
+class ChatSource(Contract):
+    title: str
+    text: str
+    section: Literal["dashboard", "brief", "canvas", "ranking", "lab", "catalog", "evidence", "synthesis"]
+    study_id: Identifier | None = None
+    evidence_id: Identifier | None = None
+    research_id: Identifier | None = None
+
+
+class ChatResponse(Contract):
+    provider: Literal["catalog", "qwen"]
+    answer: str
+    technical_details: list[str] = Field(default_factory=list, max_length=3)
+    sources: list[ChatSource] = Field(max_length=3)
+    elapsed_ms: int
+    comparison_studies: list[Identifier] = Field(default_factory=list, max_length=2)
+    suggested_question: str | None = None
+
+
+class StudyMetricSummary(Contract):
+    metric: Metric
+    unit: str
+    known_observations: int
+    median: Number
+
+
+class StudyChartData(Contract):
+    study: Study
+    metrics: list[StudyMetricSummary]
+
+
 class ResearchResponse(Contract):
     schema_version: Literal["1.0"] = "1.0"
     # Optional to preserve pre-planner research snapshots without recalculation.
     plan: ResearchPlan | None = None
     id: Identifier
     created_at: datetime
-    provider: Literal["demo", "openai"]
+    provider: Literal["demo", "openai", "qwen"]
     status: Literal["completed", "insufficient_evidence"]
     question: str
     summary: str
@@ -521,6 +567,7 @@ class ScenarioComparisonRequest(Contract):
     name_b: str = "Scenario B"
     scenario_a: RankingRequest
     scenario_b: RankingRequest
+    question: str | None = Field(default=None, min_length=3, max_length=500)
 
 
 class ScenarioComparisonResponse(Contract):
@@ -530,6 +577,7 @@ class ScenarioComparisonResponse(Contract):
     ranking_a: RankingResponse
     ranking_b: RankingResponse
     warnings: list[str]
+    highlighted_trial_ids: list[Identifier] | None = None
     label: Literal["evidence_comparison_not_physical_simulation"] = "evidence_comparison_not_physical_simulation"
 
 

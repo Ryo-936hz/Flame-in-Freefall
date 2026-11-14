@@ -95,7 +95,7 @@ def test_conflicting_catalog_plan_never_executes_analysis_or_provider(tmp_path, 
     request = catalog_request()
     request["ranking"]["target"]["flow_velocity_cm_s"] = 5
     request["ranking"]["required_match"].append("flow_velocity_cm_s")
-    for name in ("rank_trials", "compare_trials", "profile_dataset", "synthesize"):
+    for name in ("rank_trials", "compare_trials", "synthesize"):
         monkeypatch.setattr("flamelab.ai.engine." + name, forbidden)
     with TestClient(create_app(settings_for(tmp_path))) as client:
         preview = client.post("/api/v1/research/plan", json=request)

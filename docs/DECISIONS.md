@@ -51,3 +51,11 @@ acuerda plan público aditivo, modo explícito compatible, catálogo determinist
 disponibilidad de métrica por segmento antes del límite y revisión externa acotada.
 Las evaluaciones científicas y de IA pasan a ser puertas de check/CI. P5/P6 reciben
 los contratos generados para su interfaz; no se reasigna su implementación visual.
+## Qwen local para selección de evidencia
+
+Ollama es un perfil opcional del servidor. Usa el modelo cuantizado `qwen3:0.6b`
+en loopback y `httpx`, que ya forma parte del proyecto. El modelo recibe una
+selección acotada de registros del corpus o resultados calculados y devuelve
+índices validados. Python conserva la autoridad sobre métricas, filtros,
+cálculos, procedencia y citas. La degradación usa catálogo o resultados
+deterministas. [Despliegue y métricas operativas](DESPLIEGUE.md).

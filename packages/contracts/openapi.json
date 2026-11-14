@@ -43,6 +43,191 @@
         "title": "ActivityEvent",
         "type": "object"
       },
+      "ChatRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "previous_question": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previous Question"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Question",
+            "type": "string"
+          },
+          "research_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Research Id"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "ChatRequest",
+        "type": "object"
+      },
+      "ChatResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "comparison_studies": {
+            "items": {
+              "maxLength": 240,
+              "minLength": 3,
+              "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+              "type": "string"
+            },
+            "maxItems": 2,
+            "title": "Comparison Studies",
+            "type": "array"
+          },
+          "elapsed_ms": {
+            "title": "Elapsed Ms",
+            "type": "integer"
+          },
+          "provider": {
+            "enum": [
+              "catalog",
+              "qwen"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ChatSource"
+            },
+            "maxItems": 3,
+            "title": "Sources",
+            "type": "array"
+          },
+          "suggested_question": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Question"
+          },
+          "technical_details": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Technical Details",
+            "type": "array"
+          }
+        },
+        "required": [
+          "provider",
+          "answer",
+          "sources",
+          "elapsed_ms"
+        ],
+        "title": "ChatResponse",
+        "type": "object"
+      },
+      "ChatSource": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence Id"
+          },
+          "research_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Research Id"
+          },
+          "section": {
+            "enum": [
+              "dashboard",
+              "brief",
+              "canvas",
+              "ranking",
+              "lab",
+              "catalog",
+              "evidence",
+              "synthesis"
+            ],
+            "title": "Section",
+            "type": "string"
+          },
+          "study_id": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "minLength": 3,
+                "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Id"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "text",
+          "section"
+        ],
+        "title": "ChatSource",
+        "type": "object"
+      },
       "Citation": {
         "additionalProperties": false,
         "properties": {
@@ -1853,7 +2038,8 @@
           "provider": {
             "enum": [
               "demo",
-              "openai"
+              "openai",
+              "qwen"
             ],
             "title": "Provider",
             "type": "string"
@@ -1950,6 +2136,19 @@
             "title": "Name B",
             "type": "string"
           },
+          "question": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 3,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Question"
+          },
           "scenario_a": {
             "$ref": "#/components/schemas/RankingRequest"
           },
@@ -1967,6 +2166,23 @@
       "ScenarioComparisonResponse": {
         "additionalProperties": false,
         "properties": {
+          "highlighted_trial_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 240,
+                  "minLength": 3,
+                  "pattern": "^[A-Za-z0-9_.-]+:[A-Za-z0-9_.:-]+$",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highlighted Trial Ids"
+          },
           "label": {
             "const": "evidence_comparison_not_physical_simulation",
             "default": "evidence_comparison_not_physical_simulation",
@@ -2082,6 +2298,27 @@
         "title": "Study",
         "type": "object"
       },
+      "StudyChartData": {
+        "additionalProperties": false,
+        "properties": {
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/StudyMetricSummary"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "study": {
+            "$ref": "#/components/schemas/Study"
+          }
+        },
+        "required": [
+          "study",
+          "metrics"
+        ],
+        "title": "StudyChartData",
+        "type": "object"
+      },
       "StudyEvidencePage": {
         "additionalProperties": false,
         "properties": {
@@ -2111,6 +2348,58 @@
         "title": "StudyEvidencePage",
         "type": "object"
       },
+      "StudyMetricSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "known_observations": {
+            "title": "Known Observations",
+            "type": "integer"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Median"
+          },
+          "metric": {
+            "enum": [
+              "flame_spread_rate_mm_s",
+              "extinction_oxygen_pct",
+              "heat_release_w",
+              "flex_burn_duration_s",
+              "flex_visible_flame_extinction_diameter_mm",
+              "same_reported_mass_loss_rate_mg_min",
+              "samer_run_duration_s",
+              "samer_net_aging_time_s",
+              "samer_primary_aging_time_s",
+              "samer_primary_mixing_time_s",
+              "saffire_reported_burn_duration_s",
+              "peak_burner_temperature_k",
+              "cfig_reported_run_duration_s",
+              "other"
+            ],
+            "title": "Metric",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric",
+          "unit",
+          "known_observations",
+          "median"
+        ],
+        "title": "StudyMetricSummary",
+        "type": "object"
+      },
       "StudyObservationPage": {
         "additionalProperties": false,
         "properties": {
@@ -2138,6 +2427,48 @@
           "items"
         ],
         "title": "StudyObservationPage",
+        "type": "object"
+      },
+      "StudySearchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "question": {
+            "maxLength": 500,
+            "minLength": 3,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "StudySearchRequest",
+        "type": "object"
+      },
+      "StudySearchResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "provider": {
+            "enum": [
+              "catalog",
+              "qwen"
+            ],
+            "title": "Provider",
+            "type": "string"
+          },
+          "studies": {
+            "items": {
+              "$ref": "#/components/schemas/Study"
+            },
+            "title": "Studies",
+            "type": "array"
+          }
+        },
+        "required": [
+          "provider",
+          "studies"
+        ],
+        "title": "StudySearchResponse",
         "type": "object"
       },
       "Trial": {
@@ -2283,6 +2614,84 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/chat": {
+      "post": {
+        "operationId": "chat_api_v1_chat_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Chat"
+      }
+    },
     "/api/v1/comparisons": {
       "post": {
         "operationId": "compare_api_v1_comparisons_post",
@@ -3216,6 +3625,163 @@
           }
         },
         "summary": "Studies"
+      }
+    },
+    "/api/v1/studies/search": {
+      "post": {
+        "operationId": "search_studies_api_v1_studies_search_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudySearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudySearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Search Studies"
+      }
+    },
+    "/api/v1/studies/{study_id}/chart": {
+      "get": {
+        "operationId": "study_chart_api_v1_studies__study_id__chart_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "study_id",
+            "required": true,
+            "schema": {
+              "title": "Study Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyChartData"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Gateway Timeout"
+          }
+        },
+        "summary": "Study Chart"
       }
     },
     "/api/v1/studies/{study_id}/evidence": {

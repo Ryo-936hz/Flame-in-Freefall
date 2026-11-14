@@ -38,7 +38,7 @@ function assertPolicy(request: RankingRequest) {
 
 test("every preset builds a policy-valid B without mutating A", () => {
   const ids = scenarioPresets.map((preset) => preset.id);
-  assert.ok(ids.length >= 3 && ids.length <= 4);
+  assert.ok(ids.includes("flow_5") && ids.includes("flow_6"));
   assert.equal(new Set(ids).size, ids.length);
   const bases: RankingRequest[] = [
     demoRanking,

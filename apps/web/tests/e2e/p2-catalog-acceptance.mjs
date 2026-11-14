@@ -16,7 +16,16 @@ const representatives = [
 ];
 const sorted = (items) => [...items].sort();
 
+export async function openSection(page, id) {
+  const parent = { brief: "canvas", ranking: "canvas", synthesis: "canvas", "compare-studies": "lab", evidence: "catalog", saffire: "catalog" }[id];
+  const link = page.locator(`.dashboard-subnav a[href="#${id}"], .dashboard-nav a[href="#${id}"]`).first();
+  if (parent && !await link.isVisible()) await page.locator(`.dashboard-nav a[href="#${parent}"]`).click();
+  await link.click();
+  await page.waitForURL(`**/#${id}`);
+}
+
 export async function verifySaffireContext({ page, check, screenshots }) {
+  await openSection(page, "saffire");
   const card = page.getByRole("region", { name: "Saffire documentary context", exact: true });
   await card.waitFor();
   check(await card.getAttribute("data-saffire-context") !== null, "Saffire is a separate documentary context node");
@@ -47,7 +56,26 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
   const report = page.getByRole("region", { name: "Report and recovery", exact: true });
   const observations = new Map(bundle.observations.map((item) => [item.id, item]));
   const trials = new Map(bundle.trials.map((item) => [item.id, item]));
+  await step("chart metric changes use their own campaign instead of the gravity filters", async () => {
+    await openSection(page, "canvas");
+    for (const [studyId, metric] of campaigns) {
+      const metricSelect = page.getByRole("combobox", { name: "Chart metric", exact: true });
+      await metricSelect.selectOption(metric);
+      const responsePromise = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/v1/research" && response.request().method() === "POST");
+      await page.getByRole("button", { name: "Update chart", exact: true }).click();
+      const response = await responsePromise;
+      const request = response.request().postDataJSON();
+      assert.deepEqual(request.ranking.study_ids, [studyId]);
+      assert.equal(request.ranking.target.gravity_regime, undefined);
+      const run = await response.json();
+      check(response.ok() && run.status === "completed" && run.comparison.points.length > 0, `${metric}: displays recorded measurements`);
+      await page.locator(".canvas .chart .pt-dot").first().waitFor();
+    }
+    await openSection(page, "brief");
+    await page.getByRole("button", { name: "Reset filters", exact: true }).click();
+  });
   await step("an empty target remains insufficient even at zero minimum coverage", async () => {
+    await openSection(page, "brief");
     await page.locator("#role-gravity_regime").selectOption("off");
     await page.locator("#role-flow_velocity_cm_s").selectOption("off");
     await page.getByRole("slider", { name: "Minimum coverage", exact: true }).press("Home");
@@ -60,9 +88,13 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
     const run = await response.json();
     check(run.status === "insufficient_evidence" && run.ranking.items.length === 0 && run.comparison === null, "no target does not create an ungrounded ranking");
     check(run.ranking.excluded.some((item) => item.reasons.includes("no_active_target_weights")), "the saved result states the missing active target explicitly");
+    const filters = page.getByRole("combobox", { name: "Chart filters", exact: true });
+    await filters.waitFor();
+    check(await filters.inputValue() === "current", "the selector reflects the custom filters actually used");
   });
   for (const [studyId, metric, unit, material] of campaigns) {
     await step(`P2 ${studyId} metric travels through investigation, values and saved report`, async () => {
+      await openSection(page, "brief");
       await page.locator("#role-gravity_regime").selectOption("off");
       await page.locator("#role-flow_velocity_cm_s").selectOption("off");
       await page.getByRole("checkbox", { name: /Include synthetic demo data/ }).uncheck();
@@ -95,6 +127,12 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
         assert.equal(point.provenance, observation?.provenance);
       }
       check(true, `${metric}: eligible trials and values stay within ${studyId}, with ${unit} units`);
+      if (run.comparison.points.every((point) => point.x == null)) {
+        const chart = page.getByRole("group", { name: /Scatter chart: .* vs Observation order/ });
+        await chart.waitFor();
+        check(await chart.getByRole("button").count() === run.comparison.points.length,
+          `${metric}: the chart shows measured values with observation order and no fabricated X values`);
+      }
       await page.getByRole("group", { name: "Comparison view", exact: true }).getByRole("button", { name: "Table", exact: true }).click();
       const table = page.getByRole("table", { name: "Observations plotted in the chart", exact: true });
       await table.getByRole("columnheader", { name: `Y (${unit})`, exact: true }).waitFor();
@@ -108,6 +146,7 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
       });
       check(true, `${metric}: every visible table value, physical unit ID and Y unit matches the API`);
       if (screenshots) await table.screenshot({ path: path.join(screenshots, `p2-${studyId.replace(":", "-")}-metric.png`) });
+      await openSection(page, "lab");
       const pre = report.locator(`pre[data-research-id="${run.id}"]`).first();
       await pre.waitFor();
       const reportResponse = await fetch(`${apiUrl}/api/v1/research/${encodeURIComponent(run.id)}/report`, { signal: AbortSignal.timeout(30000) });
@@ -119,6 +158,7 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
       check(true, `${metric}: persisted report is literal, retains campaign trial IDs and canonical units`);
     });
   }
+  await openSection(page, "brief");
   await page.getByRole("button", { name: "Reset filters", exact: true }).click();
 }
 
@@ -142,6 +182,7 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
     return bundle.observations.filter((item) => trialIds.has(item.trial_id));
   };
   async function openCatalog() {
+    await openSection(page, "catalog");
     const summary = page.locator(".p6-catalog > details > summary");
     if (await summary.evaluate((element) => !element.parentElement.open)) await summary.click();
     await catalog.waitFor();

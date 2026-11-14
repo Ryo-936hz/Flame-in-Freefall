@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ResearchResponse } from "../lib/client";
-import { shortId } from "../lib/format";
+import { sourceLabel } from "../lib/format";
 import { tx } from "../lib/backendText";
 import { Panel, Tag } from "./ui";
 
@@ -12,7 +12,7 @@ export default function SynthesisPanel({ result, onCite }: { result: ResearchRes
   const [allWarnings, setAllWarnings] = useState(false);
   const warnings = allWarnings ? result.warnings : result.warnings.slice(0, 4);
   return <Panel id="synthesis" title="Synthesis and limits" className="synthesis"
-    meta={<Tag tone={result.provider === "demo" ? "neutral" : "signal"}>{result.provider === "demo" ? "Deterministic coordinator · no LLM" : `External synthesis · ${result.provider}`}</Tag>}>
+    meta={<Tag tone={result.provider === "demo" ? "neutral" : "signal"}>{result.provider === "demo" ? "Deterministic coordinator · no LLM" : result.provider === "qwen" ? "Qwen · local" : "External synthesis · OpenAI"}</Tag>}>
     <div className="panel-b synth-grid">
       <section aria-labelledby="claims-title">
         <h3 id="claims-title" className="cap">Cited claims</h3>
@@ -20,7 +20,7 @@ export default function SynthesisPanel({ result, onCite }: { result: ResearchRes
           <Tag tone={claim.kind === "limitation" ? "warn" : "neutral"}>{KIND[claim.kind]}</Tag>
           <p>{tx(claim.text)}</p>
           <div className="cites">{claim.citations.map((citation, i) => <button type="button" key={i} className="chip"
-            onClick={() => onCite(citation.evidence_id, citation.trial_id ?? null)}>{shortId(citation.evidence_id)}</button>)}</div>
+            title={citation.evidence_id} onClick={() => onCite(citation.evidence_id, citation.trial_id ?? null)}>{sourceLabel(citation.evidence_id) === "Source document" ? `Source ${i + 1}` : sourceLabel(citation.evidence_id)}</button>)}</div>
         </li>)}</ol> : <p className="muted">No claims: the evidence does not support any.</p>}
 
         {result.hypotheses.map((hypothesis) => <article key={hypothesis.id} className="hypo">

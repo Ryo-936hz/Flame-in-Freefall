@@ -1,10 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 /*
  * ILLUSTRATIVE ANIMATION, NOT A PHYSICAL SIMULATION.
  * A particle sketch of the challenge's opening idea: with buoyancy a flame is a
  * flickering teardrop; without it, a diffusion-fed sphere. The left emitter is a
- * 1 g reference; the right one follows the gravity label chosen in the brief.
+ * 1 g reference; the right one follows the interactive preview controls.
  * Nothing here is computed from data and nothing feeds the analysis.
  */
 
@@ -56,8 +56,11 @@ function pickColor(t: number, micro: number): number {
 
 function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: number; label: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const updateStill = useRef<(() => void) | null>(null);
   const params = useRef({ g, o2, flow });
   params.current = { g, o2, flow };
+
+  useEffect(() => { updateStill.current?.(); }, [g, o2, flow]);
 
   useEffect(() => {
     const canvas = ref.current;
@@ -68,16 +71,6 @@ function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: numb
     let w = 0, h = 0, dpr = 1, raf = 0, frame = 0;
     const emitters: { particles: Particle[]; fixedG: number | null }[] = [{ particles: [], fixedG: 1 }, { particles: [], fixedG: null }];
 
-    const resize = () => {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const r = canvas.getBoundingClientRect();
-      w = r.width; h = r.height;
-      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-    };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-
     const step = () => {
       frame++;
       const { o2: O, g: G, flow: F } = params.current;
@@ -86,15 +79,15 @@ function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: numb
       ctx.clearRect(0, 0, w, h);
       ctx.globalCompositeOperation = "lighter";
       const scale = Math.min(w / 2, h) / 210; // smaller flames: room to breathe in a narrow column
-      const o2k = 0.55 + Math.min(O, 100) / 55;
-
       emitters.forEach((em, idx) => {
+        const oxygen = em.fixedG === null ? O : 21;
+        const o2k = 0.55 + oxygen / 55;
         const gg = em.fixedG ?? G;
         const micro = 1 - Math.min(1, gg);
         const cx = (w / 4) * (idx === 0 ? 1 : 3);
         const cy = h * (0.42 + 0.22 * (1 - micro));
-        const flowPx = (em.fixedG ? 0 : F) * 0.0016 * scale;
-        const spawn = Math.round(7 * o2k);
+        const flowPx = (em.fixedG === null ? F : 0) * 0.0016 * scale;
+        const spawn = oxygen === 0 ? 0 : Math.round(7 * o2k);
         for (let i = 0; i < spawn; i++) {
           const a = Math.random() * Math.PI * 2;
           const sp = (0.55 + Math.random() * 0.7) * scale * o2k * (0.5 + micro * 0.6);
@@ -135,12 +128,30 @@ function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: numb
       ctx.globalAlpha = 1;
     };
 
+    const drawStill = () => {
+      if (w === 0 || h === 0) return;
+      emitters.forEach((emitter) => { emitter.particles.length = 0; });
+      for (let i = 0; i < 90; i++) step();
+    };
+    const resize = () => {
+      const nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+      const { width, height } = canvas.getBoundingClientRect();
+      if (w === width && h === height && dpr === nextDpr) return;
+      w = width;
+      h = height;
+      dpr = nextDpr;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      drawStill();
+    };
+
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(canvas);
     let io: IntersectionObserver | undefined;
     if (reduce) {
-      for (let i = 0; i < 90; i++) step();
+      updateStill.current = drawStill;
     } else {
-      // A few frames up front so a throttled or freshly opened view never shows an empty tile.
-      for (let i = 0; i < 60; i++) step();
       const loop = () => { step(); raf = requestAnimationFrame(loop); };
       io = new IntersectionObserver(([entry]) => {
         cancelAnimationFrame(raf);
@@ -148,32 +159,53 @@ function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: numb
       });
       io.observe(canvas);
     }
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); io?.disconnect(); };
+    return () => { updateStill.current = null; cancelAnimationFrame(raf); ro.disconnect(); io?.disconnect(); };
   }, []);
 
   return <canvas ref={ref} className="flame-canvas" role="img" aria-label={label} />;
 }
 
-/** Empty-state explainer: Earth flame next to the flame at the gravity chosen in the brief. */
 export default function FlameIllustration({ gravityLabel, o2, flow }: { gravityLabel: string | null; o2: number | null; flow: number | null }) {
-  const g = sketchGravity(gravityLabel);
-  const shownG = g ?? 0;
-  const name = g === null ? "microgravity" : gravityLabel!.trim().toLowerCase();
+  const titleId = useId();
+  const [gravity, setGravity] = useState<string | null>(null);
+  const [oxygen, setOxygen] = useState<number | null>(null);
+  const [airflow, setAirflow] = useState<number | null>(null);
+  const preset = gravity ?? gravityLabel?.trim().toLowerCase() ?? "microgravity";
+  const shownG = sketchGravity(preset) ?? 0;
+  const name = Object.hasOwn(GRAVITY, preset) ? preset : "microgravity";
+  const shownOxygen = oxygen ?? Math.max(0, Math.min(100, o2 ?? 21));
+  const shownFlow = airflow ?? Math.max(0, Math.min(100, flow ?? 5));
   const shape = shownG < 0.05 ? "near-spherical, diffusion-fed" : shownG < 0.5 ? "squat, weakly buoyant" : "buoyant teardrop";
-  return <figure className="flame-ill" aria-labelledby="flame-ill-title">
-    <p className="cap flame-title" id="flame-ill-title">Why gravity matters</p>
+  return <section className="flame-ill" aria-labelledby={titleId}>
+    <h3 className="cap flame-title" id={titleId}>Interactive flame</h3>
     <div className="flame-view">
-      <FlameCanvas g={shownG} o2={o2 ?? 21} flow={flow ?? 5}
-        label={`Illustrative animation: a candle-like flame at 1 g next to one at ${name}. Not a physical simulation.`} />
-      <span className="flame-tag">Illustrative · not a simulation</span>
-      <div className="flame-lbl l">Earth · 1 g<span>buoyant teardrop</span></div>
-      <div className="flame-lbl r">{name[0]!.toUpperCase() + name.slice(1)}{g === null ? "" : ` · ${shownG} g`}<span>{shape}</span></div>
+      <FlameCanvas g={shownG} o2={shownOxygen} flow={shownFlow}
+        label={`Earth reference at 1 g beside an illustration at ${shownG} g, ${shownOxygen}% oxygen and ${shownFlow} cm/s airflow.`} />
+      <div className="flame-lbl l">Earth reference · 1 g<span>Buoyant teardrop</span></div>
+      <div className="flame-lbl r">{name[0]!.toUpperCase() + name.slice(1)} · {shownG} g<span>{shownOxygen === 0 ? "No flame shown" : shape}</span></div>
       <i className="flame-divider" aria-hidden="true" />
     </div>
-    <figcaption>
-      Without buoyancy, hot gases do not rise: the flame becomes a dim sphere fed by diffusion, so Earth results cannot
-      simply be reused for habitats. It follows the brief’s gravity, oxygen and flow.
-      {g === null && gravityLabel ? ` “${gravityLabel}” has no preset; microgravity is shown.` : ""}
-    </figcaption>
-  </figure>;
+    <fieldset className="flame-controls">
+      <legend>Adjust the right-hand flame</legend>
+      <label>Gravity
+        <select value={name} onChange={(event) => setGravity(event.target.value)}>
+          <option value="microgravity">Microgravity</option>
+          <option value="lunar">Moon</option>
+          <option value="martian">Mars</option>
+          <option value="earth">Earth</option>
+        </select>
+      </label>
+      <label htmlFor={`${titleId}-oxygen`}><span>Oxygen <span className="flame-control-value" aria-hidden="true">{shownOxygen}%</span></span>
+        <input id={`${titleId}-oxygen`} type="range" min={0} max={100} step={0.1} value={shownOxygen} aria-valuetext={`${shownOxygen} percent`}
+          onChange={(event) => setOxygen(event.target.valueAsNumber)} />
+      </label>
+      <label htmlFor={`${titleId}-flow`}><span>Airflow <span className="flame-control-value" aria-hidden="true">{shownFlow} cm/s</span></span>
+        <input id={`${titleId}-flow`} type="range" min={0} max={100} step={0.1} value={shownFlow} aria-valuetext={`${shownFlow} centimeters per second`}
+          onChange={(event) => setAirflow(event.target.valueAsNumber)} />
+      </label>
+      <button type="button" disabled={gravity === null && oxygen === null && airflow === null}
+        onClick={() => { setGravity(null); setOxygen(null); setAirflow(null); }}>Reset illustration</button>
+    </fieldset>
+    <p className="flame-caption">Conceptual illustration. These controls change only the preview.</p>
+  </section>;
 }

@@ -6,7 +6,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRuntime } from "./runtime.mjs";
-import { verifyCampaignResearch, verifyP2Catalog, verifySaffireContext } from "./p2-catalog-acceptance.mjs";
+import { openSection, verifyCampaignResearch, verifyP2Catalog, verifySaffireContext } from "./p2-catalog-acceptance.mjs";
 
 const EXPECTED_SHA256 = "cb8b782fd73dbe4df0576b8047f3dea781a37d7c06c962ad2e978e607a00191d";
 const DATASET = "psi:nasa-local-corpus-v1";
@@ -180,11 +180,46 @@ try {
     check(health.data_mode === "scientific_unverified" && health.ai_provider === "demo", "real corpus remains scientific_unverified in deterministic mode");
     check(profile.dataset_id === DATASET && profile.n_studies === 24 && profile.synthetic_trials === 0, "24-study corpus contains no synthetic trials");
     await page.goto(WEB);
-    await page.getByRole("heading", { name: "Mission Brief", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Open dashboard", exact: true }).click();
+    const preview = page.getByRole("region", { name: "Flame spread vs. airflow", exact: true });
+    const points = preview.locator(".pt-dot");
+    await points.first().waitFor();
+    check(await points.count() === 10, "ten measured BASS-II observations are plotted on opening the dashboard");
+    await points.first().press("Enter");
+    await preview.getByRole("button", { name: "Read observation source" }).click();
+    await page.locator("#evidence .ev-text").waitFor();
+    const rankingResponse = page.waitForResponse((response) => isPost(response, "/api/v1/rankings"));
+    await openSection(page, "ranking");
+    const response = await rankingResponse;
+    const ranking = await response.json();
+    const rankingRequest = response.request().postDataJSON();
+    assert.deepEqual(rankingRequest.target, { flow_velocity_cm_s: 5 });
+    check(response.ok() && ranking.dataset_id === DATASET && ranking.items.length === 10 && !rankingRequest.allow_synthetic,
+      "the global top shows ten eligible P2 trials for the airflow reference without synthetic trials");
+    await page.getByRole("table", { name: "Eligible trials ordered by similarity", exact: true }).waitFor();
+    await openSection(page, "lab");
     await bass.waitFor(); await report.waitFor();
   });
 
   await verifyP2Catalog({ page, apiUrl: API, bundle, check, step, screenshots: SHOTS });
+  await step("the study comparison follows back and forward between query links", async () => {
+    const first = "#compare-studies?study=psi%3APSI-25&study=psi%3APSI-69";
+    const second = "#compare-studies?study=psi%3APSI-25&study=psi%3APSI-98";
+    const studyB = page.getByRole("combobox", { name: "Study B", exact: true });
+    const showPair = async (value) => {
+      await page.waitForFunction((expected) =>
+        document.querySelector(".study-comparison-selects > label:nth-child(2) select")?.value === expected, value);
+      return studyB.inputValue();
+    };
+    await page.evaluate((hash) => { window.location.hash = hash; }, first);
+    check(await showPair("psi:PSI-69") === "psi:PSI-69", "first comparison link");
+    await page.evaluate((hash) => { window.location.hash = hash; }, second);
+    check(await showPair("psi:PSI-98") === "psi:PSI-98", "same-page comparison link replaces the pair");
+    await page.goBack();
+    check(await showPair("psi:PSI-69") === "psi:PSI-69", "back restores the previous comparison pair");
+    await page.goForward();
+    check(await showPair("psi:PSI-98") === "psi:PSI-98", "forward restores the next comparison pair");
+  });
   await step("documentary Saffire context stays separate from imported BASS points", async () => {
     await verifySaffireContext({ page, check, screenshots: SHOTS });
   });
@@ -192,8 +227,10 @@ try {
 
   await step("approved 6 cm/s preset preserves four source observations", async () => {
     // Fixed, disclosed presets must not inherit unrelated current-form edits.
+    await openSection(page, "brief");
     await page.getByRole("combobox", { name: "Metric", exact: true }).selectOption("heat_release_w");
     await page.getByRole("spinbutton", { name: /Max\. trials/ }).fill("1");
+    await openSection(page, "lab");
     const run = await runPreset("bass_6", "Run BASS-II · 6 cm/s");
     verifyRun("bass_6", run);
     await openM8("bass_6", 2);
@@ -274,7 +311,7 @@ try {
     await stop(api); api = startApi();
     await waitHttp(`${API}/api/v1/health`, api);
     await page.reload();
-    await page.getByRole("heading", { name: "Mission Brief", exact: true }).waitFor();
+    await openSection(page, "lab");
     await report.getByText(/No active research\./).waitFor();
     await report.getByRole("button", { name: "Reopen last research", exact: true }).click();
     await pre.waitFor();

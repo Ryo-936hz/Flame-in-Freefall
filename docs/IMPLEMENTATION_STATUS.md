@@ -15,6 +15,24 @@ El cierre se publica en la [PR #4](https://github.com/Ryo-936hz/Flame-in-Freefal
 
 ## Implementado para la demo
 
+La rama de dashboard incorpora exploración por campaña para las métricas del
+corpus P2, selección de escenario A y Qwen local opcional para preguntas abiertas
+en Ask FlameLab. La navegación agrupa investigación, comparaciones y fuentes.
+[Guía de despliegue](DESPLIEGUE.md).
+
+La API reutiliza una copia validada del corpus activo por proceso. Consulta el
+identificador de contenido en la base de datos en cada lectura y carga el
+corpus de nuevo cuando se importa una versión distinta, incluso con el mismo
+`dataset_id`. Los informes y las fuentes guardadas conservan la versión que
+se usó en la investigación.
+
+La rama `codex/flamelab-dashboard`, basada en la fusión de la PR #4, añade una
+portada sobre la combustión en microgravedad y divide el dashboard en vistas de
+investigación, gráficos, relevancia, síntesis, comparación A/B y fuentes. La
+búsqueda abre secciones y registros del corpus activo. El top global toma como
+referencia un flujo de 5 cm/s. La síntesis conserva el modo del coordinador y
+las etiquetas de procedencia. El rediseño utiliza los contratos vigentes.
+
 | Área | Capacidad comprobable |
 |---|---|
 | Contrato/API | Pydantic estricto, corpus 1.1 con lectura 1.0, OpenAPI/TypeScript generados, plan público previsualizable y persistido. |

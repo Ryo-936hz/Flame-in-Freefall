@@ -1,84 +1,220 @@
-import { useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { gsap, prefersReducedMotion, useGSAP } from "../lib/motion";
-import type { Health } from "../lib/client";
+import type { Api, Health, Models } from "../lib/client";
 import { DATA_MODE_LABEL } from "../lib/format";
-import { Mark, RollText, Tag } from "./ui";
+import { tx } from "../lib/backendText";
+import { Mark, Tag } from "./ui";
 
-const SECTIONS = [
-  { id: "brief", label: "Brief" },
-  { id: "canvas", label: "Evidence Canvas" },
-  { id: "evidence", label: "Evidence" },
-  { id: "synthesis", label: "Synthesis" },
-  { id: "lab", label: "Lab" },
+export const SECTIONS = [
+  { id: "dashboard", label: "Overview", title: "Research overview", keywords: "home dashboard start dataset corpus" },
+  { id: "chat", label: "Ask FlameLab", title: "Ask FlameLab", keywords: "chat qwen questions how to data" },
+  { id: "brief", label: "Filters", title: "Research filters", keywords: "gravity oxygen pressure material habitats metric form" },
+  { id: "canvas", label: "Charts", title: "Data visualizations", keywords: "chart graph scatter plot table csv observations metrics" },
+  { id: "ranking", label: "Relevance ranking", title: "Evidence by relevance", keywords: "top global rank similarity coverage gower" },
+  { id: "synthesis", label: "Synthesis", title: "Findings & interpretation", keywords: "ai si summary citations claims hypotheses limits" },
+  { id: "lab", label: "Compare A/B", title: "Scenario comparison", keywords: "lab scenarios compare BASS II lunar report recovery" },
+  { id: "compare-studies", label: "Compare studies", title: "Study comparison", keywords: "compare campaigns graphs bars" },
+  { id: "catalog", label: "Study catalog", title: "Study catalog", keywords: "studies research PSI datasets NASA normalized records" },
+  { id: "evidence", label: "Evidence", title: "Source reader", keywords: "sources documents original evidence references citations" },
+  { id: "saffire", label: "Saffire context", title: "Combustion at spacecraft scale", keywords: "Saffire Cygnus published context transfer scale" },
+] as const;
+
+export type Section = (typeof SECTIONS)[number]["id"];
+
+const NAV_GROUPS: { label: string; sections: [Section, ...Section[]] }[] = [
+  { label: "Overview", sections: ["dashboard"] },
+  { label: "Ask FlameLab", sections: ["chat"] },
+  { label: "Research", sections: ["canvas", "brief", "ranking", "synthesis"] },
+  { label: "Compare", sections: ["lab", "compare-studies"] },
+  { label: "Library", sections: ["catalog", "evidence", "saffire"] },
 ];
 
-/**
- * Section links. Brief and Evidence live in sticky columns that are always on
- * screen, so a plain anchor would look inert: every jump also highlights the
- * target panel and moves focus to its heading.
- */
-function SectionNav({ available }: { available: string[] }) {
-  const [active, setActive] = useState("brief");
-  const timer = useRef<number | undefined>(undefined);
+function navigateSection(event: React.MouseEvent<HTMLAnchorElement>, id: Section, onNavigate: (section: Section) => void) {
+  if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+  event.preventDefault();
+  onNavigate(id);
+}
 
-  const go = (id: string) => {
-    const panel = document.getElementById(id);
-    if (!panel) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const startTop = panel.getBoundingClientRect().top;
-    panel.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-    // Some embedded or throttled browsers never run smooth scrolling: jump if nothing moved.
-    window.setTimeout(() => {
-      if (Math.abs(panel.getBoundingClientRect().top - startTop) < 2) panel.scrollIntoView({ block: "start" });
-    }, 400);
-    const heading = panel.querySelector<HTMLElement>("h2");
-    if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
-    // Restart the highlight even when the same panel is chosen twice.
-    panel.dataset.flash = "false";
-    void panel.offsetWidth;
-    panel.dataset.flash = "true";
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => { panel.dataset.flash = "false"; }, 1300);
-    setActive(id);
-  };
+const SECTION_ICONS: Record<Section, string> = {
+  dashboard: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
+  chat: "M4 4h16v12H9l-5 4z M8 8h8 M8 12h5",
+  brief: "M4 4h16v12H9l-5 4z M8 8h8 M8 12h6",
+  canvas: "M4 4v16h16 M8 16l4-6 4 2 4-6",
+  ranking: "M4 20h16 M5 12h4v8H5z M10 4h4v16h-4z M15 8h4v12h-4z",
+  synthesis: "M6 3h9l4 4v14H6z M14 3v5h5 M9 12h7 M9 16h7",
+  lab: "M7 4v16 M17 4v16 M3 9h8 M13 15h8 M7 6v6 M17 12v6",
+  "compare-studies": "M4 20h16 M6 17v-6 M12 17V5 M18 17V8",
+  catalog: "M4 4h5v16H4z M9 4h5v16H9z M14 5l5-1 3 15-5 1z",
+  evidence: "M9 15l6-6 M8 17l-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0 M16 7l1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0",
+  saffire: "M12 2v20 M2 12h20 M8 8h8v8H8z",
+};
 
-  return <nav className="nav" aria-label="Sections">
-    {SECTIONS.map(({ id, label }) => {
-      const enabled = available.includes(id);
-      return <a key={id} href={`#${id}`} className="nav-link roll-host"
-        aria-current={active === id ? "location" : undefined}
-        aria-disabled={!enabled || undefined}
-        title={enabled ? undefined : "Run an investigation first"}
-        onClick={(event) => { event.preventDefault(); if (enabled) go(id); }}>
-        <RollText>{label}</RollText>
-      </a>;
-    })}
+export function DashboardNav({ active, onNavigate }: { active: Section; onNavigate: (section: Section) => void }) {
+  return <nav className="dashboard-nav" aria-label="Dashboard sections">
+    {NAV_GROUPS.map(({ sections: [id, ...children], label }) => <a className="nav-link" key={id} href={`#${id}`}
+      aria-current={active === id || children.includes(active) ? children.length ? "location" : "page" : undefined}
+      onClick={(event) => navigateSection(event, id, onNavigate)}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d={SECTION_ICONS[id]} />
+      </svg>
+      {label}
+    </a>)}
+    <a className="nav-link dashboard-intro-link" href="#intro">Introduction</a>
   </nav>;
 }
 
-export default function TopBar({ health, offline, theme, onTheme, sections, onResetAll }: {
+export function DashboardSubnav({ active, onNavigate }: { active: Section; onNavigate: (section: Section) => void }) {
+  const group = NAV_GROUPS.find(({ sections }) => sections.includes(active));
+  if (!group || group.sections.length < 2) return null;
+  return <nav className="dashboard-subnav" aria-label={`${group.label} views`}>
+    {group.sections.map((id) => <a key={id} href={`#${id}`} aria-current={active === id ? "page" : undefined}
+      onClick={(event) => navigateSection(event, id, onNavigate)}>{SECTIONS.find((section) => section.id === id)?.label}</a>)}
+  </nav>;
+}
+
+type SearchEntry = {
+  id: string;
+  type: "Section" | "Study" | "Trial" | "Source";
+  label: string;
+  keywords: string;
+  open: () => void;
+};
+
+function searchText(value: string) {
+  return value.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "")
+    .replace(/[^\p{Letter}\p{Number}]+/gu, " ").trim();
+}
+
+function DashboardSearch({ api, trials, onNavigate, onOpenStudy, onOpenSource }: {
+  api: Api;
+  trials: Models["Trial"][];
+  onNavigate: (section: Section) => void;
+  onOpenStudy: (studyId: string) => void;
+  onOpenSource: (trial: Models["Trial"], evidenceId: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [studies, setStudies] = useState<Models["Study"][] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  const resultsId = useId();
+  const term = searchText(query);
+  const words = term ? term.split(" ") : [];
+  const shouldFetch = open && words.length > 0 && studies === null && !failed;
+
+  useEffect(() => {
+    if (!shouldFetch) return;
+    let current = true;
+    api.studies().then((items) => { if (current) setStudies(items); }, () => { if (current) setFailed(true); });
+    return () => { current = false; };
+  }, [api, shouldFetch]);
+
+  const trialIndex = useMemo(() => {
+    const trialEntries: SearchEntry[] = [];
+    const sourceEntries = new Map<string, SearchEntry>();
+    for (const trial of trials) {
+      const scopes = [trial, ...(trial.segments ?? [])];
+      const conditions = scopes.flatMap(({ conditions }) => Object.values(conditions));
+      const refs = [
+        ...scopes.flatMap(({ evidence_ids }) => evidence_ids),
+        ...conditions.flatMap(({ evidence_ids }) => evidence_ids ?? []),
+      ];
+      const first = refs[0];
+      const label = tx(trial.label);
+      trialEntries.push({
+        id: trial.id, type: "Trial", label,
+        keywords: [trial.study_id, trial.label, ...conditions.map(({ value }) => value ?? "")].join(" "),
+        open: () => first ? onOpenSource(trial, first) : onOpenStudy(trial.study_id),
+      });
+      for (const id of refs) {
+        if (!sourceEntries.has(id)) sourceEntries.set(id, {
+          id, type: "Source", label: id, keywords: "", open: () => onOpenSource(trial, id),
+        });
+      }
+    }
+    return [...trialEntries, ...sourceEntries.values()].map(indexEntry);
+  }, [trials, onOpenStudy, onOpenSource]);
+  const sectionIndex = useMemo(() => SECTIONS.map(({ id, label, title, keywords }) => indexEntry({
+    id, type: "Section", label, keywords: `${title} ${keywords}`, open: () => onNavigate(id),
+  })), [onNavigate]);
+  const studyIndex = useMemo(() => (studies ?? []).map((study) => indexEntry({
+    id: study.id, type: "Study", label: study.title,
+    keywords: `${study.family} ${study.description ?? ""}`, open: () => onOpenStudy(study.id),
+  })), [studies, onOpenStudy]);
+  const showResults = open && words.length > 0;
+  const matches = showResults ? [...sectionIndex, ...studyIndex, ...trialIndex]
+    .filter(({ searchable }) => words.every((word) => searchable.includes(word))) : [];
+  const exact = matches.find(({ normalizedId, normalizedLabel }) => term === normalizedId || term === normalizedLabel);
+  const entries = exact ? [exact, ...matches.filter((item) => item !== exact)].slice(0, 9) : matches.slice(0, 9);
+  const choose = (entry: SearchEntry) => {
+    setQuery("");
+    setOpen(false);
+    entry.open();
+  };
+
+  return <form className="dashboard-search" role="search"
+    onSubmit={(event) => { event.preventDefault(); if (entries[0]) choose(entries[0]); }}
+    onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}
+    onKeyDown={(event) => {
+      if (event.key === "Escape") { input.current?.focus(); setOpen(false); }
+    }}>
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4 4" /></svg>
+    <input ref={input} type="search" aria-label="Search studies, trials and sections"
+      aria-controls={showResults ? resultsId : undefined} placeholder="Search studies, trials and sections"
+      value={query} onChange={(event) => { setQuery(event.target.value); setOpen(true); setFailed(false); }}
+      onFocus={() => setOpen(true)} />
+    {showResults && <div className="dashboard-search-results" id={resultsId}>
+      {entries.length > 0 && <ul aria-label="Search results">
+        {entries.map((entry) => <li key={`${entry.type}:${entry.id}`}>
+          <button type="button" onClick={() => choose(entry)}>
+            <span>{entry.label}</span><small>{entry.type}{entry.type === "Section" || entry.type === "Source" ? "" : ` · ${entry.id}`}</small>
+          </button>
+        </li>)}
+      </ul>}
+      {shouldFetch && <p role="status">Searching the study catalog…</p>}
+      {failed && <p role="status">Study catalog unavailable. <button type="button" onClick={() => setFailed(false)}>Retry</button></p>}
+      {!entries.length && !shouldFetch && !failed && <p role="status">No matching studies, trials, sources or sections.</p>}
+    </div>}
+  </form>;
+}
+
+function indexEntry(entry: SearchEntry) {
+  return {
+    ...entry,
+    searchable: searchText(`${entry.label} ${entry.keywords} ${entry.id}`),
+    normalizedId: searchText(entry.id),
+    normalizedLabel: searchText(entry.label),
+  };
+}
+
+export default function TopBar({ api, trials, health, offline, theme, onTheme, onNavigate, onOpenStudy, onOpenSource, onResetAll }: {
+  api: Api;
+  trials: Models["Trial"][];
   health: Health | null;
   offline: boolean;
   theme: "dark" | "light";
   onTheme: () => void;
-  /** IDs of the sections currently rendered. */
-  sections: string[];
-  /** Restore the whole app to its first-load state. */
+  onNavigate: (section: Section) => void;
+  onOpenStudy: (studyId: string) => void;
+  onOpenSource: (trial: Models["Trial"], evidenceId: string) => void;
   onResetAll: () => void;
 }) {
-  return <header className="topbar">
-    <a className="brand roll-host" href="#brief">
+  return <header className="topbar dashboard-topbar">
+    <a className="brand" href="#dashboard" onClick={(event) => {
+      if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+      event.preventDefault();
+      onNavigate("dashboard");
+    }}>
       <Mark />
-      <b><RollText>FlameLab SI</RollText></b>
-      <span className="brand-team">Los TTS</span>
+      <b>FlameLab SI</b>
     </a>
-    <SectionNav available={sections} />
-    <div className="status" aria-live="polite">
-      {offline ? <Tag tone="risk">API offline</Tag> : health ? <>
-        <Tag tone={health.data_mode === "synthetic" ? "synthetic" : "neutral"}>{DATA_MODE_LABEL[health.data_mode] ?? health.data_mode}</Tag>
-        <Tag tone={health.ai_provider === "demo" ? "neutral" : "signal"}>AI {health.ai_provider === "demo" ? "deterministic demo" : health.ai_provider}</Tag>
-        <span className="status-db">{health.database} · v{health.version}</span>
-      </> : <span className="status-db">Connecting…</span>}
+    <DashboardSearch api={api} trials={trials} onNavigate={onNavigate} onOpenStudy={onOpenStudy} onOpenSource={onOpenSource} />
+    <div className="status">
+      <span className="dashboard-status" aria-live="polite">
+        {offline ? <Tag tone="risk">API offline</Tag> : health
+          ? <Tag tone={health.data_mode === "synthetic" ? "synthetic" : "neutral"}>{DATA_MODE_LABEL[health.data_mode] ?? health.data_mode}</Tag>
+          : <span className="status-db">Connecting…</span>}
+      </span>
       <button type="button" className="reset-all" onClick={onResetAll} title="Clear results, selection and filters">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7" /><path d="M3 4v5h5" /></svg>
         Reset

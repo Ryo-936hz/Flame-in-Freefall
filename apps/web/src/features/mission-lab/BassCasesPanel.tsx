@@ -3,6 +3,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import casesText from "../../../../../data/catalog/p2-demo-cases-v1.1.0.json?raw";
 import copyText from "../../../../../data/catalog/p2-demo-copy-v1.1.1.json?raw";
 import { ApiError } from "../../lib/client";
+import { conditionLabel, metricLabel } from "../../lib/filters";
+import { sourceLabel } from "../../lib/format";
 import type { Models, ResearchResponse } from "../../lib/client";
 import type { MissionSlotProps } from "./slot";
 import { createRequestGuard, describeRequest } from "./comparisonState";
@@ -38,8 +40,8 @@ function RunDetails({ run, active, onOpen, onEvidence }: {
   const points = run.comparison?.points ?? [];
   const m8Sources = run.evidence.filter((source) => source.id.startsWith(`${BASS_STUDY}:M8:stage:`) && source.id.endsWith(":table51"));
   return <div className="ml-bass-run" data-research-id={run.id}>
-    <p>Observed API status: <strong>{run.status}</strong> · {run.ranking.items.length} selected trials · {points.length} observations.</p>
-    <p><code>{run.id}</code> · {active ? "Active research in the workspace" : "Saved result; another research is active"}.</p>
+    <p><strong>{run.status === "completed" ? "Measurements available" : "No matching measurements"}</strong> · {run.ranking.items.length} selected trials · {points.length} observations.</p>
+    <details><summary>Saved analysis record</summary><code>{run.id}</code></details>
     {!active && <button type="button" onClick={onOpen}>Open this BASS-II research</button>}
     <p>{run.summary}</p>
     {run.plan && <details><summary>Saved filters and metric</summary>
@@ -48,14 +50,14 @@ function RunDetails({ run, active, onOpen, onEvidence }: {
     </details>}
     {points.length > 0 && <table className="ml-table ml-bass-points">
       <caption>Observations returned by the API. Original values/units are retained when available, together with segment and sample identity; rows are not additional independent replicates.</caption>
-      <thead><tr><th>Trial / segment / observation</th><th>Sample</th><th>X: {run.comparison?.x_condition ?? "unassigned"}</th><th>Y: {run.comparison?.metric ?? "unassigned"}</th><th>Source</th></tr></thead>
+      <thead><tr><th>Trial and segment</th><th>Sample</th><th>{conditionLabel(run.comparison?.x_condition ?? "Airflow")}</th><th>{metricLabel(run.comparison?.metric ?? "Measurement")}</th><th>Source</th></tr></thead>
       <tbody>{points.map((point) => <tr key={point.observation_id}>
-        <th scope="row" data-label="Trial / segment"><code>{point.trial_id}</code><br/><code>{point.segment_id ?? "not assigned"}</code><br/><code>{point.observation_id}</code></th>
-        <td data-label="Sample"><code>{point.independent_unit_id}</code><br/>{point.independent_unit_status}</td>
+        <th scope="row" data-label="Trial / segment" title={point.observation_id}>{point.trial_id.split(":").at(-1)}{point.segment_id && ` · segment ${point.segment_id.split(":").at(-1)}`}</th>
+        <td data-label="Sample" title={point.independent_unit_id}>{point.independent_unit_id.split(":").at(-1)}</td>
         <td data-label={`X: ${run.comparison?.x_condition ?? "unassigned"}`}>{point.x ?? "unavailable"} {run.comparison?.x_unit ?? ""}</td>
         <td data-label={`Y: ${run.comparison?.metric ?? "unassigned"}`}>{point.original_value ?? point.y} {point.original_unit ?? run.comparison?.unit}<br/><span className="ml-tag">{point.provenance}</span></td>
         <td data-label="Source">{point.evidence_ids.map((id) => <button className="reference" type="button" key={id} disabled={!active}
-          onClick={() => onEvidence(id)} aria-label={`Open evidence ${id} (saved BASS-II research)`}>{id}</button>)}</td>
+          onClick={() => onEvidence(id)} title={id} aria-label={`Open evidence ${id} (saved BASS-II research)`}>{sourceLabel(id)}</button>)}</td>
       </tr>)}</tbody>
     </table>}
     {points.length > 0 && !active && <p className="ml-muted">Open this saved research before opening its evidence; citations are read from that research snapshot.</p>}

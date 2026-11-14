@@ -124,6 +124,20 @@ export const scenarioPresets: readonly ScenarioPreset[] = [
     change: "allow_synthetic = false; every other filter stays the same.",
     expectation: "With the synthetic demo dataset, B has no applicable evidence: every trial is a synthetic fixture and leaves with synthetic_not_allowed. It shows that fixtures are never passed off as real evidence.",
     build: (base) => ({ ...cloneRequest(base), allow_synthetic: false })
+  },
+  {
+    id: "flow_5",
+    title: "airflow at 5 cm/s",
+    change: "Require a reported airflow of 5 cm/s.",
+    expectation: "Trials without a matching airflow are excluded.",
+    build: (base) => requireCondition({ ...base, condition_scope: "segment" }, "flow_velocity_cm_s", 5)
+  },
+  {
+    id: "flow_6",
+    title: "airflow at 6 cm/s",
+    change: "Require a reported airflow of 6 cm/s.",
+    expectation: "Trials without a matching airflow are excluded.",
+    build: (base) => requireCondition({ ...base, condition_scope: "segment" }, "flow_velocity_cm_s", 6)
   }
 ];
 

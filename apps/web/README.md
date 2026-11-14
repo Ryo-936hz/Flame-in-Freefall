@@ -1,16 +1,19 @@
-# Cliente FlameLab SI · interfaz integrada de demo (P5/P6)
+# Cliente FlameLab SI
 
-Sustituye al arnés técnico por una interfaz utilizable para la demo: formular
-pregunta y filtros sin editar JSON, investigar y explorar gráfico, tabla, ranking
-y evidencia enlazados por identidad. Sigue `docs/DESIGN_ANDURIL.md` de forma
-acotada: tema oscuro por defecto (claro opcional), Inter Tight y Geist Mono
-autoalojadas, acentos de llama naranja/azul según tema, conservados del diseño de P5.
+La portada explica el problema de la combustión en microgravedad y da acceso al
+dashboard. El espacio de trabajo permite buscar estudios y ensayos, formular una
+investigación con filtros explícitos y explorar comparaciones, ranking y fuentes.
+El dashboard usa grafito y ámbar, conserva el tema claro y carga Inter Tight y
+Geist Mono desde el propio proyecto.
 
 ## Estructura
 
 | Ruta | Contenido |
 |---|---|
-| `src/App.tsx` | Montaje: conexión, investigación, selección compartida y paneles. |
+| `src/App.tsx` | Conexión, navegación por secciones, investigación y selección compartida. |
+| `src/components/MissionIntro.tsx` | Portada, material visual de NASA e ilustración conceptual. |
+| `src/components/TopBar.tsx` | Búsqueda y accesos del dashboard. |
+| `src/dashboard.css` | Marco, navegación, superficies y adaptación del dashboard al ancho de pantalla. |
 | `src/components/MissionBrief.tsx` | Formulario tipado → `RankingRequest` y resumen de los filtros que se enviarán. |
 | `src/components/SynthesisPanel.tsx` | Afirmaciones citadas, hipótesis rotuladas, actividad y advertencias. |
 | `src/features/mission-lab/` | Panel A/B, segmentos, hipótesis, consulta lunar y vigencia; define `MissionSlotProps`. |
@@ -33,8 +36,9 @@ autoalojadas, acentos de llama naranja/azul según tema, conservados del diseño
 - La evidencia se pide con `research_id` para conservar el expediente. La de los
   ensayos excluidos no forma parte del expediente: se lee del corpus activo y se
   rotula «Corpus activo · no está en este expediente».
-- Sintético/real y IA demo/proveedor quedan visibles en cabecera, canvas,
-  ranking y evidencia. Las hipótesis preparadas se rotulan como propuesta.
+- Canvas, ranking y evidencia identifican la procedencia de los datos. La
+  síntesis identifica el coordinador local o el proveedor externo. Las hipótesis
+  preparadas se rotulan como propuesta.
 - Una respuesta de una consulta anterior no sobrescribe la actual.
 - Estados distinguibles: sin conexión, vacío, cargando, error con reintento y
   evidencia insuficiente con los motivos devueltos por el ranking.

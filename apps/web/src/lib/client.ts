@@ -37,6 +37,8 @@ export function createApi(baseUrl = "", fetcher: typeof fetch = fetch) {
   return {
     health: async () => unwrap(await client.GET("/api/v1/health")),
     studies: async () => unwrap(await client.GET("/api/v1/studies")),
+    studyChart: async (id: string) => unwrap(await client.GET("/api/v1/studies/{study_id}/chart", { params: { path: { study_id: id } } })),
+    chat: async (body: Models["ChatRequest"]) => unwrap(await client.POST("/api/v1/chat", { body })),
     studyEvidence: async (id: string, offset: number, limit: number) => unwrap(await client.GET(
       "/api/v1/studies/{study_id}/evidence", { params: { path: { study_id: id }, query: { offset, limit } } }
     )),

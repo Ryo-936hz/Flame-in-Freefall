@@ -10,13 +10,16 @@ function Row({ item, position, label, selected, onSelect }: {
   item: Ranked; position: number | null; label: string | undefined; selected: boolean; onSelect: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const bareLabel = label ?? shortId(item.trial_id);
+  const study = item.trial_id.match(/^psi:(PSI-\d+):/i)?.[1];
+  const display = /^\d+[a-z]?$/i.test(bareLabel) ? `Trial ${bareLabel}` : bareLabel;
   return <Fragment>
     <tr className="row" data-selected={selected} data-eligibility={item.eligibility}>
       <td className="num muted">{position === null ? "—" : String(position).padStart(2, "0")}</td>
       <td>
         <button type="button" className="row-link" aria-pressed={selected} onClick={onSelect}>
-          <b>{label ?? shortId(item.trial_id)}</b>
-          <span className="id">{item.trial_id}</span>
+          <b>{display}</b>
+          {study && <span className="id" title={item.trial_id}>{study} </span>}
           <ProvenanceTag value={item.provenance} />
         </button>
       </td>
@@ -48,7 +51,7 @@ export default function RankingTable({ ranking, labels, selectedTrial, onSelect 
   selectedTrial: string | null;
   onSelect: (trialId: string) => void;
 }) {
-  const [showExcluded, setShowExcluded] = useState(true);
+  const [showExcluded, setShowExcluded] = useState(false);
   const head = <thead><tr><th>#</th><th>Trial</th><th>Similarity</th><th>Coverage</th><th>Status</th><th>Reasons</th><th><span className="sr-only">Detail</span></th></tr></thead>;
   return <div className="ranking">
     <div className="table-wrap">

@@ -5,7 +5,7 @@ import "./catalog.css";
 
 const limit = 20;
 
-export function StudyCatalog({ api }: { api: ReturnType<typeof createApi> }) {
+export function StudyCatalog({ api, studyRequest = null }: { api: ReturnType<typeof createApi>; studyRequest?: { id: string } | null }) {
   const [studies, setStudies] = useState<Models["Study"][]>([]);
   const [catalogAttempt, setCatalogAttempt] = useState(0);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -14,6 +14,7 @@ export function StudyCatalog({ api }: { api: ReturnType<typeof createApi> }) {
   const [offset, setOffset] = useState(0);
   const pageTicket = useRef(0);
   const sourceTicket = useRef(0);
+  const appliedRequest = useRef<{ id: string } | null>(null);
   const [pageAttempt, setPageAttempt] = useState(0);
   const [pageLoading, setPageLoading] = useState(false);
   const [pageError, setPageError] = useState("");
@@ -77,6 +78,13 @@ export function StudyCatalog({ api }: { api: ReturnType<typeof createApi> }) {
     sourceTicket.current += 1;
     setSourceRequest({ id: ref, attempt: sourceTicket.current });
   }
+
+  useEffect(() => {
+    if (!studyRequest || appliedRequest.current === studyRequest || !studies.some((item) => item.id === studyRequest.id)) return;
+    appliedRequest.current = studyRequest;
+    if (id === studyRequest.id && offset === 0) return;
+    load(studyRequest.id, 0);
+  }, [studyRequest, studies, id, offset]);
 
   const study = studies.find((item) => item.id === id);
   const link = sourceLink(source?.source_url);

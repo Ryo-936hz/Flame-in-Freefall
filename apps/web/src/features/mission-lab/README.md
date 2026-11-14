@@ -26,7 +26,7 @@ Mission Lab presenta escenarios A/B, hipótesis y el caso sin evidencia suficien
   propio de botones y tablas dentro del panel porque P5 no estiliza `button`/`table` sin clase.
   El host define `.p6-slot { container-type: inline-size; container-name: mission-slot; }`;
   la tabla pasa a filas apiladas dentro de columnas estrechas, también en escritorio.
-- Montaje actual en P5: `App.tsx` sustituye `InterimMissionTools` por
+- Montaje actual en P5: `App.tsx` renderiza
   `<MissionLabPanel {...slot} question={draft.question} />` y `<ReportPanel {...slot} />` dentro de `#lab`. El
   `slot.metric` recibe `draft.metric`. `beginResearchIntent` coordina recuperaciones con Reset/Investigate;
   `onOpenEvidence` del host lee sin `research_id` cuando `source === "corpus"`, incluso sin expediente activo.

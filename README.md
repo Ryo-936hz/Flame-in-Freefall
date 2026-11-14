@@ -13,6 +13,8 @@ identidades del catálogo y selector de las 14 métricas. El cierre se entrega m
 
 Los TTS · 14 de noviembre de 2026.
 
+[Guía de despliegue con Qwen local y el corpus P2](docs/DESPLIEGUE.md).
+
 [![Verificación Windows y Linux](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/workflows/verify.yml)
 
 Demo integrada: FastAPI/Pydantic, SQLite con migraciones y snapshots, ingesta,
