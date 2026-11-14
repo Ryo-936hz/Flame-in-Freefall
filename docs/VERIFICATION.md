@@ -285,3 +285,49 @@ El incremento P1 desde `422f6b03f410c6ac049b699e13fc204a3af67743` añade un job 
 ## Contrato 1.1 de condiciones sucesivas
 
 Verificado en el incremento P1: `apps/api/tests/test_contracts.py` y `test_science.py` (45 passed), Ruff de API/scripts, export OpenAPI `--check`, TypeScript generado `--check`, typecheck de cliente y 6 pruebas cliente. La suite Python completa no finalizo en este entorno: pytest no pudo crear temporales en el directorio de sistema y la reejecucion con `--basetemp work/pytest-p1` se interrumpio tras quedar sin salida. El ejemplo es totalmente sintetico. La comparacion extrae X y el `segment_id` enlazado, pero la estratificacion cientifica P3 completa sigue pendiente; PostgreSQL tampoco se verifico.
+
+## P6 · Mission Lab A/B, hipótesis y guion (14 nov 2026, Linux)
+
+Rama `claude/cool-edison-2okpmp`, partida `422f6b0` (`codex/team-start-v1`). Entorno
+Linux del contenedor de trabajo: Python 3.13 (uv), Node 22.23; proveedor `demo`, SQLite
+temporal con semilla sintética. No es una ejecución de CI ni de Windows.
+
+- Ruff aprobado; **112 pruebas Python**; OpenAPI/TS sin deriva; typecheck y build correctos.
+- `npm run test:client`: **15 pruebas** (6 existentes + 9 de `mission-lab.test.ts`).
+- `scripts/smoke.py` aprobado con reinicio.
+- Recorrido en Chromium (Playwright) comparado con un worktree del commit base: el
+  recorrido de TEAM_START §4 da los mismos resultados; presets A/B, consulta sin
+  evidencia, panel de hipótesis, API caída, teclado y 390 px sin desbordamiento revisados.
+- Cifras de DEMO.md contrastadas con la API demo. Todos los datos son fixtures sintéticos.
+
+Cambio compartido: el script `test:client` de `package.json` añade el nuevo archivo de
+pruebas (coordinar con P1). Sin cambios de contrato, API ni `packages/contracts`.
+
+## P6 · Montaje P5, recorrido E2E e informe (14 nov 2026, Linux)
+
+Rama `codex/p6-mission-lab`, HEAD `c6c2c1d` (merge de `main` en `1041ff2`; partida `44a8d8e`) con el incremento
+P6 sin commit en el árbol. Linux del contenedor de trabajo, Node 22, Python con uv, Playwright/Chromium instalado
+globalmente (no es dependencia del proyecto). Proveedor `demo`, SQLite temporal con semilla sintética. No es CI ni Windows.
+
+En `/home/user/Flame-in-Freefall` (arnés de esta rama):
+
+- `npm run typecheck` sin errores; `npm run build` correcto; `npm run check:types` «TypeScript contract matches OpenAPI.»
+- `npm run test:client`: **43 aprobadas** (client, mission-lab, mission-lab-state, mission-lab-panel, report).
+- `uv run pytest -q`: 211 aprobadas, 3 omitidas; `uv run ruff check apps/api scripts` sin avisos.
+- `uv run python scripts/smoke.py`: `"points": 4`, `"restart_persistence": "passed"`.
+- `node apps/web/tests/e2e/p6-walkthrough.mjs --host=harness`: **12/12 pasos, 23 comprobaciones**. Incluye evidencia
+  `record` con `research_id` y `corpus` sin él, A/B marcado como anterior al cambiar filtros, consulta
+  `insufficient_evidence`, informe mostrado == `GET /report` == descargado, recarga + reinicio de API con
+  recuperación del mismo informe, 404 y API parada ⇒ alerta con Retry que funciona al volver la API.
+- Una ejecución con host equivocado (`--host=p5` sobre el arnés) terminó con código 1 y resumen de fallo.
+
+Integración con P5 en worktree temporal (`HEAD` + merge sin commit de `origin/codex/p5-evidence-canvas` `c71fa13`,
+App.tsx de P5, `InterimMissionTools` sustituido por los paneles P6; worktree eliminado después):
+
+- typecheck y build correctos; `npm run test:client` 43 aprobadas; `npx tsx --test apps/web/tests/evidence/*.test.ts` 10 aprobadas.
+- `p6-walkthrough.mjs --host=p5`: **12/12 pasos, 23 comprobaciones**. Capturas revisadas en tema oscuro: tras tokenizar
+  `mission-lab.css` el panel es legible; la tabla A/B queda estrecha en la columna central de P5.
+- El parche `docs/handoffs/P6-mount-for-P5.patch` se aplica limpiamente (`git apply --check`) sobre los archivos de `c71fa13`.
+
+Todos los datos son fixtures sintéticos, no mediciones NASA. Sin cambios de contrato, API ni `packages/contracts`.
+Cambio compartido: `test:client` en `package.json` añade `mission-lab-state`, `mission-lab-panel` y `report` (anotar P1).

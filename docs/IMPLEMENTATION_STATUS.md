@@ -54,3 +54,10 @@ Las entregas previas y sus resultados están en VERIFICATION y los relevos
 [P1](handoffs/P1.md), [P3](handoffs/P3.md), [P4](handoffs/P4.md).
 La referencia inicial `codex/team-start-v1` permanece congelada. Para el incremento
 actual usar el commit de la entrega, sin reset ni borrar ramas de compañeros.
+
+## Integración P6 en curso
+
+La petición actual asigna también P6 a este trabajo. Se incorpora su rama
+`80ceba4` conservando historial. Mission Lab e informe existen, pero el montaje
+en la interfaz P5 actual y las nuevas verificaciones están pendientes en este
+punto de integración; los resultados históricos de su relevo no validan este merge.

@@ -69,3 +69,132 @@ P6 mantiene una consulta conocida, una consulta modificada y una consulta sin ev
 - ¿Qué hace la IA? Distinguir el flujo determinista actual, sus herramientas y una eventual síntesis externa; no presentar demo como inferencia real.
 - ¿Qué está prototipado? Mostrar etiquetas y alcance.
 - ¿Qué falta para uso real? Corpus verificado, evaluación ampliada, revisión especializada y modelos validados donde se hagan predicciones.
+
+## P6 · Recorrido Mission Lab
+
+Guion de respaldo verificado contra la API real (modo `demo`, `FLAMELAB_SEED_DEMO=true`, SQLite temporal) el
+2026-11-14. Todas las cifras proceden de los **fixtures sintéticos** (`synthetic:*`): no son mediciones NASA. La
+coordinación es determinista y no llama a un modelo. `/scenarios/compare` compara **aplicabilidad de evidencia**
+(`label: evidence_comparison_not_physical_simulation`); no simula combustión ni predice seguridad.
+
+- Commit de partida: `422f6b03f410c6ac049b699e13fc204a3af67743` (API sin cambios en la rama de trabajo).
+- Commit del recorrido: el commit de la rama P6 que introduce esta sección (`git log -1 -- docs/DEMO.md`); el relevo registra su SHA. Repetir la verificación si el recorrido se ejecuta sobre otro commit.
+
+### 1. Consulta conocida (respondida)
+
+`POST /api/v1/research` con `demoRanking` de `apps/web/src/lib/client.ts`:
+
+```json
+{"question": "Que ensayos sinteticos en microgravedad son comparables variando la velocidad de flujo?",
+ "ranking": {"target": {"gravity_regime": "microgravity"}, "required_match": ["gravity_regime"],
+             "vary": ["flow_velocity_cm_s"], "allow_synthetic": true, "minimum_coverage": 0.6, "limit": 3}}
+```
+
+Resultado observado:
+
+- `status: completed`, `provider: demo`, resumen «Demostración determinista con datos sintéticos.»
+- Seleccionados: `synthetic:trial-1`, `-2`, `-3` (`eligible`, similitud 1.0, cobertura 1.0,
+  `explicit_requirements_satisfied`). Fuera: `trial-4` `excluded` (`required_condition_mismatch:gravity_regime`,
+  es `earth`) y `trial-5` `indeterminate` (`required_condition_missing:gravity_regime`, `no_known_target_conditions`).
+- Comparación: `flame_spread_rate_mm_s` frente a `flow_velocity_cm_s`, 1 grupo, 4 puntos de 3 ensayos
+  (`trial-1` aporta 2 observaciones de la misma unidad independiente: no son réplicas).
+- Hipótesis `demo:hypothesis-controlled-series`, etiqueta `prepared_demo_hypothesis` (contenido preparado, no
+  descubrimiento). Siguiente prueba (`next_measurement`): «Registrar velocidad calibrada, O2 durante el ensayo y
+  propagación con unidades, controlando geometría y material.» Incluye `alternative_explanation` y `falsification`.
+
+### 2. Consulta modificada A/B
+
+`POST /api/v1/scenarios/compare` con A = `demoRanking` y B = la misma petición cambiando solo
+`target.gravity_regime` a `"lunar"`:
+
+```json
+{"name_a": "A microgravedad", "name_b": "B",
+ "scenario_a": {"target": {"gravity_regime": "microgravity"}, "required_match": ["gravity_regime"], "vary": ["flow_velocity_cm_s"], "allow_synthetic": true, "minimum_coverage": 0.6, "limit": 3},
+ "scenario_b": {"target": {"gravity_regime": "lunar"}, "required_match": ["gravity_regime"], "vary": ["flow_velocity_cm_s"], "allow_synthetic": true, "minimum_coverage": 0.6, "limit": 3}}
+```
+
+| Escenario | Seleccionados | Salen y motivo en B |
+|---|---|---|
+| A microgravedad | trial-1, trial-2, trial-3 | — |
+| B lunar | ninguno | trial-1..3 `required_condition_mismatch:gravity_regime`; trial-5 sigue `indeterminate` |
+
+Advertencias: «Compara aplicabilidad de evidencia; no simula la combustión ni predice seguridad.» y, en
+`ranking_b`, «No eligible evidence for the explicit filters and coverage requirement.» El cambio se explica por el
+filtro explícito: ningún fixture declara gravedad lunar. No implica nada sobre la combustión lunar.
+
+Variantes de B también observadas (misma A):
+
+- `allow_synthetic: false` (microgravedad): B vacío; todos `excluded` con `synthetic_not_allowed` (más los motivos previos de trial-4/5).
+- `gravity_regime: "earth"`: entra `trial-4` (`eligible`, similitud 1.0); salen trial-1..3 por `required_condition_mismatch:gravity_regime`. Es el único B de los fixtures donde algo **entra**.
+
+### 3. Consulta sin evidencia suficiente
+
+`POST /api/v1/research` con `{"question": "Aplicación lunar sin evidencia directa", "ranking": <B lunar anterior>}`
+(la misma que usa `scripts/smoke.py`). Resultado: `status: insufficient_evidence`, resumen «Evidencia insuficiente
+para la métrica y las restricciones solicitadas.», `ranking.items` vacío, `comparison: null`, `hypotheses` y
+`claims` vacíos. Qué falta, según la respuesta: «Faltan candidatos elegibles o mediciones compatibles de la
+métrica.» (0 de 5 ensayos elegibles). No se sustituyen cifras ni se propone una hipótesis.
+
+### Funcional, preparado e ilustrativo
+
+| Elemento | Estado |
+|---|---|
+| Ranking, elegibilidad, motivos, comparación A/B, estado `insufficient_evidence` | Funcional: calculado por la API en cada petición. |
+| Hipótesis y siguiente prueba | Preparado: texto fijo `prepared_demo_hypothesis`, no inferido por un modelo. |
+| Datos de ensayos y observaciones | Sintéticos: fixtures de software. |
+| Escena conceptual / simulación | No existe; si se añade, va rotulada como ilustrativa. |
+
+### Caso de respaldo
+
+El respaldo es la consulta conocida (1) y la lunar (3). Reproducción sin UI: `uv run python scripts/smoke.py`
+(arranca API en SQLite temporal, ejecuta research, escenarios y caso lunar y reinicia; resultado observado:
+`"n_trials": 5`, `"points": 4`, `"restart_persistence": "passed"`), o las peticiones JSON de arriba con `curl`
+contra una API en modo demo. Una captura o grabación se presenta como resultado previo, nunca como ejecución en vivo.
+
+### Pasos en la UI Mission Lab
+
+Por función. Los paneles P6 `MissionLabPanel` (`apps/web/src/features/mission-lab/`) y `ReportPanel`
+(`apps/web/src/features/report/`) están montados en el arnés técnico de `codex/p6-mission-lab`. En la interfaz P5
+se montaron solo en un worktree temporal de integración; el montaje real en la rama de P5 está pendiente
+(parche propuesto en `docs/handoffs/P6-mount-for-P5.patch`). Los textos visibles de P6 están en inglés.
+
+1. Lanzar la consulta conocida y abrir el panel de hipótesis: etiqueta preparada visible, fundamento, alternativa,
+   refutación y siguiente prueba.
+2. Elegir un escenario B en el selector (gravedad lunar, gravedad terrestre, flujo 2 cm/s puntuado, sin sintéticos) y comparar.
+3. Revisar la vista entra / sale / se mantiene: cada salida muestra sus motivos de `ranking_b.excluded`; la
+   etiqueta de comparación de evidencia es visible.
+4. Pulsar «Run query without sufficient evidence»: se muestra `insufficient_evidence` y lo que falta, sin cifras ni hipótesis.
+5. Vigencia: cambiar los filtros del formulario después de comparar. El resultado A/B pasa a «Previous A/B result»
+   con el aviso «Previous comparison — not computed with the current filters», los filtros usados y el botón
+   «Recompute with current filters»; A deja de llamarse «A · current filters». Restaurar los mismos filtros lo
+   devuelve a actual.
+6. Evidencia: las referencias de hipótesis abren la evidencia del expediente (`research_id`); las de filas A/B, la
+   del corpus activo (sin `research_id`), y el visor del host lo rotula.
+7. Informe en «Report and recovery»: se carga al activar un expediente y se muestra como fuente Markdown sin
+   renderizar, tal cual llega de `GET /research/{id}/report`. «Download report (.md)» descarga exactamente ese texto.
+   «Replay saved events» reproduce eventos persistidos (no en vivo).
+8. Recuperación: tras recargar la página no se reabre nada automáticamente; «Reopen last research» o la lista de
+   recientes (solo en este navegador) recuperan el expediente desde la API. Con la API parada aparece una alerta con
+   Retry; al volver la API, Retry funciona.
+
+### Recorrido automatizado (navegador real)
+
+`node apps/web/tests/e2e/p6-walkthrough.mjs --host=harness` (o `--host=p5` sobre la interfaz P5 con los paneles
+montados) arranca API demo con SQLite temporal y Vite, y recorre los pasos 1–8 con Chromium, incluido el reinicio
+de la API. Requiere Playwright instalado (no es dependencia del proyecto; ver `apps/web/tests/e2e/README.md`).
+Resultado del 14 nov 2026 en Linux: 12/12 pasos y 23 comprobaciones en ambos hosts; detalle en VERIFICATION.
+Es el caso de respaldo ejecutable vinculado a commit: registrar el SHA con el que se ejecute.
+
+### Aceptación de extremo a extremo
+
+| Revisor | Comprueba |
+|---|---|
+| P1 | El recorrido corre en el commit registrado; `scripts/smoke.py`, pruebas y cliente generado sin cambios manuales. |
+| P3 | Motivos de exclusión e `insufficient_evidence` son correctos; nada sugiere física lunar ni datos NASA. |
+| P4 | La hipótesis conserva `prepared_demo_hypothesis`/`ai_hypothesis` y muestra fundamento, alternativa y refutación. |
+| P5 | Mission Lab e informe se montan en su App (parche P6) sin romper el arnés; etiquetas sintético/demo visibles; `record`/`corpus` respetado en el visor. |
+
+### Límites
+
+Datos sintéticos (5 ensayos, 6 observaciones); demo determinista sin LLM; sin escena física ni simulación; sin
+datos NASA cuantitativos. Similitud no es confianza ni peligrosidad.
