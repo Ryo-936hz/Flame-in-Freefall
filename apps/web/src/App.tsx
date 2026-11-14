@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ApiError, createApi, demoRanking, sourceLink } from "./lib/client";
-import type { Evidence, Health, Profile, RankingRequest, ResearchResponse, ScenarioComparison } from "./lib/client";
+import type { Evidence, Health, Profile, RankingRequest, ResearchResponse } from "./lib/client";
+import MissionLab, { type ScenarioTrigger } from "./features/mission-lab/MissionLab";
 
 const api = createApi(import.meta.env.VITE_API_BASE_URL ?? "");
 
@@ -16,7 +17,7 @@ export default function App() {
   const [rankingJson, setRankingJson] = useState(JSON.stringify(demoRanking, null, 2));
   const [result, setResult] = useState<ResearchResponse | null>(null);
   const [evidence, setEvidence] = useState<Evidence | null>(null);
-  const [scenario, setScenario] = useState<ScenarioComparison | null>(null);
+  const [scenarioTrigger, setScenarioTrigger] = useState<ScenarioTrigger | null>(null);
   const [report, setReport] = useState("");
   const [events, setEvents] = useState("");
   const [runId, setRunId] = useState("");
@@ -44,34 +45,18 @@ export default function App() {
   }
 
   function showRun(value: ResearchResponse) {
-    setResult(value); setRunId(value.id); setEvidence(null); setReport(""); setEvents(""); setScenario(null);
+    setResult(value); setRunId(value.id); setEvidence(null); setReport(""); setEvents("");
   }
 
   async function investigate() {
-    setResult(null); setEvidence(null); setReport(""); setEvents(""); setScenario(null);
+    setResult(null); setEvidence(null); setReport(""); setEvents("");
     showRun(await api.research({ question, ranking: ranking(), include_hypotheses: true }));
   }
 
-  async function compareScenarios() {
-    const current = ranking();
-    setScenario(null);
-    setScenario(await api.scenarios({
-      name_a: "A · filtros actuales",
-      name_b: "B · gravedad lunar",
-      scenario_a: current,
-      scenario_b: {
-        ...current,
-        target: { ...current.target, gravity_regime: "lunar" },
-        required_match: [...new Set([...(current.required_match ?? []), "gravity_regime" as const])],
-        vary: (current.vary ?? []).filter((key) => key !== "gravity_regime")
-      }
-    }));
-  }
-
-  const selectEvidence = (id: string) => perform(async () => {
+  const selectEvidence = (id: string, live = false) => perform(async () => {
     setEvidence(null);
-    // The endpoint reads the saved snapshot when research_id is provided.
-    setEvidence(await api.evidence(id, result?.id));
+    // The endpoint reads the saved snapshot when research_id is provided; live A/B comparisons read the current dataset.
+    setEvidence(await api.evidence(id, live ? undefined : result?.id));
   });
   const source = sourceLink(evidence?.source_url);
 
@@ -103,7 +88,7 @@ export default function App() {
       <label>RankingRequest (JSON validado por la API)<textarea className="code-input" value={rankingJson} onChange={(event) => setRankingJson(event.target.value)} rows={12} spellCheck={false} /></label>
       <div className="actions">
         <button disabled={busy || question.trim().length < 3} onClick={() => perform(investigate)}>Investigar</button>
-        <button disabled={busy} onClick={() => perform(compareScenarios)}>Comparar A/B · cambiar gravedad</button>
+        <button disabled={busy} onClick={() => setScenarioTrigger({ presetId: "gravity_lunar", nonce: Date.now() })}>Comparar A/B · cambiar gravedad</button>
         <button disabled={busy} onClick={() => setRankingJson(JSON.stringify(demoRanking, null, 2))}>Restaurar filtros sintéticos</button>
       </div>
       <label>Recuperar investigación guardada<input value={runId} onChange={(event) => setRunId(event.target.value)} placeholder="Identificador devuelto por la API" /></label>
@@ -113,12 +98,8 @@ export default function App() {
     <div aria-live="polite">{busy && <p role="status">Esperando respuesta de la API…</p>}</div>
     {error && <p className="error" role="alert">{error}</p>}
 
-    {scenario && <section aria-labelledby="scenario-title">
-      <h2 id="scenario-title">Escenarios A/B · comparación de evidencia</h2>
-      <p>{scenario.label}. No es una simulación física.</p>
-      <p>{scenario.name_a}: {scenario.ranking_a.items.length} candidatos · {scenario.name_b}: {scenario.ranking_b.items.length} candidatos.</p>
-      <details><summary>Selección, cobertura y exclusiones de ambos escenarios</summary><pre>{JSON.stringify(scenario, null, 2)}</pre></details>
-    </section>}
+    <MissionLab api={api} getBase={ranking} question={question} busy={busy} perform={perform} result={result}
+      onEvidence={(id, live) => { void selectEvidence(id, live); }} trigger={scenarioTrigger} />
 
     {result && <>
       <section aria-labelledby="research-title">

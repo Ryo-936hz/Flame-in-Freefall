@@ -30,6 +30,10 @@ Ver [TEAM_START](TEAM_START.md). El historial local anterior y el tag
   ejecutó servidor PostgreSQL/Docker. No se creó ni pobló un índice vectorial.
 - P5/P6 tienen carpetas y cliente común. DESIGN_ANDURIL conserva la dirección visual;
   no se ha construido frontend de producto ni una escena física.
+- P6: guion Mission Lab con peticiones A/B, caso conocido y caso lunar sin evidencia
+  verificados contra la API demo en DEMO.md. UI Mission Lab montada en el arnés: presets A/B,
+  entra/sale/se mantiene, hipótesis rotuladas con siguiente prueba y consulta sin evidencia;
+  9 pruebas cliente nuevas. Sin escena conceptual ni diseño final.
 
 ## Pendientes concretos
 

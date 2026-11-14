@@ -103,3 +103,20 @@ de equipo incorpora esta documentación; consultar su ejecución propia en Actio
 Para nuevos cambios, revisar la ejecución asociada a su SHA: el éxito de #1 no
 acredita automáticamente futuras modificaciones. Los permisos de colaboradores,
 visibilidad y reglas de protección del repositorio no se han cambiado.
+
+## P6 · Mission Lab A/B, hipótesis y guion (14 nov 2026, Linux)
+
+Rama `claude/cool-edison-2okpmp`, partida `422f6b0` (`codex/team-start-v1`). Entorno
+Linux del contenedor de trabajo: Python 3.13 (uv), Node 22.23; proveedor `demo`, SQLite
+temporal con semilla sintética. No es una ejecución de CI ni de Windows.
+
+- Ruff aprobado; **112 pruebas Python**; OpenAPI/TS sin deriva; typecheck y build correctos.
+- `npm run test:client`: **15 pruebas** (6 existentes + 9 de `mission-lab.test.ts`).
+- `scripts/smoke.py` aprobado con reinicio.
+- Recorrido en Chromium (Playwright) comparado con un worktree del commit base: el
+  recorrido de TEAM_START §4 da los mismos resultados; presets A/B, consulta sin
+  evidencia, panel de hipótesis, API caída, teclado y 390 px sin desbordamiento revisados.
+- Cifras de DEMO.md contrastadas con la API demo. Todos los datos son fixtures sintéticos.
+
+Cambio compartido: el script `test:client` de `package.json` añade el nuevo archivo de
+pruebas (coordinar con P1). Sin cambios de contrato, API ni `packages/contracts`.

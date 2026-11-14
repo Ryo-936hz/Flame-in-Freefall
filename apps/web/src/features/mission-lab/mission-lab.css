@@ -1,0 +1,73 @@
+/* Mission Lab (P6): estilo sobrio y denso, acotado con el prefijo ml-. No define tokens globales. */
+.mission-lab { padding: 0; overflow: hidden; }
+.mission-lab .ml-head { margin: 0; padding: 16px 22px; background: #1d252c; color: #e6ebef; border: 0; border-bottom: 2px solid #3d8fc4; border-radius: 0; }
+.mission-lab .ml-head h2 { margin: 2px 0 8px; font-size: 1.25rem; letter-spacing: .01em; }
+.mission-lab .ml-head code { color: #e6ebef; }
+.mission-lab .ml-head .ml-muted { color: #b5c1ca; }
+.ml-eyebrow { margin: 0; font-family: ui-monospace, Consolas, monospace; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #9fb3c2; }
+.ml-modes { display: grid; gap: 4px; margin: 0 0 8px; font-size: .85rem; }
+.ml-modes strong { font-family: ui-monospace, Consolas, monospace; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em; color: #8fcaf0; margin-right: 4px; }
+.ml-muted { color: #4f5f6b; font-size: .85rem; }
+.ml-block { padding: 16px 22px; border-top: 1px solid #d5dce2; }
+.ml-block h3 { font-size: 1.05rem; margin-bottom: 8px; }
+.ml-block h4 { font-size: .98rem; margin: 0 0 6px; }
+.ml-block h5 { font-size: .85rem; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .05em; color: #384955; }
+.ml-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.ml-presets legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
+.ml-preset { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; row-gap: 3px; margin: 0; padding: 10px; font-weight: 400; font-size: .84rem; border: 1px solid #c3ccd3; border-left: 3px solid #c3ccd3; border-radius: 3px; background: #fafbfc; cursor: pointer; min-width: 0; }
+.ml-preset input { display: inline; width: auto; margin: 3px 0 0; grid-row: span 3; align-self: start; }
+.ml-preset input:focus-visible { outline: 3px solid #1976b6; outline-offset: 2px; }
+.ml-preset-active { border-color: #2a6f9c; border-left-color: #2a6f9c; background: #eef5fa; }
+.ml-preset-title { font-weight: 700; }
+.ml-preset-text { overflow-wrap: anywhere; color: #2c3a44; }
+.ml-preset-text em { font-style: normal; font-weight: 600; }
+.ml-result { margin-top: 12px; padding: 12px; border: 1px solid #c3ccd3; border-radius: 3px; background: #fbfcfd; min-width: 0; }
+.ml-result-title:focus-visible { outline: 3px solid #1976b6; outline-offset: 3px; }
+.ml-result-title:focus { outline-offset: 3px; }
+.ml-label { margin: 4px 0 8px; font-size: .85rem; overflow-wrap: anywhere; }
+.ml-label code, .ml-result code, .ml-hypothesis code { overflow-wrap: anywhere; word-break: break-word; }
+.ml-tag { display: inline-block; padding: 0 6px; font-family: ui-monospace, Consolas, monospace; font-size: .75rem; line-height: 1.6; border: 1px solid #8796a2; border-radius: 2px; background: #eef1f4; color: #26333c; overflow-wrap: anywhere; }
+.ml-tag-strong { margin: 0 0 6px; background: #1d252c; border-color: #1d252c; color: #f1f4f6; font-weight: 600; }
+.ml-summary { margin: 0 0 10px; padding-left: 18px; font-size: .86rem; }
+.ml-summary li, .ml-list li { overflow-wrap: anywhere; }
+.ml-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.ml-column { padding: 10px; border: 1px solid #c3ccd3; border-top: 3px solid #6b7c88; border-radius: 3px; background: white; min-width: 0; }
+.ml-column-b { border-top-color: #2a6f9c; }
+.ml-counts { display: flex; gap: 18px; margin: 0 0 8px; }
+.ml-counts dd { font-family: ui-monospace, Consolas, monospace; font-size: 1.25rem; font-weight: 700; }
+.ml-list { margin: 6px 0; padding-left: 18px; font-size: .84rem; }
+.ml-metrics { display: block; color: #3e4e59; font-family: ui-monospace, Consolas, monospace; font-size: .78rem; }
+.ml-insufficient { margin: 6px 0; padding: 8px 10px; border: 1px solid #8a6100; border-left: 4px solid #8a6100; background: #fff6dc; font-size: .86rem; overflow-wrap: anywhere; }
+.ml-insufficient p { margin: 3px 0; }
+.ml-insufficient code, .ml-table td code { display: inline-block; margin: 1px 4px 1px 0; overflow-wrap: anywhere; }
+.ml-warn { padding: 8px 10px; border-left: 4px solid #6b7c88; background: #f0f3f5; }
+.ml-table { font-size: .8rem; }
+.ml-table caption { text-align: left; font-size: .8rem; color: #3e4e59; padding-bottom: 4px; }
+.ml-table th, .ml-table td { padding: 6px 7px; overflow-wrap: anywhere; }
+.ml-table tbody th { font-weight: 400; background: transparent; }
+.ml-table td:nth-child(3), .ml-table td:nth-child(4), .ml-table td:nth-child(5), .ml-table td:nth-child(6) { font-family: ui-monospace, Consolas, monospace; text-align: right; white-space: nowrap; }
+.ml-row-entered td:nth-child(2) { border-left: 3px solid #2a6f9c; }
+.ml-row-left td:nth-child(2) { border-left: 3px solid #8a6100; }
+.ml-hypotheses { display: grid; gap: 10px; }
+.ml-hypothesis { margin: 0; padding: 12px; border: 1px solid #c3ccd3; border-radius: 3px; background: #fbfcfd; }
+.ml-hdl { display: grid; gap: 6px; margin: 6px 0 0; }
+.ml-hdl dt { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: #384955; font-weight: 700; }
+.ml-hdl dd { font-size: .88rem; }
+.ml-next { padding: 8px 10px; border: 1px solid #2a6f9c; border-left: 4px solid #2a6f9c; background: #eaf3f9; }
+.ml-next dt { color: #1b557c; }
+.ml-refs { margin-top: 3px; }
+.ml-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 760px) {
+  .ml-columns { grid-template-columns: 1fr; }
+  .ml-table, .ml-table tbody, .ml-table tr, .ml-table th, .ml-table td { display: block; width: auto; }
+  .ml-table thead tr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .ml-table caption { display: block; }
+  .ml-table tr { margin-bottom: 8px; border: 1px solid #ccd5dc; }
+  .ml-table th, .ml-table td { border: 0; border-bottom: 1px solid #e3e8ec; text-align: left !important; white-space: normal !important; }
+  .ml-table [data-label]::before { content: attr(data-label); display: block; font-family: system-ui, sans-serif; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: #4f5f6b; }
+  .ml-row-entered td:nth-child(2), .ml-row-left td:nth-child(2) { border-left: 0; }
+}
+@media (max-width: 600px) {
+  .mission-lab .ml-head, .ml-block { padding: 12px 14px; }
+}
