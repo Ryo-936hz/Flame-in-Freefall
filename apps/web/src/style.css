@@ -1,4 +1,4 @@
-/* FlameLab SI demo interface. Global tokens owned by P5; P6 uses scoped styles. */
+/* Ignition Protocol demo interface. Global tokens owned by P5; P6 uses scoped styles. */
 
 @font-face {
   font-family: "Inter Tight Variable";
@@ -74,21 +74,7 @@ code, pre, .num, .id { font-family: var(--font-num); font-variant-numeric: tabul
 .skip { position: absolute; left: -999px; top: 8px; z-index: 30; background: var(--signal); color: var(--signal-ink); padding: 8px 12px; }
 .skip:focus { left: 12px; }
 
-/* ---------- Top bar ---------- */
-.topbar {
-  position: sticky; top: 0; z-index: 20; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 24px;
-  padding: 12px clamp(14px, 2.4vw, 32px); background: color-mix(in oklab, var(--bg) 92%, transparent);
-  backdrop-filter: blur(12px); border-bottom: 1px solid var(--rule);
-}
-.brand { display: flex; align-items: center; gap: 9px; text-decoration: none; color: var(--ink); }
-.brand svg { width: 20px; height: 20px; }
-.brand b { font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; font-size: 15px; }
-.brand-team { color: var(--ink-3); font-size: 12px; }
-.nav { display: flex; gap: 20px; justify-self: center; }
-.nav-link { text-decoration: none; color: var(--ink-2); font-size: 14px; padding: 4px 0; }
-.nav-link:hover { color: var(--ink); }
-.status { display: flex; align-items: center; gap: 8px; justify-self: end; flex-wrap: wrap; }
-.status-db { font-family: var(--font-num); font-size: 11px; color: var(--ink-3); }
+/* ---------- Shared small controls ---------- */
 .icon-btn { width: 34px; height: 34px; display: grid; place-items: center; background: transparent; border: 1px solid transparent; color: var(--ink); }
 .icon-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
 .bracket { position: relative; }
@@ -100,17 +86,10 @@ code, pre, .num, .id { font-family: var(--font-num); font-variant-numeric: tabul
 
 /* Hover roll */
 .roll { display: inline-flex; overflow: hidden; height: 1.25em; line-height: 1.25em; vertical-align: top; }
-.roll-c { display: inline-block; white-space: pre; text-shadow: 0 1.25em currentColor; transition: transform 0.55s cubic-bezier(0.65, 0, 0.15, 1); transition-delay: calc(var(--i) * 16ms); }
-.roll-host:hover .roll-c, .roll-host:focus-visible .roll-c { transform: translateY(-1.25em); }
+/* The copy sits 1.25em below each letter; GSAP (useRollHover in lib/motion.ts) slides both up on hover and focus. */
+.roll-c { display: inline-block; white-space: pre; text-shadow: 0 1.25em currentColor; }
 
-/* ---------- Layout ---------- */
-.shell {
-  display: grid; grid-template-columns: minmax(280px, 3fr) minmax(0, 6fr) minmax(300px, 3fr); gap: 10px;
-  padding: 10px clamp(14px, 2.4vw, 32px) 40px; align-items: start;
-}
-.col-brief, .col-evidence { position: sticky; top: 68px; max-height: calc(100vh - 78px); overflow-y: auto; }
-.col-work { display: grid; gap: 10px; min-width: 0; }
-.corpus { color: var(--ink-3); font-size: 11px; margin: 8px 2px 0; }
+/* ---------- Panels ---------- */
 .run-id { margin: 2px 2px -2px; color: var(--ink-3); font-size: 11px; overflow-wrap: anywhere; }
 
 .panel { background: var(--surface); border: 1px solid var(--panel-border); border-radius: var(--radius); min-width: 0; }
@@ -194,8 +173,9 @@ input[type="range"]::-moz-range-thumb { width: 12px; height: 12px; border: 0; bo
 .seg button { border: 0; background: transparent; padding: 5px 12px; font-size: 12.5px; color: var(--ink-2); }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
 
-.chart { margin: 0; border: 1px solid var(--rule); border-radius: 4px; background:
-  linear-gradient(var(--rule) 1px, transparent 1px) 0 0 / 32px 32px, linear-gradient(90deg, var(--rule) 1px, transparent 1px) 0 0 / 32px 32px; background-color: var(--bg); }
+/* No CSS grid behind the plot: it does not scale with the SVG viewBox and drew a second,
+   misaligned grid over the real axis ticks. The grid lines come from the chart's own axes. */
+.chart { margin: 0; border: 1px solid var(--rule); border-radius: 4px; background-color: var(--bg); }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
 .axis line { stroke: var(--rule); }
 .axis text { font-family: var(--font-num); font-size: 10.5px; fill: var(--ink-3); }
@@ -279,19 +259,8 @@ table.sub td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
 .lab-full { grid-column: 1 / -1; }
 .lab-full .cap { color: var(--ink-3); margin: 0 0 6px; }
 
-.foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 14px clamp(14px, 2.4vw, 32px) 24px; border-top: 1px solid var(--rule); color: var(--ink-3); font-size: 12px; }
-
 /* ---------- Responsive ---------- */
-@media (max-width: 1280px) {
-  .shell { grid-template-columns: minmax(280px, 4fr) minmax(0, 8fr); }
-  .col-evidence { grid-column: 2; position: static; max-height: none; }
-}
 @media (max-width: 900px) {
-  .topbar { grid-template-columns: 1fr auto; }
-  .nav { grid-column: 1 / -1; grid-row: 2; justify-self: start; overflow-x: auto; max-width: 100%; }
-  .status-db { display: none; }
-  .shell { grid-template-columns: 1fr; }
-  .col-brief, .col-evidence { position: static; max-height: none; grid-column: auto; }
   .synth-grid, .lab-grid, .ab { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -300,18 +269,6 @@ table.sub td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
 }
 .cov, .ranking .btn.ghost { white-space: nowrap; }
 .row-link .tag { margin-top: 4px; }
-@media (max-width: 900px) { .brand-team { display: none; } .status .tag { font-size: 9.5px; padding: 2px 6px; } }
-
-/* Section navigation: current link and jump highlight */
-.nav-link { position: relative; }
-.nav-link[aria-current="location"] { color: var(--ink); }
-.nav-link[aria-current="location"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px; background: var(--signal); }
-.nav-link[aria-disabled="true"] { opacity: 0.4; cursor: not-allowed; }
-.panel[data-flash="true"] { animation: panel-flash 1.3s var(--ease); }
-@keyframes panel-flash {
-  0% { border-color: var(--signal); box-shadow: 0 0 0 1px var(--signal), 0 0 0 0 color-mix(in oklab, var(--signal) 45%, transparent); }
-  100% { border-color: var(--panel-border); box-shadow: 0 0 0 1px transparent, 0 0 0 10px transparent; }
-}
 .panel h2:focus { outline: none; }
 
 /* Investigate stays reachable: the action bar sticks to the bottom of the brief column. */
@@ -324,28 +281,6 @@ table.sub td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
 .brief-actions .btn.primary { flex: 1 1 auto; justify-content: center; }
 .brief-error { flex-basis: 100%; margin: 0 0 4px; }
 .kbd-hint { font-family: var(--font-num); font-size: 10.5px; color: var(--ink-3); margin-left: auto; }
-.col-brief { scroll-padding-bottom: 72px; }
-
-/* ---------- Fixed app shell (desktop): the page never scrolls, footer always visible ---------- */
-@media (min-width: 901px) {
-  html, body, #root { height: 100%; overflow: hidden; }
-  .app { height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
-  .topbar { position: relative; }
-  .shell { min-height: 0; height: 100%; padding-bottom: 10px; align-items: stretch; }
-  .col-brief, .col-work, .col-evidence {
-    position: relative; top: auto; max-height: none; height: 100%; min-height: 0;
-    overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable;
-  }
-  .col-work { align-content: start; padding-right: 2px; }
-  .col-evidence .panel { min-height: 100%; }
-  .foot { padding: 8px clamp(14px, 2.4vw, 32px); }
-}
-@media (min-width: 901px) and (max-width: 1280px) {
-  .shell { grid-template-columns: minmax(280px, 4fr) minmax(0, 8fr); grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); }
-  .col-brief { grid-column: 1; grid-row: 1 / span 2; }
-  .col-work { grid-column: 2; grid-row: 1; }
-  .col-evidence { grid-column: 2; grid-row: 2; }
-}
 
 /* ---------- Day/night switch ---------- */
 .theme-switch {
@@ -366,7 +301,6 @@ table.sub td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
   position: absolute; left: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
   background: var(--signal); color: var(--signal-ink); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
-.ts-label { min-width: 40px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 
 /* ---------- Glassmorphism (frost + translucency + lit edge + depth), applied sparingly ---------- */
 :root {
@@ -397,7 +331,7 @@ table.sub td { padding: 4px 8px; border-bottom: 1px solid var(--rule); }
 }
 body { background: var(--bg); }
 
-.panel, .topbar, .theme-switch {
+.panel, .theme-switch {
   background: var(--glass-bg);
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   backdrop-filter: blur(16px) saturate(150%);
@@ -411,7 +345,6 @@ body { background: var(--bg); }
   -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0.55; transition: opacity 0.4s var(--ease);
 }
 .panel:hover::before { opacity: 1; }
-.topbar { border-bottom-color: var(--glass-edge); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
 /* The flame viewport style tile and nested bars stay solid: no glass on glass. */
 .brief-actions { background: color-mix(in oklab, var(--surface) 88%, transparent); -webkit-backdrop-filter: none; backdrop-filter: none; }
 .chart, .ev-text, .interpreted, .state { background-color: color-mix(in oklab, var(--bg) 70%, transparent); }
@@ -428,11 +361,11 @@ body { background: var(--bg); }
 
 /* Accessibility and support fallbacks. */
 @media (prefers-reduced-transparency: reduce) {
-  .panel, .topbar, .theme-switch { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .panel, .theme-switch { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .app::after { display: none; }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .panel, .topbar, .theme-switch { background: color-mix(in oklab, var(--surface) 94%, transparent); }
+  .panel, .theme-switch { background: color-mix(in oklab, var(--surface) 94%, transparent); }
 }
 @media (prefers-reduced-motion: reduce) {
   .panel, .panel::before { transition: none; }
@@ -476,33 +409,28 @@ body { background: var(--bg); }
   -webkit-backdrop-filter: var(--frost);
   backdrop-filter: var(--frost);
 }
-.topbar, .theme-switch { -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost); }
+.theme-switch { -webkit-backdrop-filter: var(--frost); backdrop-filter: var(--frost); }
 
 /* Layer order: ambient glow and grain sit under everything; content always above. */
 .app::before { z-index: -2; }
 .app::after { z-index: -1; }
-.topbar { z-index: 20; }
-.shell, .foot { position: relative; z-index: 1; }
+.landing, .dash { position: relative; z-index: 1; }
 @media (prefers-reduced-transparency: reduce) {
-  .panel, .topbar, .theme-switch { background-color: var(--surface); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .panel, .theme-switch { background-color: var(--surface); background-image: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .app::before { background: var(--bg); }
   .app::after { display: none; }
 }
 
-/* Flame explainer lives in the evidence column before the first investigation. */
-.col-evidence { display: grid; align-content: start; gap: 10px; }
-.col-evidence .panel.evidence { min-height: 0; }
-.flame-panel .panel-b { padding: 12px 14px 14px; }
+/* Flame explainer: shown on the welcome page. */
 .flame-ill { margin: 0; }
 .flame-title { margin: 0 0 8px; color: var(--ink-3); }
 .flame-view { aspect-ratio: 16 / 10; }
 .flame-tag { top: 8px; right: 8px; font-size: 9px; padding: 1px 6px; }
-.flame-lbl { bottom: 8px; font-size: 12.5px; }
-.flame-lbl.l { left: 10px; }
-.flame-lbl.r { left: calc(50% + 10px); }
-.flame-lbl span { font-size: 9px; margin-top: 2px; }
-.flame-ill figcaption { font-size: 12px; line-height: 1.45; }
-.col-evidence .panel { min-height: 0; }
+.flame-lbl { bottom: 10px; font-size: 14px; }
+.flame-lbl.l { left: 12px; }
+.flame-lbl.r { left: calc(50% + 12px); }
+.flame-lbl span { font-size: 9.5px; margin-top: 2px; }
+.flame-ill figcaption { font-size: 12.5px; line-height: 1.5; color: var(--ink-3); }
 
 /* ---------- Ambient glow: day = green behind solid white panels; night = peach/rose ---------- */
 :root {
@@ -520,7 +448,6 @@ body { background: var(--bg); }
 }
 /* Day: the glow only shows in the gaps; panels, header and switch are solid white. */
 :root[data-theme="light"] .panel,
-:root[data-theme="light"] .topbar,
 :root[data-theme="light"] .theme-switch {
   background-color: #ffffff; background-image: none;
   -webkit-backdrop-filter: none; backdrop-filter: none;
@@ -537,15 +464,6 @@ body { background: var(--bg); }
 }
 .cond-slider { grid-column: 1 / -1; margin-top: 2px; }
 .cond-slider .ticks { display: flex; justify-content: space-between; font-family: var(--font-num); font-size: 9.5px; color: var(--ink-3); }
-.reset-all {
-  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
-  letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid var(--rule-strong); background: transparent; color: var(--ink);
-  transition: border-color 0.2s, background 0.2s, transform 0.12s var(--ease);
-}
-.reset-all:hover { border-color: var(--ink); background: var(--sunk); }
-.reset-all:active { transform: scale(0.96); }
-.reset-all svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.4s var(--ease); }
-.reset-all:hover svg { transform: rotate(-200deg); }
 
 /* ---------- Final palette: no background glow; day = flame orange, night = microgravity flame blue ---------- */
 :root, :root:not([data-theme="light"]) {

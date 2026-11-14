@@ -4,8 +4,24 @@ import type { RankingRequest } from "../lib/client";
 import { CONDITIONS, HABITATS, METRICS, ROLE_LABELS, activeHabitat, applyHabitat, buildRanking, describeRanking } from "../lib/filters";
 import type { BriefDraft, ConditionKey, ConditionRole } from "../lib/filters";
 import { Panel } from "./ui";
+import Select from "./Select";
+import type { SelectOption } from "./Select";
 
 const ROLES: ConditionRole[] = ["off", "match", "similar", "vary"];
+const ROLE_OPTIONS: SelectOption[] = ROLES.map((role) => ({ value: role, label: ROLE_LABELS[role] }));
+const METRIC_OPTIONS: SelectOption[] = METRICS.map((metric) => ({ value: metric.key, label: metric.label }));
+const PRESET_GRAVITY = [...new Set(HABITATS.map((habitat) => habitat.gravity))];
+
+/**
+ * Categorical values offered for a condition: those present in the active corpus,
+ * plus preset gravity labels and the current value, which are marked when the
+ * corpus does not contain them (they cannot match until it does).
+ */
+function valueOptions(key: ConditionKey, current: string, inCorpus: string[]): SelectOption[] {
+  const extra = key === "gravity_regime" ? PRESET_GRAVITY : [];
+  const values = [...new Set([...inCorpus, ...extra, ...(current.trim() ? [current.trim()] : [])])];
+  return values.map((value) => ({ value, label: value, hint: inCorpus.includes(value) ? undefined : "not in corpus" }));
+}
 
 export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy, suggestions }: {
   draft: BriefDraft;
@@ -17,6 +33,7 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
   suggestions: Partial<Record<ConditionKey, string[]>>;
 }) {
   const coverageId = useId();
+  const metricId = useId();
   const built = useMemo(() => buildRanking(draft), [draft]);
   const setCondition = (key: ConditionKey, patch: Partial<BriefDraft["conditions"][ConditionKey]>) =>
     onChange({ ...draft, conditions: { ...draft.conditions, [key]: { ...draft.conditions[key], ...patch } } });
@@ -33,7 +50,7 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
       const was = before[index];
       const now = draft.conditions[key].role;
       const shown = (role?: string) => role === "match" || role === "similar";
-      if (!shown(was) && shown(now)) gsap.from(`[data-cond="${key}"] .input`, { height: 0, opacity: 0, y: -6, duration: 0.4, ease: "expo.out", clearProps: "height,opacity,transform" });
+      if (!shown(was) && shown(now)) gsap.from(`[data-cond="${key}"] .input, [data-cond="${key}"] .cond-value`,{ height: 0, opacity: 0, y: -6, duration: 0.4, ease: "expo.out", clearProps: "height,opacity,transform" });
     });
   }, { scope: form, dependencies: [roles] });
 
@@ -47,18 +64,18 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
             // Ctrl/Cmd + Enter runs the investigation without leaving the keyboard.
             if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); }
           }} />
-        <small className="hint">Shown with the synthesis. The filters below drive the analysis; the demo does not interpret written constraints.</small>
+        <small className="hint">The filters below drive the analysis; written constraints are not interpreted.</small>
       </label>
 
       <div className="field">
         <span className="cap">Habitat presets</span>
-        <div className="presets" role="group" aria-label="Habitat presets">
+        <div className="presets" role="group" aria-label="Habitat presets"
+          title="Fills gravity, O₂ and pressure. Gravity must exist in the data to match.">
           {HABITATS.map((h) => <button type="button" key={h.id} className="preset" aria-pressed={activeHabitat(draft) === h.id}
             onClick={() => onChange(applyHabitat(draft, h.id))}>
             {h.label}<small>{h.note}</small>
           </button>)}
         </div>
-        <small className="hint">Fills gravity, O₂ and pressure. Gravity must exist in the data to match.</small>
       </div>
 
       <fieldset className="conditions">
@@ -71,17 +88,17 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
           const needsValue = condition.role === "match" || condition.role === "similar";
           return <div className="cond" key={key} data-cond={key} data-role={condition.role}>
             <label className="cond-name" htmlFor={`role-${key}`}>{label}{unit && <span className="unit"> {unit}</span>}</label>
-            <select id={`role-${key}`} className="select" value={condition.role}
-              onChange={(event) => setCondition(key, { role: event.target.value as ConditionRole })}>
-              {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}
-            </select>
+            <Select id={`role-${key}`} value={condition.role} options={ROLE_OPTIONS}
+              onChange={(role) => setCondition(key, { role: role as ConditionRole })} />
             {needsValue && <>
-              <input aria-label={`Value for ${label}`} className="input" value={condition.value}
-                inputMode={numeric ? "decimal" : "text"} list={numeric ? undefined : `values-${key}`}
-                aria-invalid={Boolean(error)} aria-describedby={error ? `err-${key}` : undefined}
-                placeholder={numeric ? "0" : "value"}
-                onChange={(event) => setCondition(key, { value: event.target.value })} />
-              {!numeric && <datalist id={`values-${key}`}>{(suggestions[key] ?? []).map((value) => <option key={value} value={value} />)}</datalist>}
+              {numeric
+                ? <input aria-label={`Value for ${label}`} className="input" value={condition.value} inputMode="decimal"
+                  aria-invalid={Boolean(error)} aria-describedby={error ? `err-${key}` : undefined} placeholder="0"
+                  onChange={(event) => setCondition(key, { value: event.target.value })} />
+                : <Select ariaLabel={`Value for ${label}`} className="cond-value" value={condition.value}
+                  options={valueOptions(key, condition.value, suggestions[key] ?? [])} placeholder="Choose a value"
+                  invalid={Boolean(error)} describedBy={error ? `err-${key}` : undefined}
+                  onChange={(value) => setCondition(key, { value })} />}
               {range && (() => {
                 const parsed = Number(condition.value.replace(",", "."));
                 const current = condition.value.trim() !== "" && Number.isFinite(parsed) ? Math.min(range.max, Math.max(range.min, parsed)) : range.min;
@@ -100,12 +117,11 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
       </fieldset>
 
       <div className="field-row">
-        <label className="field">
-          <span className="cap">Metric</span>
-          <select className="select" value={draft.metric} onChange={(event) => onChange({ ...draft, metric: event.target.value as BriefDraft["metric"] })}>
-            {METRICS.map((metric) => <option key={metric.key} value={metric.key}>{metric.label}</option>)}
-          </select>
-        </label>
+        <div className="field">
+          <label className="cap" htmlFor={metricId}>Metric</label>
+          <Select id={metricId} value={draft.metric} options={METRIC_OPTIONS}
+            onChange={(metric) => onChange({ ...draft, metric: metric as BriefDraft["metric"] })} />
+        </div>
         <label className="field">
           <span className="cap">Max. trials</span>
           <input className="input" type="number" min={1} max={50} value={draft.limit}
@@ -124,10 +140,13 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
         <span>Include synthetic demo data <small>(not NASA measurements)</small></span>
       </label>
 
-      {built.request && <div className="interpreted" aria-live="polite">
-        <p className="cap">Filters to be sent</p>
-        <ul>{describeRanking(built.request).map((line) => <li key={line}>{line}</li>)}</ul>
-      </div>}
+      {built.request && (() => {
+        const lines = describeRanking(built.request);
+        return <details className="interpreted">
+          <summary className="cap">Filters to be sent ({lines.length})</summary>
+          <ul aria-live="polite">{lines.map((line) => <li key={line}>{line}</li>)}</ul>
+        </details>;
+      })()}
 
       <div className="actions brief-actions">
         {Object.keys(built.errors).length > 0 && <p className="field-error brief-error" role="status">Fix the highlighted condition to investigate.</p>}

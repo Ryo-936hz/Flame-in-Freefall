@@ -23,16 +23,32 @@ function niceTicks(max: number, count = 5): number[] {
   return ticks;
 }
 
+/** Points of each group sorted by x, so a line runs left to right through them. */
+function linesByGroup<T extends { group_id: string; x: number | null }>(points: T[]): { group: string; points: T[] }[] {
+  const groups = new Map<string, T[]>();
+  for (const point of points) groups.set(point.group_id, [...(groups.get(point.group_id) ?? []), point]);
+  return [...groups].map(([group, items]) => ({ group, points: [...items].sort((a, b) => (a.x ?? 0) - (b.x ?? 0)) }));
+}
+
 /**
  * Plots the points returned by the API exactly: x/y values, units and groups
  * come from the comparison response. Points without x are listed, not placed.
  */
-export default function ScatterChart({ comparison, groupIndex, selectedObservation, selectedTrial, onSelect }: {
+/** How the same points are drawn: dots, dots joined per group, or one bar per point. */
+export type ChartForm = "points" | "line" | "bars";
+export const CHART_FORMS: { id: ChartForm; label: string }[] = [
+  { id: "points", label: "Points" },
+  { id: "line", label: "Line" },
+  { id: "bars", label: "Bars" },
+];
+
+export default function ScatterChart({ comparison, groupIndex, selectedObservation, selectedTrial, onSelect, form = "points" }: {
   comparison: Comparison;
   groupIndex: Map<string, number>;
   selectedObservation: string | null;
   selectedTrial: string | null;
   onSelect: (observationId: string) => void;
+  form?: ChartForm;
 }) {
   const figure = useRef<HTMLElement>(null);
   // Selection ring contracts onto the chosen point.
@@ -75,18 +91,25 @@ export default function ScatterChart({ comparison, groupIndex, selectedObservati
         <text className="axis-title" x={(M.l + W - M.r) / 2} y={H - 8} textAnchor="middle">{xTitle}</text>
         <text className="axis-title" transform={`translate(14 ${(M.t + H - M.b) / 2}) rotate(-90)`} textAnchor="middle">{yTitle}</text>
       </g>
+      {form === "line" && <g aria-hidden="true">
+        {linesByGroup(placed).map(({ group, points }) => <polyline key={group} className="pt-line" data-series={(groupIndex.get(group) ?? 0) % 4}
+          points={points.map((point) => `${sx(point.x as number) + (offsets.get(point.observation_id) ?? 0)},${sy(point.y)}`).join(" ")} />)}
+      </g>}
       {placed.map((point) => {
         const selected = point.observation_id === selectedObservation;
         const sameTrial = !selected && point.trial_id === selectedTrial;
         const x = sx(point.x as number) + (offsets.get(point.observation_id) ?? 0);
         const y = sy(point.y);
+        const label = `${shortId(point.observation_id)} · ${shortId(point.trial_id)}: ${fmt(point.x)} ${comparison.x_unit ?? ""}, ${fmt(point.y)} ${comparison.unit}`;
+        const pick = { onClick: () => onSelect(point.observation_id), onKeyDown: (event: KeyboardEvent) => onKey(event, point.observation_id) };
         return <g key={point.observation_id} className="pt" data-selected={selected} data-related={sameTrial}
           data-series={(groupIndex.get(point.group_id) ?? 0) % 4}>
           {selected && <circle className="pt-ring" cx={x} cy={y} r={12} />}
-          <circle className="pt-dot" cx={x} cy={y} r={selected ? 6.5 : 5.5} tabIndex={0} role="button"
-            aria-pressed={selected}
-            aria-label={`${shortId(point.observation_id)} · ${shortId(point.trial_id)}: ${fmt(point.x)} ${comparison.x_unit ?? ""}, ${fmt(point.y)} ${comparison.unit}`}
-            onClick={() => onSelect(point.observation_id)} onKeyDown={(event) => onKey(event, point.observation_id)} />
+          {form === "bars"
+            ? <rect className="pt-bar" x={x - 6} y={y} width={12} height={Math.max(0, sy(0) - y)} rx={2} tabIndex={0} role="button"
+              aria-pressed={selected} aria-label={label} {...pick} />
+            : <circle className="pt-dot" cx={x} cy={y} r={selected ? 6.5 : 5.5} tabIndex={0} role="button"
+              aria-pressed={selected} aria-label={label} {...pick} />}
         </g>;
       })}
     </svg>

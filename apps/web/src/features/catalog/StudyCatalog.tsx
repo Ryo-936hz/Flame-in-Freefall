@@ -2,10 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { sourceLink } from "../../lib/client";
 import type { createApi, Evidence, Models } from "../../lib/client";
 import "./catalog.css";
+import Select from "../../components/Select";
 
 const limit = 20;
 
-export function StudyCatalog({ api }: { api: ReturnType<typeof createApi> }) {
+export function StudyCatalog({ api, requested }: {
+  api: ReturnType<typeof createApi>;
+  /** A study chosen elsewhere (header search); the nonce lets the same study be chosen again. */
+  requested?: { id: string; nonce: number } | null;
+}) {
   const [studies, setStudies] = useState<Models["Study"][]>([]);
   const [catalogAttempt, setCatalogAttempt] = useState(0);
   const [catalogLoading, setCatalogLoading] = useState(true);
@@ -78,6 +83,10 @@ export function StudyCatalog({ api }: { api: ReturnType<typeof createApi> }) {
     setSourceRequest({ id: ref, attempt: sourceTicket.current });
   }
 
+  useEffect(() => {
+    if (requested?.id) load(requested.id, 0);
+  }, [requested?.nonce]); // only a new request reloads; `load` is recreated on every render
+
   const study = studies.find((item) => item.id === id);
   const link = sourceLink(source?.source_url);
   const total = Math.max(page?.total ?? 0, observations?.total ?? 0);
@@ -89,11 +98,11 @@ export function StudyCatalog({ api }: { api: ReturnType<typeof createApi> }) {
       <button onClick={() => setCatalogAttempt((attempt) => attempt + 1)}>Reintentar catálogo</button>
     </div>}
     {!catalogLoading && !catalogError && studies.length === 0 && <p>El corpus activo no contiene estudios.</p>}
-    <label>Estudio<select value={id} disabled={catalogLoading || studies.length === 0}
-      onChange={(event) => load(event.target.value, 0)}>
-      <option value="">Selecciona un estudio</option>
-      {studies.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
-    </select></label>
+    <div className="catalog-picker">
+      <label htmlFor="catalog-study">Estudio</label>
+      <Select id="catalog-study" value={id} disabled={catalogLoading || studies.length === 0} placeholder="Selecciona un estudio"
+        options={studies.map((item) => ({ value: item.id, label: item.title }))} onChange={(next) => load(next, 0)} />
+    </div>
     {study && <div className="catalog-study"><p><code>{study.id}</code> · {study.family}</p>
       <p>{study.description}</p><p>Estado del estudio: <strong>{study.dataset_status}</strong></p>
       {study.dataset_status === "synthetic" && <p>Datos sintéticos de demostración; no son mediciones NASA.</p>}
