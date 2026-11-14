@@ -50,6 +50,8 @@ export function createApi(baseUrl = "", fetcher: typeof fetch = fetch) {
   };
 }
 
+export type Api = ReturnType<typeof createApi>;
+
 export function sourceLink(value: string | null | undefined): string | null {
   if (!value) return null;
   try {

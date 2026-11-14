@@ -1,0 +1,80 @@
+import { useEffect, useRef, useState } from "react";
+import type { Api, Evidence } from "../../lib/client";
+import { ApiError, sourceLink } from "../../lib/client";
+import { createLatest } from "../../lib/latest";
+import { shortId } from "../../lib/format";
+import { Panel, ProvenanceTag, StateMessage, Tag } from "../../components/ui";
+
+type Load = { state: "idle" } | { state: "loading" } | { state: "ready"; evidence: Evidence } | { state: "error"; message: string };
+
+/**
+ * Shows the evidence behind the current selection. It always passes the
+ * research_id so a saved run keeps its historical sources after the corpus changes.
+ */
+export default function EvidenceViewer({ api, researchId, ids, retrieved, activeId, context, onPick }: {
+  api: Api;
+  researchId: string | null;
+  ids: string[];
+  /**
+   * Whether the evidence was retrieved with the run. Excluded trials' sources are
+   * not stored in the dossier, so they are read from the active corpus and labelled.
+   */
+  retrieved: boolean;
+  activeId: string | null;
+  context: string | null;
+  onPick: (evidenceId: string) => void;
+}) {
+  const [load, setLoad] = useState<Load>({ state: "idle" });
+  const [attempt, setAttempt] = useState(0);
+  const latest = useRef(createLatest());
+
+  useEffect(() => {
+    if (!activeId || !researchId) { latest.current.cancel(); setLoad({ state: "idle" }); return; }
+    const token = latest.current.begin();
+    setLoad({ state: "loading" });
+    api.evidence(activeId, retrieved ? researchId : undefined).then(
+      (evidence) => { if (latest.current.isCurrent(token)) setLoad({ state: "ready", evidence }); },
+      (error: unknown) => {
+        if (!latest.current.isCurrent(token)) return;
+        setLoad({ state: "error", message: error instanceof ApiError ? `${error.message} (${error.code}${error.requestId ? ` · ${error.requestId}` : ""})` : "No se pudo cargar la evidencia." });
+      },
+    );
+  }, [api, activeId, researchId, retrieved, attempt]);
+
+  const evidence = load.state === "ready" ? load.evidence : null;
+  const link = sourceLink(evidence?.source_url);
+
+  return <Panel id="evidence" title="Evidencia" className="evidence" meta={context && <span className="id">{context}</span>}>
+    <div className="panel-b">
+      {ids.length > 1 && <div className="ev-tabs" role="group" aria-label="Evidencias de la selección">
+        {ids.map((id) => <button type="button" key={id} className="chip" aria-pressed={id === activeId} onClick={() => onPick(id)}>{shortId(id)}</button>)}
+      </div>}
+      {load.state === "idle" && <StateMessage kind="empty" title="Nada seleccionado">
+        <p>Elige un punto del gráfico, una fila de la tabla o una cita para ver su fuente.</p>
+      </StateMessage>}
+      {load.state === "loading" && <StateMessage kind="loading" title="Cargando evidencia del expediente…" />}
+      {load.state === "error" && <StateMessage kind="error" title="No se pudo abrir la evidencia" action={<button type="button" className="btn" onClick={() => setAttempt(attempt + 1)}>Reintentar</button>}>
+        <p>{load.message}</p>
+      </StateMessage>}
+      {evidence && <article className="ev">
+        <div className="ev-tags">
+          <ProvenanceTag value={evidence.provenance} />
+          <Tag tone={evidence.reviewed ? "neutral" : "warn"}>{evidence.reviewed ? "Revisada" : "Revisión pendiente"}</Tag>
+          {!retrieved && <Tag tone="warn">Corpus activo · no está en este expediente</Tag>}
+        </div>
+        <h3>{evidence.title}</h3>
+        <dl className="ev-meta">
+          <div><dt>ID</dt><dd className="id">{evidence.id}</dd></div>
+          <div><dt>Estudio</dt><dd className="id">{evidence.study_id}</dd></div>
+          <div><dt>Localizador</dt><dd className="id">{evidence.locator}{evidence.page != null ? ` · página PDF ${evidence.page}` : ""}</dd></div>
+        </dl>
+        <pre className="ev-text">{evidence.text}</pre>
+        {link
+          ? <a className="btn" href={link} target="_blank" rel="noreferrer">Abrir fuente pública ↗</a>
+          : <p className="hint">{evidence.provenance === "synthetic"
+            ? "Fixture sintético: no enlaza a ninguna medición NASA."
+            : "Sin URL pública. La fuente es localizable con el localizador de archivo; no se inventa un enlace."}</p>}
+      </article>}
+    </div>
+  </Panel>;
+}

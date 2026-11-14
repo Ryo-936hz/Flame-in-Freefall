@@ -1,52 +1,68 @@
-# Cliente técnico FlameLab SI
+# Cliente FlameLab SI · interfaz de demo (P5)
 
-Este es el arnés de integración, no el frontend final. Consume salud, perfil,
-investigación, escenarios A/B, evidencia del expediente, informe persistido y
-reproducción de eventos. Las tablas muestran las unidades devueltas por la API;
-el navegador no recalcula ranking ni estadísticas.
+Sustituye al arnés técnico por una interfaz utilizable para la demo: formular
+pregunta y filtros sin editar JSON, investigar y explorar gráfico, tabla, ranking
+y evidencia enlazados por identidad. Sigue `docs/DESIGN_ANDURIL.md` de forma
+acotada: tema oscuro por defecto (claro opcional), Inter Tight y Geist Mono
+autoalojadas, acento chartreuse solo para selección y actividad.
 
-Desde la raíz, tras la preparación del README principal:
+## Estructura
+
+| Ruta | Contenido |
+|---|---|
+| `src/App.tsx` | Montaje: conexión, investigación, selección compartida y paneles. |
+| `src/components/MissionBrief.tsx` | Formulario tipado → `RankingRequest` y resumen de los filtros que se enviarán. |
+| `src/components/SynthesisPanel.tsx` | Afirmaciones citadas, hipótesis rotuladas, actividad y advertencias. |
+| `src/components/InterimMissionTools.tsx` | Montaje **provisional** de A/B, informe, eventos y recuperación hasta los paneles de P6; define `MissionSlotProps`. |
+| `src/features/evidence/` | Evidence Canvas: gráfico, tabla de puntos, ranking, visor de evidencia y selección. |
+| `src/lib/filters.ts` | Estado del formulario y traducción a filtros explícitos. |
+| `src/lib/latest.ts` | Guarda contra respuestas tardías. |
+| `src/lib/format.ts` | Texto de códigos de razón y etiquetas; no recalcula nada. |
+| `src/assets/fonts/` | Subconjunto latino con licencia OFL y sus licencias. |
+
+## Reglas que respeta la interfaz
+
+- Unidades, grupos, exclusiones, similitud y cobertura vienen de la API; React no
+  duplica reglas científicas. El formulario solo comprueba la forma (vacío,
+  número); rangos y combinaciones los valida la API (error 422 visible con su
+  identificador de solicitud).
+- Punto, fila, cita y fuente se enlazan por `observation_id`, `trial_id` y
+  `evidence_id`, nunca por posición.
+- La evidencia se pide con `research_id` para conservar el expediente. La de los
+  ensayos excluidos no forma parte del expediente: se lee del corpus activo y se
+  rotula «Corpus activo · no está en este expediente».
+- Sintético/real y IA demo/proveedor quedan visibles en cabecera, canvas,
+  ranking y evidencia. Las hipótesis preparadas se rotulan como propuesta.
+- Una respuesta de una consulta anterior no sobrescribe la actual.
+- Estados distinguibles: sin conexión, vacío, cargando, error con reintento y
+  evidencia insuficiente con los motivos devueltos por el ranking.
+
+## Comandos
+
+Desde la raíz:
 
 ```powershell
-npm run generate:types
-npm run check:types
 npm run typecheck
 npm run test:client
+npx tsx --test apps/web/tests/evidence/filters.test.ts apps/web/tests/evidence/selection.test.ts
 npm run build
 npm run dev:web
+npm run test:client:live   # con la API iniciada en modo demo
 ```
+
+Las pruebas de `tests/evidence/` aún no están en `package.json` ni en CI: se ha
+pedido a P1 que añada el comando (ver `docs/handoffs/P5.md`).
 
 El servidor de desarrollo usa `http://127.0.0.1:5173` y dirige `/api` a la API
-local del puerto 8000. Para comprobar el consumidor TypeScript contra la API
-real iniciada en modo demo y con la fixture sintética cargada:
+local del puerto 8000. `VITE_API_BASE_URL` permite otro origen HTTP; ninguna
+variable `VITE_*` puede contener claves. La autoridad es Pydantic → OpenAPI →
+`packages/contracts/schema.d.ts`; no editar el generado.
 
-```powershell
-npm run test:client:live
-```
+En Windows, detener Vite antes de repetir `npm ci` o `setup.ps1`.
 
-`FLAMELAB_API_URL` cambia el destino del test HTTP. `VITE_API_BASE_URL` permite
-configurar un origen HTTP para el navegador; no contiene una ruta `/api/v1`
-adicional. Ninguna variable `VITE_*` puede contener claves o secretos. El proxy
-local evita necesitar ese cambio durante el recorrido habitual.
+## Historial: arnés técnico
 
-La autoridad es Pydantic → OpenAPI → `packages/contracts/schema.d.ts`.
-`scripts/generate-types.mjs` genera ese archivo; no editarlo a mano.
-`openapi-fetch` usa las rutas y cuerpos generados. Se desactiva la opción
-`defaultNonNullable` del generador para conservar como opcionales los campos
-de entrada que la API completa con defaults.
-
-Los filtros JSON son explícitos y la API los valida. El modo demo no interpreta
-restricciones verbales de la pregunta. `allow_synthetic` se activa en el ejemplo
-y puede desactivarse en esos filtros. El escenario B cambia la gravedad a
-`lunar`: muestra el cambio en selección, no una simulación física. Abrir una
-fuente utiliza `research_id` para recuperar la evidencia guardada con el
-expediente, incluso después de sustituir el corpus actual.
-
-P5 ampliará `src/features/evidence/`; P6 ampliará
-`src/features/mission-lab/`. Ambos coordinan con P1 los cambios de contrato.
-La dirección visual permanece en `docs/DESIGN_ANDURIL.md`.
-
-## Verificación realizada el 14 de noviembre de 2026
+### Verificación del arnés, 14 de noviembre de 2026
 
 En Windows, Node 24.22.1 y npm 11.6.2: generación y deriva de tipos,
 `typecheck`, 6 pruebas del transporte y compilación Vite completadas.
