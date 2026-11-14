@@ -2,6 +2,7 @@
 // Presenta respuestas de la API; no calcula ranking ni simula física en el navegador.
 // Montaje: props MissionSlotProps (slot.ts). Textos visibles en inglés.
 import { useEffect, useId, useRef, useState } from "react";
+import { BassCasesPanel } from "./BassCasesPanel";
 import { ApiError } from "../../lib/client";
 import type { RankingRequest, ResearchResponse } from "../../lib/client";
 import { createRequestGuard, describeRequest } from "./comparisonState";
@@ -166,7 +167,7 @@ function ScenarioColumn({ side, name, selected, excluded, noEvidence, metric }: 
   </div>;
 }
 
-export function MissionLabPanel({ api, research, request, metric, researchState, onOpenRun, onOpenEvidence, question, trigger }: MissionLabPanelProps) {
+export function MissionLabPanel({ api, research, request, metric, researchState, onOpenRun, onOpenEvidence, beginResearchIntent, question, trigger }: MissionLabPanelProps) {
   const uid = useId();
   const researchId = research?.id ?? null;
   const [presetId, setPresetId] = useState<string>(scenarioPresets[0]?.id ?? "");
@@ -363,6 +364,9 @@ export function MissionLabPanel({ api, research, request, metric, researchState,
         </details>}
       </div>}
     </div>
+
+    <BassCasesPanel api={api} research={research} researchState={researchState} onOpenRun={onOpenRun}
+      onOpenEvidence={onOpenEvidence} beginResearchIntent={beginResearchIntent} />
 
     <div className="ml-block" role="group" aria-labelledby={`${uid}-hyp`}>
       <h3 id={`${uid}-hyp`}>Hypotheses of the active research</h3>

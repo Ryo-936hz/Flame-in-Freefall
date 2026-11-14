@@ -23,9 +23,11 @@ async function availablePort(requested) {
 }
 
 /** Owns only newly spawned processes and one newly-created temporary directory. */
-export async function createRuntime(root, { apiPort, webPort, tempBase } = {}) {
+export async function createRuntime(root, { apiPort, webPort, tempBase, fixturePath } = {}) {
   const python = path.join(root, ".venv", WINDOWS ? "Scripts/python.exe" : "bin/python");
   if (!existsSync(python)) throw new Error("Project Python is missing. Run scripts/setup.ps1 (or uv sync --locked) first.");
+  const fixture = path.resolve(fixturePath ?? path.join(root, "data/fixtures/demo.json"));
+  if (!existsSync(fixture)) throw new Error("The explicitly selected dataset fixture is missing.");
   const require = createRequire(path.join(root, "package.json"));
   const vite = path.join(path.dirname(require.resolve("vite/package.json")), "bin/vite.js");
   const { chromium } = require("playwright");
@@ -102,7 +104,7 @@ export async function createRuntime(root, { apiPort, webPort, tempBase } = {}) {
       PYTHONPATH: path.join(root, "apps/api/src"),
       FLAMELAB_DATABASE_URL: `sqlite:///${db.replaceAll("\\", "/")}`,
       FLAMELAB_SEED_DEMO: "true", FLAMELAB_AI_PROVIDER: "demo",
-      FLAMELAB_FIXTURE_PATH: path.join(root, "data/fixtures/demo.json"),
+      FLAMELAB_FIXTURE_PATH: fixture,
       FLAMELAB_CORS_ORIGINS: JSON.stringify([webUrl]),
     }, directory), // No project .env: this process only sees the isolated demo settings.
     startWeb: () => start("web", process.execPath, [vite, "--config", "apps/web/vite.config.ts", "--port", String(webNumber), "--strictPort", "--host", "127.0.0.1"], { VITE_API_BASE_URL: apiUrl }),

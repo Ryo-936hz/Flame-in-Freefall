@@ -12,7 +12,7 @@ Mission Lab presenta escenarios A/B, hipótesis y el caso sin evidencia suficien
 - `/scenarios/compare` compara aplicabilidad de evidencia (`evidence_comparison_not_physical_simulation`);
   no simula física.
 - Las hipótesis conservan `prepared_demo_hypothesis` o `ai_hypothesis`; los fixtures son sintéticos, no NASA.
-- Guion, peticiones verificadas, respaldo y aceptación: [docs/DEMO.md](../../../../../docs/DEMO.md#p6--recorrido-mission-lab).
+- Guion, peticiones verificadas, respaldo y aceptación: [docs/DEMO.md](../../../../../docs/DEMO.md).
 - `MissionLabPanel.tsx`: panel montable con `MissionSlotProps` (`slot.ts`) más `question` y `trigger` opcionales.
   Cada resultado A/B y la consulta insuficiente guardan filtros usados, métrica, hora y expediente activo;
   la consulta guarda además la pregunta y el orden original de `vary` (puede cambiar el eje X); `resultStatus.ts`
@@ -31,7 +31,7 @@ Mission Lab presenta escenarios A/B, hipótesis y el caso sin evidencia suficien
   `slot.metric` recibe `draft.metric`. `beginResearchIntent` coordina recuperaciones con Reset/Investigate;
   `onOpenEvidence` del host lee sin `research_id` cuando `source === "corpus"`, incluso sin expediente activo.
   El parche antiguo se conserva como antecedente y no se aplica sobre el montaje actual.
-- Recorrido E2E con navegador y backend reales: `apps/web/tests/e2e/p6-walkthrough.mjs` (`--host=harness|p5`); usa
+- Recorrido E2E con navegador y backend reales: `apps/web/tests/e2e/p6-walkthrough.mjs` (`--host=p5`); usa
   roles, nombres accesibles, `data-freshness` (resultado A/B y consulta) y `data-research-id` (informe/eventos).
   Cambiar esos textos o atributos exige actualizar el recorrido.
 
@@ -49,3 +49,61 @@ Las guardas descartan respuestas de peticiones anteriores y de paneles desmontad
 El botón se llama «Run lunar evidence query»: la insuficiencia se espera solo en
 el respaldo sintético, no se promete para cualquier corpus. Las etiquetas de
 procedencia cuentan ensayos seleccionados, no fuentes ni observaciones.
+
+
+## Recorrido real acotado BASS-II
+
+`BassCasesPanel.tsx` se monta dentro de MissionLab, sin modificar el formulario
+P5. Importa como texto los JSON versionados `data/catalog/p2-demo-cases-v1.1.0.json`
+(incluye el lunar corregido) y `p2-demo-copy-v1.1.1.json`. `bassCases.ts` adapta esos
+tres casos al tipo generado `ResearchRequest` y rechaza cambios de su ámbito
+aprobado; la API sigue siendo la autoridad contractual.
+
+La región «BASS-II · approved source cases» ofrece:
+
+- «Run BASS-II · 6 cm/s», «Run BASS-II · 5 cm/s», «Run BASS-II · lunar».
+- «Compare BASS-II · 6 → 5 cm/s»: ejecuta los dos expedientes y el A/B con la
+  métrica explícita. Abre B; los botones «Open BASS-II research A/B» permiten
+  cambiar el expediente activo para consultar su informe y fuentes históricas.
+
+Las solicitudes individuales conservan exactamente los objetos JSON publicados:
+`study_ids=[psi:PSI-25]`, `condition_scope=segment`, `allow_synthetic=false`,
+`include_hypotheses=false`, tasa de propagación y límite 20. El lunar no conserva
+un filtro de velocidad. Estos controles son presets fijos independientes del
+formulario general; no heredan silenciosamente sus filtros o su métrica.
+
+Para reproducir los datos reales debe importarse el paquete interno P2 1.1.1 en
+una base separada, según `docs/handoffs/P2_DEMO.md`. No se agregan mediciones reales
+al fixture. La UI muestra los resultados reales de la API incluso si el corpus
+activo solo contiene fixtures o no coincide con la referencia; en ese caso
+explica la diferencia y no muestra la interpretación preparada.
+
+El texto aprobado de comparación solo aparece cuando ambos expedientes y el A/B
+concuerdan con los diez IDs de observación/segmento, los IDs de las siete muestras,
+las unidades y valores aprobados, la procedencia publicada y las citas guardadas.
+M8 debe contener el aviso exacto en la evidencia devuelta; la UI muestra ese texto
+literal del API, sin fabricarlo a partir del archivo de copy. Esta comprobación
+es de consistencia con el guion revisado, no una nueva validación científica.
+
+El texto lunar aprobado exige además ensayos BASS-II reales en la consulta actual
+del corpus y que su propia respuesta conserve la cohorte publicada excluida por
+gravedad. La mera ficha metadata de PSI-25 o una selección sintética vacía no lo
+autoriza. Si el backend devuelve un resultado diferente, se conserva ese estado.
+
+Los expedientes se publican mediante `onOpenRun` y el ticket `beginResearchIntent`.
+Reset, desmontaje o una investigación/recuperación posterior invalidan respuestas
+pendientes. Las fuentes se abren con `source=record` solo cuando su expediente es
+el activo; las fuentes M8 también pueden leerse literalmente en los detalles de
+cada resultado. No se reconstruye ningún informe ni se mezclan snapshots.
+
+Selectores estables para el E2E real: región y botones anteriores,
+`[data-bass-case=bass_6|bass_5|lunar][data-research-id]`,
+`[data-bass-comparison]`, `data-approved-match=true|false` y
+`[data-approved-copy=comparison|lunar]`. Las referencias tienen nombre accesible
+«Open evidence ID (saved BASS-II research)».
+
+`bass-cases.test.ts` comprueba los límites, los cambios adversos con los mismos
+conteos, la identidad/unidad/valor/fuente, la falta de cohorte y la rama lunar.
+El recorrido real opt-in usa `npm run test:e2e:p6:bass` con el bundle local
+indicado en `FLAMELAB_P2_DEMO_BUNDLE`; el E2E predeterminado continúa siendo
+sintético y no distribuye el paquete NASA.

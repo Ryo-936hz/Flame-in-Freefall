@@ -488,6 +488,37 @@ try {
     check(await pre.textContent() === reportText, "report restored after Retry");
   });
 
+  await step("BASS-II presets cannot claim the approved source result on synthetic fixtures", async () => {
+    const bass = lab.getByRole("region", { name: "BASS-II · approved source cases", exact: true });
+    for (const [key, name] of [["bass_6", "Run BASS-II · 6 cm/s"], ["lunar", "Run BASS-II · lunar"]]) {
+      const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/research") && r.request().method() === "POST");
+      await bass.getByRole("button", { name, exact: true }).click();
+      const body = await (await response).json();
+      check(body.status === "insufficient_evidence" && body.ranking.items.length === 0, `${key}: the actual fixture-only corpus has no BASS-II selection`);
+      const result = bass.locator(`[data-bass-case="${key}"]`);
+      await result.waitFor();
+      check(await result.getAttribute("data-approved-match") === "false", `${key}: no claim that the reviewed source package was reproduced`);
+      check(await result.locator("[data-approved-copy]").count() === 0, `${key}: approved narrative is withheld on the wrong corpus`);
+    }
+    const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/scenarios/compare") && r.request().method() === "POST");
+    await bass.getByRole("button", { name: "Compare BASS-II · 6 → 5 cm/s", exact: true }).click();
+    await response;
+    const comparison = bass.locator("[data-bass-comparison]");
+    await comparison.waitFor();
+    check(await comparison.getAttribute("data-approved-match") === "false" && await comparison.locator("[data-approved-copy]").count() === 0, "wrong-corpus A/B does not invent the four/six/seven-sample result");
+  });
+
+  await step("Reset cancels a pending approved-case request", async () => {
+    const bass = lab.getByRole("region", { name: "BASS-II · approved source cases", exact: true });
+    const pending = await holdNext("/api/v1/research", "POST");
+    await bass.getByRole("button", { name: "Run BASS-II · 6 cm/s", exact: true }).click();
+    await pending.seen;
+    await page.getByRole("button", { name: "Reset", exact: true }).click();
+    pending.release(); await pending.done; await settle();
+    check(await bass.locator("[data-bass-case], [data-bass-comparison]").count() === 0, "late source-case response cannot repopulate reset panels");
+    check(await page.locator(".run-id").count() === 0 && await report.getByText(/No active research\./).isVisible(), "late source-case response cannot reopen the workspace research");
+  });
+
   await step("no uncaught page errors", async () => {
     check(pageErrors.length === 0, `uncaught page errors: ${pageErrors.join(" | ") || "none"}`);
   });

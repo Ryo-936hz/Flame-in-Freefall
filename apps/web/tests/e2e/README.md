@@ -72,3 +72,39 @@ validación científica de NASA ni evaluación de un proveedor externo.
 Los resultados efectivamente ejecutados, entorno y commit están en
 [`docs/VERIFICATION.md`](../../../../docs/VERIFICATION.md). No se reutilizan los
 recuentos del antiguo arnés como si correspondieran a este host integrado.
+
+
+## BASS-II real: comprobación opt-in separada
+
+El CI ordinario ejecuta el recorrido **sintético**, incluido el rechazo de narrativas
+aprobadas BASS-II cuando ese corpus no está cargado y Reset durante una petición
+de preset pendiente. El CI no recibe ni distribuye los originales ni el bundle real.
+
+Para probar los presets publicados de P2/P3, proporcionar por separado el
+`bundle.json` del paquete interno **FlameLab Demo 1.1.1**:
+
+```powershell
+node apps/web/tests/e2e/p6-bass-walkthrough.mjs --bundle='C:\ruta\privada\bundle.json' --screenshots=work/p6-bass-e2e
+```
+
+También admite `FLAMELAB_P2_DEMO_BUNDLE` como entrada explícita. Si falta la entrada,
+no se reemplaza con fixtures y termina con código 2. El preflight exige:
+
+- SHA-256 `cb8b782fd73dbe4df0576b8047f3dea781a37d7c06c962ad2e978e607a00191d`.
+- `dataset_id=psi:nasa-local-corpus-v1`, contrato 1.1, 24 estudios y ausencia de
+  registros sintéticos.
+- Los diez valores/IDs/muestras cotejados en el
+  [dictamen P3](../../../../docs/handoffs/P3_BASS_II_DECISION_DEMO.md), siete unidades
+  identificadas, O₂ de segmento ausente y aviso de discrepancia en ambas fuentes M8.
+
+El runner carga el bundle en otra SQLite nueva, siempre con proveedor determinista,
+y verifica los payloads exactos de `p2-demo-cases-v1.1.0.json`: cuatro puntos a
+6 cm/s, seis a 5 cm/s, cambios A/B de selección y segmentos sin inventar réplicas,
+texto aprobado de límites, y caso lunar sin restricción heredada de flujo.
+Comprueba las fuentes M8 y su informe literales, descarga, recuperación tras
+reiniciar API y recargar navegador, y layout de 1440/390 px. La entrada real nunca
+se copia a Git ni se modifica. Las capturas se guardan solo en la ruta solicitada.
+
+Este resultado verifica software, identidad y trazabilidad del guion; no convierte
+el corpus `scientific_unverified` en validado ni estima causalidad, riesgo o física
+lunar. Registrar por separado sus resultados y SHA; no atribuirlos al CI sintético.

@@ -143,3 +143,10 @@
   .ml-table [data-label]::before { content: attr(data-label); display: block; font-family: system-ui, sans-serif; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ml-ink-3); }
   .ml-row-entered td:nth-child(2), .ml-row-left td:nth-child(2) { border-left: 0; }
 }
+
+/* Curated BASS-II inputs and raw saved source text remain bounded inside the host column. */
+.ml-bass pre { white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; max-width: 100%; min-width: 0; font-size: .78rem; }
+.ml-bass blockquote { margin: 10px 0; padding: 8px 12px; border-left: 3px solid var(--ml-accent); background: var(--ml-accent-bg); font-size: .88rem; }
+.ml-bass-run { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ml-rule); }
+.ml-bass-m8 { margin: 8px 0; }
+.ml-bass-points td { white-space: normal !important; text-align: left !important; }

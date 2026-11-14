@@ -18,7 +18,8 @@
     "test:client:live": "tsx apps/web/tests/live-smoke.ts",
     "build": "vite build --config apps/web/vite.config.ts",
     "dev:web": "vite --config apps/web/vite.config.ts",
-    "test:e2e:p6": "node apps/web/tests/e2e/p6-walkthrough.mjs --host=p5"
+    "test:e2e:p6": "node apps/web/tests/e2e/p6-walkthrough.mjs --host=p5",
+    "test:e2e:p6:bass": "node apps/web/tests/e2e/p6-bass-walkthrough.mjs"
   },
   "devDependencies": {
     "@types/node": "24.10.1",

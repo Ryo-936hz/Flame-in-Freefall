@@ -19,5 +19,8 @@ try {
     Invoke-ProjectNpm @('run','test:client')
     Invoke-ProjectNpm @('run','build')
     Invoke-Checked $pythonExe @('scripts/smoke.py')
-    if ($E2E) { Invoke-ProjectNpm @('run','test:e2e:p6') }
+    if ($E2E) {
+        Invoke-ProjectNpm @('run','test:e2e:p6')
+        if ($env:FLAMELAB_P2_DEMO_BUNDLE) { Invoke-ProjectNpm @('run','test:e2e:p6:bass') }
+    }
 } finally { Pop-Location }
