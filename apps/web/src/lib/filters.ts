@@ -49,6 +49,16 @@ export const METRICS = [
   { key: "flame_spread_rate_mm_s", label: "Flame spread rate" },
   { key: "extinction_oxygen_pct", label: "Extinction oxygen" },
   { key: "heat_release_w", label: "Heat release" },
+  { key: "flex_burn_duration_s", label: "FLEX · reported burn duration" },
+  { key: "flex_visible_flame_extinction_diameter_mm", label: "FLEX · visible extinction diameter" },
+  { key: "same_reported_mass_loss_rate_mg_min", label: "SAME · reported mass loss rate" },
+  { key: "samer_run_duration_s", label: "SAME-R · run duration" },
+  { key: "samer_net_aging_time_s", label: "SAME-R · net aging time" },
+  { key: "samer_primary_aging_time_s", label: "SAME-R · primary aging time" },
+  { key: "samer_primary_mixing_time_s", label: "SAME-R · primary mixing time" },
+  { key: "saffire_reported_burn_duration_s", label: "Saffire I · reported burn duration" },
+  { key: "peak_burner_temperature_k", label: "CFI-G · peak burner temperature" },
+  { key: "cfig_reported_run_duration_s", label: "CFI-G · reported run duration" },
   { key: "other", label: "Other metric" },
 ] as const satisfies readonly { key: Metric; label: string }[];
 

@@ -14,6 +14,7 @@ import { MissionLabPanel } from "./features/mission-lab/MissionLabPanel";
 import { ReportPanel } from "./features/report/ReportPanel";
 import type { EvidenceSource, MissionSlotProps } from "./features/mission-lab/slot";
 import { StudyCatalog } from "./features/catalog/StudyCatalog";
+import { SaffireContext } from "./features/catalog/SaffireContext";
 import "./p6-integration.css";
 import FlameIllustration from "./components/FlameIllustration";
 import { Panel, StateMessage } from "./components/ui";
@@ -241,6 +242,7 @@ export default function App() {
             <div className="panel-b"><StudyCatalog api={api} /></div>
           </details>
         </section>
+        <SaffireContext />
       </div>
 
       <div className="col-evidence">

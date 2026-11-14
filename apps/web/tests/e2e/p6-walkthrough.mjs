@@ -5,6 +5,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRuntime } from "./runtime.mjs";
+import { verifySaffireContext } from "./p2-catalog-acceptance.mjs";
 
 const allowed = new Set(["host", "root", "api-port", "web-port", "headed", "screenshots", "timeout"]);
 const args = Object.fromEntries(process.argv.slice(2).map((arg) => {
@@ -179,6 +180,10 @@ try {
     await studies.selectOption(studyId);
     check((await sources).ok(), "catalog study evidence endpoint is reachable");
     await page.locator(".p6-catalog summary").first().click();
+  });
+
+  await step("Saffire documentary context never claims imported NASA data", async () => {
+    await verifySaffireContext({ page, check, screenshots: SHOTS });
   });
 
   await step("A/B evidence opens before any research exists", async () => {

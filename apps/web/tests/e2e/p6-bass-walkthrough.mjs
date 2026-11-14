@@ -6,6 +6,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRuntime } from "./runtime.mjs";
+import { verifyCampaignResearch, verifyP2Catalog, verifySaffireContext } from "./p2-catalog-acceptance.mjs";
 
 const EXPECTED_SHA256 = "cb8b782fd73dbe4df0576b8047f3dea781a37d7c06c962ad2e978e607a00191d";
 const DATASET = "psi:nasa-local-corpus-v1";
@@ -182,6 +183,12 @@ try {
     await page.getByRole("heading", { name: "Mission Brief", exact: true }).waitFor();
     await bass.waitFor(); await report.waitFor();
   });
+
+  await verifyP2Catalog({ page, apiUrl: API, bundle, check, step, screenshots: SHOTS });
+  await step("documentary Saffire context stays separate from imported BASS points", async () => {
+    await verifySaffireContext({ page, check, screenshots: SHOTS });
+  });
+  await verifyCampaignResearch({ page, apiUrl: API, bundle, check, step, screenshots: SHOTS });
 
   await step("approved 6 cm/s preset preserves four source observations", async () => {
     // Fixed, disclosed presets must not inherit unrelated current-form edits.
