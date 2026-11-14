@@ -52,7 +52,8 @@ backends. El contrato y el estado real prevalecen sobre tablas históricas de vi
 ## Verificación y entrega
 
 `scripts/check.ps1`: 112 pruebas Python aprobadas, 6 pruebas de cliente aprobadas,
-Ruff, OpenAPI/TS sin deriva, tipado, build y HTTP con reinicio correctos. Aviso
+Ruff, OpenAPI/TS sin deriva, tipado, build y HTTP con reinicio correctos. Setup/check
+también aprobados desde clon limpio con dependencias propias en este Windows. Aviso
 Starlette/TestClient sobre httpx deprecado; no fallo. Detalles y límites en
 VERIFICATION. Relevo, propietarios y primera tarea en TEAM_HANDOFF.
 

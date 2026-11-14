@@ -56,8 +56,15 @@ No son 111 ensayos científicos. Las observaciones sintéticas prueban conexione
 
 ## Instalación limpia
 
-El cierre de entrega incluye una comprobación adicional desde clon local limpio.
-Su resultado y SHA se registran en el relevo exportado y se añaden aquí al completarse.
+Se creó `work/clean-checkout` con `git clone --no-hardlinks` desde el commit
+`d9f7406` y se ejecutaron allí `scripts/setup.ps1` y `scripts/check.ps1`.
+Se crearon su propia `.venv`, `node_modules`, herramientas locales y `.env`:
+**112 pruebas Python, 6 de cliente, tipos/generados, build y HTTP con reinicio
+aprobados**. Se reutilizaron runtimes y cachés del mismo Windows, no se probó una
+máquina nueva ni otro sistema operativo. Los cambios posteriores al commit probado
+solo registran estos resultados en documentación; el código y lockfiles no cambiaron.
+`.gitattributes` fija LF para impedir deriva artificial de generados por CRLF.
+Logs: `work/clean-checkout/work/setup.log` y `work/clean-checkout/work/verification.log`.
 
 ## Evidencia conservada
 

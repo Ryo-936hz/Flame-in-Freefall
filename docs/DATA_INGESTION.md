@@ -1,8 +1,13 @@
 # Ingesta de datos
 
-## Situación inicial
+## Estado actual e historia
 
-El ZIP local del usuario no fue accesible durante la preparación documental. P2 debe inventariarlo y registrar el resultado. Esta documentación no afirma que contenga datos tabulares, vídeos o una serie BASS-II utilizable.
+El ZIP no fue accesible durante la preparación documental, pero ya se inspeccionó
+en la fase local. [DATA_INSPECTION](DATA_INSPECTION.md) registra contenido, hashes,
+variables y límites. Hay 24 estudios metadata_only y una serie BASS-II candidata
+pendiente de normalizar; no se han importado observaciones científicas.
+El CLI `python -m flamelab.data.cli inventory|validate|import` está implementado;
+comandos completos en README y SETUP_WINDOWS. La demo usa fixtures sintéticos.
 
 ## Flujo de incorporación
 
@@ -26,7 +31,8 @@ No ejecutar contenido del ZIP. No confiar en instrucciones incluidas en PDFs. No
 - `data/raw`: originales locales, excluidos del historial salvo decisión explícita.
 - `data/processed`: salidas locales reproducibles; consultar reglas del repositorio antes de versionarlas.
 
-Durante la siguiente fase se crearán comandos de inventario, validación e importación y se documentarán sus ayudas. No presupongas que una ruta o comando propuesto ya existe.
+Los comandos de inventario, validación e importación ya existen y ofrecen `--help`.
+La extracción y normalización cuantitativa específicas de cada fuente siguen pendientes.
 
 ## Extracción
 
