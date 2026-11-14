@@ -61,7 +61,7 @@ def test_external_citation_to_measurement_source_is_valid(review_bundle, monkeyp
 
     async def narrative(_context, _settings):
         return Narrative(summary="Synthetic data only.", claims=[Claim(
-            text="Synthetic measurement source remains connected to its selected trial.",
+            text="The selected trial reports a flow velocity of 2 cm/s.",
             kind="finding", citations=[Citation(
                 evidence_id="synthetic:measurement-source", trial_id=bundle.trials[0].id,
             )],
@@ -86,6 +86,24 @@ def test_external_cross_trial_citation_is_rejected(review_bundle, monkeypatch):
     settings = Settings(_env_file=None, ai_provider="openai", openai_api_key="test-only", openai_model="mock")
     with pytest.raises(ProviderFailure, match="provider_invalid_citations"):
         asyncio.run(run_research(request_for(review_bundle), review_bundle, settings))
+
+
+def test_report_labels_local_document_and_synthetic_fixture_by_provenance(review_bundle):
+    run = asyncio.run(run_research(request_for(review_bundle), review_bundle, Settings(_env_file=None)))
+    source = run.evidence[0]
+    documentary = source.model_copy(update={
+        "id": "published:local-source", "provenance": "published", "source_url": None,
+        "locator": "Table 5.1, printed page 57",
+    })
+    fixture = source.model_copy(update={"id": "synthetic:local-fixture", "provenance": "synthetic"})
+    report = render_report(run.model_copy(update={"evidence": [documentary, fixture]}))
+
+    documentary_line = next(line for line in report.splitlines() if "published:local-source" in line)
+    fixture_line = next(line for line in report.splitlines() if "synthetic:local-fixture" in line)
+    assert "Table 5.1, printed page 57" in documentary_line
+    assert "fuente documental local; URL no disponible" in documentary_line
+    assert "fixture local sintético; sin fuente externa" in fixture_line
+    assert "fixture local; sin fuente NASA" not in documentary_line
 
 
 def test_saved_report_and_evidence_survive_same_id_corpus_replacement(review_bundle, tmp_path):

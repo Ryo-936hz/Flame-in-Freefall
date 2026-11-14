@@ -3,11 +3,13 @@ from uuid import uuid4
 
 from pydantic import ValidationError
 
+from flamelab.ai.planner import plan_research
 from flamelab.ai.provider import ProviderFailure, synthesize
+from flamelab.ai.review import NarrativeReviewError, review_narrative, summary_conflicts
 from flamelab.config import Settings
 from flamelab.domain.contracts import (
     ActivityEvent, Citation, Claim, ComparisonRequest, DatasetBundle, Hypothesis,
-    Panel, ResearchRequest, ResearchResponse,
+    Panel, RankingResponse, ResearchRequest, ResearchResponse,
 )
 from flamelab.science.comparison import compare_trials
 from flamelab.science.profiling import profile_dataset
@@ -20,9 +22,31 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
     events = []
     def event(stage, message, ids=None):
         events.append(ActivityEvent(sequence=len(events) + 1, stage=stage, message=message, evidence_ids=ids or []))
-    event("plan", "Flujo determinista: perfil, filtros explícitos, ranking, comparación y revisión de referencias.")
+    plan = plan_research(request)
+    event("plan", plan.message)
+    if plan.blocked:
+        warning = plan.message
+        if plan.intent == "unsupported":
+            summary = "La petición queda fuera de las herramientas científicas disponibles; no se ejecutaron cálculos ni se generó una conclusión."
+        else:
+            summary = "No se ejecutó el análisis porque el plan requiere aclaración antes de aplicar herramientas."
+        ranking = RankingResponse(
+            dataset_id=bundle.dataset_id, items=[], excluded=[], warnings=[warning],
+        )
+        event("review", "No se ejecutaron herramientas: el plan está fuera del catálogo o necesita aclaración.")
+        event("complete", "Investigación detenida antes del análisis por revisión del plan.")
+        return ResearchResponse(
+            id=f"research:{uuid4()}", created_at=datetime.now(timezone.utc),
+            provider=settings.ai_provider, status="insufficient_evidence",
+            question=request.question, summary=summary, claims=[], ranking=ranking,
+            comparison=None, evidence=[], hypotheses=[],
+            events=events,
+            warnings=[warning, "No se solicitó ni se presentó una inferencia de un modelo externo."],
+            panels=[Panel(id=kind, kind=kind, title=kind, data_ref="warnings" if kind == "limitations" else kind)
+                    for kind in ("ranking", "comparison", "evidence", "hypotheses", "limitations")],
+        )
     profile = profile_dataset(bundle)
-    ranking = rank_trials(bundle, request.ranking)
+    ranking = rank_trials(bundle, plan.ranking)
     selected = {item.trial_id for item in ranking.items}
     refs = {ref for item in ranking.items for ref in item.evidence_ids}
     for trial in bundle.trials:
@@ -35,16 +59,16 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
     event("retrieve", f"Perfil: {profile.n_trials} ensayos; {len(selected)} candidatos elegibles; {len(evidence)} evidencias recuperadas.", sorted(refs))
     comparison = None
     if selected:
-        numeric_vary = [key for key in request.ranking.vary if key in ("oxygen_pct", "pressure_kpa", "flow_velocity_cm_s", "thickness_mm", "diameter_mm", "sample_width_mm")]
+        numeric_vary = [key for key in plan.ranking.vary if key in ("oxygen_pct", "oxygen_initial_pct", "oxygen_final_pct", "pressure_kpa", "flow_velocity_cm_s", "thickness_mm", "diameter_mm", "sample_width_mm")]
         comparison = compare_trials(bundle, ComparisonRequest(
             trial_ids=[item.trial_id for item in ranking.items], metric=request.metric,
-            x_condition=numeric_vary[0] if numeric_vary else "flow_velocity_cm_s",
-            vary=request.ranking.vary, allow_synthetic=request.ranking.allow_synthetic,
+            x_condition=plan.x_condition or (numeric_vary[0] if numeric_vary else "flow_velocity_cm_s"),
+            vary=plan.ranking.vary, allow_synthetic=plan.ranking.allow_synthetic,
         ))
     event("analyze", "Ranking y comparación calculados por herramientas Python; no por un modelo.")
     enough = bool(comparison and any(point.x is not None for point in comparison.points))
     warnings = [*ranking.warnings, *(comparison.warnings if comparison else []),
-                "Los filtros estructurados mandan; la demo no interpreta restricciones verbales.",
+                ("Plan interpretado de forma acotada: " + plan.intent + "."),
                 "No es una certificación de seguridad ni una predicción de combustión."]
     synthetic = any(item.provenance == "synthetic" for item in ranking.items)
     if synthetic:
@@ -59,13 +83,26 @@ async def run_research(request: ResearchRequest, bundle: DatasetBundle, settings
         warnings.append("Faltan candidatos elegibles o mediciones compatibles de la métrica.")
     if settings.ai_provider == "openai" and enough:
         narrative = await synthesize({
-            "question": request.question, "filters": request.ranking.model_dump(mode="json"),
+            "question": request.question, "plan": plan.intent,
+            "filters": plan.ranking.model_dump(mode="json"),
             "ranking": ranking.model_dump(mode="json"),
             "comparison": comparison.model_dump(mode="json"),
             "evidence": [item.model_dump(mode="json") for item in evidence], "warnings": warnings,
         }, settings)
-        summary, claims = narrative.summary, narrative.claims
-        warnings.append("Síntesis externa pendiente de revisión científica humana; validar IDs no demuestra respaldo semántico.")
+        conflicts = summary_conflicts(narrative.summary, evidence=evidence, ranking=ranking, comparison=comparison)
+        try:
+            claims = review_narrative(
+                narrative, ranking=ranking, comparison=comparison, evidence=evidence,
+                bundle=bundle, fallback_claims=claims,
+            )
+        except NarrativeReviewError as exc:
+            code = "provider_invalid_citations" if "citation" in str(exc) or "trial" in str(exc) else "provider_invalid_narrative"
+            raise ProviderFailure(code) from exc
+        if conflicts:
+            warnings.append("Se descartó un resumen externo contradictorio con cifras o procedencia estructuradas.")
+        # Provider prose is never used as the report summary: semantic support cannot
+        # be certified mechanically. Keep the program-owned summary tied to results.
+        warnings.append("El resumen externo se sustituyó por síntesis determinista; la revisión semántica de afirmaciones sigue pendiente de revisión humana.")
     elif settings.ai_provider == "openai":
         warnings.append("No se llamó al proveedor externo: las herramientas devolvieron evidencia insuficiente.")
     hypotheses = []

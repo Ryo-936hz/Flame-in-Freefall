@@ -17,7 +17,13 @@ def render_report(run: ResearchResponse) -> str:
             lines += [f"- {group.id}: {group.n_trials} ensayos; {group.n_observations} observaciones; {group.n_independent_units} unidades independientes; mediana={group.median}; sin intervalo."]
     lines += ["", "## Evidencia", ""]
     for item in run.evidence:
-        lines += [f"- {item.id} [{item.provenance}, reviewed={item.reviewed}]: {item.title}. {item.locator}. Fuente: {item.source_url or 'fixture local; sin fuente NASA'}. Texto: {item.text}"]
+        if item.source_url:
+            source = item.source_url
+        elif item.provenance == "synthetic":
+            source = "fixture local sintético; sin fuente externa"
+        else:
+            source = "fuente documental local; URL no disponible"
+        lines += [f"- {item.id} [{item.provenance}, reviewed={item.reviewed}]: {item.title}. {item.locator}. Fuente: {source}. Texto: {item.text}"]
     lines += ["", "## Propuestas de investigación", ""]
     for item in run.hypotheses:
         lines += [f"- [{item.label}] {item.statement} Siguiente medición: {item.next_measurement} Refutación: {item.falsification}"]
