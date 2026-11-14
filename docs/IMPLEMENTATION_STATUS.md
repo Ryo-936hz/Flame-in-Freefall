@@ -37,7 +37,10 @@ Ver [TEAM_START](TEAM_START.md). El historial local anterior y el tag
    combustión, O2 inicial/final, discrepancias de dimensiones y licencias. Resolver
    métricas/encabezados de Saffire antes de comparación cuantitativa.
 2. P3/P4: evaluación científica/semántica con consultas independientes; no confundir
-   pruebas de software con validación de datos NASA o predicción de incendios.
+   pruebas de software con validación de datos NASA o predicción de incendios. La
+   rama P4 añade regresiones locales para pregunta adversaria, filtros explícitos,
+   etiqueta sintética e insuficiencia; las pruebas P4/proveedor/revisión ejecutadas
+   dieron 33 aprobadas. No miden pertinencia semántica.
 3. P4: planificador de lenguaje natural, modelo/budget autorizado y prueba acotada
    del proveedor. Las restricciones verbales no cambian filtros automáticamente.
 4. P1: mantener CI, motor PostgreSQL, autenticación/límites

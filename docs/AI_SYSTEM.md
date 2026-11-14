@@ -64,4 +64,11 @@ proveedor. Un eje solicitado completamente ausente produce `insufficient_evidenc
 
 ## Evaluación
 
-Medir citas válidas y pertinentes, respeto de filtros, uso correcto de herramientas, estados de evidencia insuficiente, latencia y coste observado. No usar exclusivamente un segundo LLM para certificar al primero. Detalles en [EVALUATION](EVALUATION.md).
+Las regresiones deterministas de planificación limitada, etiquetas sintéticas e
+insuficiencia de evidencia están en `apps/api/tests/test_ai_evaluation.py`; la
+validación de referencias inventadas o cruzadas está en `test_provider.py` y
+`test_review.py`. No necesitan clave y no puntúan calidad semántica. Medir por
+separado citas válidas y pertinentes, respeto de filtros, uso correcto de
+herramientas, latencia y coste observado con consultas etiquetadas. No usar
+exclusivamente un segundo LLM para certificar al primero. Detalles en
+[EVALUATION](EVALUATION.md).

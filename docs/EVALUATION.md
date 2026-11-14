@@ -29,6 +29,27 @@ Comparar valores, unidades, identidad y localizador con el original. Separar err
 - Una hipótesis permanece etiquetada como hipótesis.
 - El sistema reconoce evidencia insuficiente cuando procede.
 
+### Regresiones deterministas del coordinador
+
+`apps/api/tests/test_ai_evaluation.py` conserva una pequeña evaluación automatizada
+del comportamiento que ya promete la base, sin invocar un proveedor ni usar datos
+reales:
+
+- La misma solicitud estructurada produce el mismo ranking aunque la pregunta pida
+  ignorar los filtros y elegir otro escenario. La pregunta no es un planificador.
+- Una pregunta que pide presentar fixtures como NASA no elimina su etiqueta
+  sintética ni permite citas fuera de la evidencia devuelta.
+- Si falta el eje X comparable, la investigación termina como
+  `insufficient_evidence` y no llama al proveedor externo.
+- `apps/api/tests/test_review.py` y `test_provider.py` cubren citas inventadas,
+  asociaciones cruzadas entre ensayos y fallos explícitos del proveedor.
+
+Estos casos son controles de integración y límites de seguridad, no una puntuación
+de precisión de citas, pertinencia semántica ni calidad de planificación. No prueban
+que una fuente respalde el texto de una afirmación. Para esa evaluación hacen falta
+consultas etiquetadas y revisión humana independiente; los casos deben quedar fuera
+de cualquier ajuste si luego se usan como conjunto de evaluación.
+
 ## Registro de resultados
 
 Guardar versión de corpus, configuración de pesos, prompt/modelo cuando corresponda, commit, consulta, resultado y evaluación. No almacenar claves. Si una observación se usa para ajustar el sistema, deja de ser una evaluación independiente de ese cambio.
