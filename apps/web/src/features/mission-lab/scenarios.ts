@@ -217,3 +217,9 @@ export function hypothesisLabelText(label: Hypothesis["label"]): string {
       return `Hipótesis sin etiqueta reconocida (${String(label)}) · requiere verificación`;
   }
 }
+
+/** Cambios visibles de B respecto de A (target, required_match, vary, weights, allow_synthetic, ...), en español; [] si son iguales. */
+export function describeScenarioChanges(a: RankingRequest, b: RankingRequest): string[] {
+  void a; void b;
+  throw new Error("Pendiente de implementación.");
+}
