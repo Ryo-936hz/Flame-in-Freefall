@@ -3,6 +3,20 @@
 Los resultados vigentes aparecen primero; el resto conserva el historial.
 Ninguna prueba de software equivale a validación científica.
 
+## Integración concurrente de favicon — 14 noviembre 2026
+
+Después del cierre funcional, `main` añadió `9f22d21`, una línea de favicon.
+Se integró mediante merge **`576e60827f44bbc80e48f26022b589a6f60175c1`**,
+conservando el HTML P5/P6. La única diferencia de aplicación frente a `6693463`
+es `<link rel="icon" href="data:," />` en `apps/web/index.html`.
+
+Build y recorrido Chromium sintético repetidos después del merge: salida 0,
+**24 pasos / 58 comprobaciones**, sin fallos. No cambiaron cálculos, API,
+persistencia, presets ni dependencias; los resultados completos anteriores
+mantienen su SHA explícito abajo. La etiqueta común de esta integración es
+`flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta se conserva sin mover.
+El CI del head final puede consultarse en la PR #3.
+
 ## Cierre P6 — interfaz integrada y casos BASS-II — 14 noviembre 2026
 
 Código **`66934638e37c1396eeab638631d54a2159ab7930`**, rama `raul`, [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3).

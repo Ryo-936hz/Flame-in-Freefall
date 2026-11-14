@@ -1,5 +1,11 @@
 # Estado real de FlameLab SI
 
+**Integración posterior de main:** se conservó el cambio de favicon `9f22d21`
+mediante merge `576e608`, manteniendo el HTML y las funciones de P5/P6.
+La referencia común actual es `flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta
+se conserva sin mover. El código funcional y sus pruebas completas son los
+registrados abajo; la única diferencia de aplicación posterior es esa línea de favicon.
+
 **P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
 informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
 la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II

@@ -7,9 +7,9 @@ El [guion anterior](handoffs/P6_DEMO_HISTORY.md) se conserva como historial.
 
 ## Preparación reproducible en Windows
 
-La etiqueta `flamelab-p6-demo-2026-11-14` fija esta entrega para los seis.
+La etiqueta `flamelab-p6-demo-2026-11-14-r2` fija esta entrega para los seis.
 En un clon nuevo, `git fetch origin --tags` y
-`git switch -c mi-demo flamelab-p6-demo-2026-11-14`.
+`git switch -c mi-demo flamelab-p6-demo-2026-11-14-r2`.
 En una rama existente, conservar e integrar los cambios propios; no hacer reset.
 Git, Python 3.12, Node 24/npm y PowerShell 7; instalación inicial con red:
 

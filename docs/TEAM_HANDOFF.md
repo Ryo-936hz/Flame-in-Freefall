@@ -1,5 +1,11 @@
 # Relevo vigente — P6 integrado con P5
 
+**Integración posterior de main:** se conservó el cambio de favicon `9f22d21`
+mediante merge `576e608`, manteniendo el HTML y las funciones de P5/P6.
+La referencia común actual es `flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta
+se conserva sin mover. El código funcional y sus pruebas completas son los
+registrados abajo; la única diferencia de aplicación posterior es esa línea de favicon.
+
 **P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
 informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
 la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II
@@ -29,7 +35,7 @@ se detallan en VERIFICATION, sin convertir tests en validación científica.
 | P6 | Mantener los presets y los dos recorridos de aceptación; la entrega no tiene bloqueos de implementación P6; lector de pantalla y móvil físico no se presuponen probados. |
 
 Para un clon nuevo seguir README desde la etiqueta
-`flamelab-p6-demo-2026-11-14`, que fija código y documentación para los seis. Para incorporar en una rama existente: guardar cambios, `git fetch origin`,
+`flamelab-p6-demo-2026-11-14-r2`, que fija código y documentación para los seis. Para incorporar en una rama existente: guardar cambios, `git fetch origin`,
 revisar el diff y hacer `git merge origin/raul`; después setup y check con E2E.
 Una vez fusionada la PR, usar `origin/main` como referencia compartida. No reset
 ni force push. No se movieron las referencias iniciales ni se enviaron mensajes

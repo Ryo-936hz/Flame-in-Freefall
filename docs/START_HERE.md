@@ -1,5 +1,11 @@
 # Empieza aquí
 
+**Integración posterior de main:** se conservó el cambio de favicon `9f22d21`
+mediante merge `576e608`, manteniendo el HTML y las funciones de P5/P6.
+La referencia común actual es `flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta
+se conserva sin mover. El código funcional y sus pruebas completas son los
+registrados abajo; la única diferencia de aplicación posterior es esa línea de favicon.
+
 **P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
 informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
 la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II
@@ -13,7 +19,7 @@ La PR aún no está fusionada en `main`; conservar ramas y cambios propios.
 
 La base conecta API, persistencia, ingesta, ciencia e IA demo con Evidence Canvas,
 Mission Lab, informe y recuperación. [README](../README.md) contiene los pasos para
-clonar desde `flamelab-p6-demo-2026-11-14` y arrancar; [DEMO](DEMO.md) añade el E2E con Chromium.
+clonar desde `flamelab-p6-demo-2026-11-14-r2` y arrancar; [DEMO](DEMO.md) añade el E2E con Chromium.
 `team-start-v1` y [TEAM_START](TEAM_START.md) son la referencia inicial, no una orden
 de deshacer avances. La [entrega P1/P3/P4](INTEGRATION_P134.md) conserva el historial.
 
