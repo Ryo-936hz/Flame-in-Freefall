@@ -1,15 +1,16 @@
 # Demo vigente — Mission Lab integrado
 
-Entrega P6 en `raul`, con P1/P3/P4 y P2 de `main`, P6 `80ceba4` y el host P5
-`9f54700` integrados. El commit de entrega y pruebas ejecutadas están en
-[relevo P6](handoffs/P6.md) y [VERIFICATION](VERIFICATION.md).
-El [guion anterior](handoffs/P6_DEMO_HISTORY.md) se conserva como historial.
+La PR #3 integra P6 con P1/P3/P4 y P2 en `main`. El cierre adicional de la
+integración P2 incorpora catálogo recuperable, métricas por campaña y contexto
+Saffire. El estado y las pruebas están en [integración P2](INTEGRATION_P2_MAIN.md)
+y [VERIFICATION](VERIFICATION.md). Los relevos y guiones anteriores conservan
+sus SHA y resultados históricos; no sustituyen la comprobación vigente.
 
 ## Preparación reproducible en Windows
 
-La etiqueta `flamelab-p6-demo-2026-11-14-r2` fija esta entrega para los seis.
-En un clon nuevo, `git fetch origin --tags` y
-`git switch -c mi-demo flamelab-p6-demo-2026-11-14-r2`.
+La base vigente de integración es `origin/main`. En un clon nuevo,
+`git fetch origin` y `git switch -c mi-demo origin/main`.
+Las etiquetas P6 se conservan como hitos anteriores, sin moverlas.
 En una rama existente, conservar e integrar los cambios propios; no hacer reset.
 Git, Python 3.12, Node 24/npm y PowerShell 7; instalación inicial con red:
 
@@ -129,6 +130,44 @@ El runner comprueba el paquete aprobado antes de abrir Chromium,
 crea su propia base temporal y no modifica el archivo de entrada. El CI público
 ejecuta el recorrido sintético; esta comprobación real necesita el bundle local.
 Los resultados ejecutados y el hash exacto están en [VERIFICATION](VERIFICATION.md).
+
+## Catálogo P2, métricas por campaña y contexto Saffire
+
+Con el paquete real cargado, abrir **Study catalog** y seleccionar un estudio.
+Debe haber 24 opciones de estudio, además de la opción vacía. La ficha distingue
+perfiles documentales, configuraciones y observaciones; no convierte registros
+sin un resultado extraído en mediciones numéricas.
+
+- Abrir fuentes y observaciones normalizadas. Cada observación muestra su ID,
+  ensayo/registro, segmento si existe, valor y unidad originales, estado de ausencia
+  y procedencia. El texto de una fuente se muestra literal desde el corpus activo.
+- **Anterior/Siguiente** recorren páginas de hasta 20 fuentes y 20 observaciones
+  con el mismo desplazamiento; sus totales pueden diferir. Una página vacía de
+  observaciones no implica que el estudio original no tenga resultados.
+- Si falla la API, usar **Reintentar catálogo**, **Reintentar página** o
+  **Reintentar fuente**. Cambiar estudio/página descarta respuestas anteriores.
+- El selector **Metric** ofrece las 14 métricas del contrato, incluidas las de
+  FLEX, SAME, SAME-R, CFI-G y duración Saffire I. No redefine unas como otras.
+  Para explorar esas campañas: escribir una pregunta descriptiva, poner gravedad
+  y flujo en **Not used**, excluir sintéticos, fijar **Minimum coverage** en 0 y
+  usar **Material → Rank by similarity** con un valor documentado: FLEX `methanol`,
+  SAME `teflon`, SAME-R `kapton`, CFI-G `ethane` o Saffire I `sibal fabric`.
+  El resultado conserva la métrica y su campaña; semejanza de material no prueba
+  compatibilidad física. Sin un eje X respaldado, leer la tabla y conservar el
+  aviso de insuficiencia, sin inferir una relación causal. Un objetivo totalmente
+  vacío produce `no_active_target_weights`, incluso con cobertura mínima 0:
+  para explorar sin ningún control se utiliza el catálogo, no el ranking.
+- Para comparación científica, establecer condiciones y variable estudiada que
+  tengan significado en la campaña, leer los controles/avisos y conservar la
+  unidad experimental. El guion BASS-II aprobado usa sus presets específicos.
+
+La tarjeta **Saffire · contexto de escala** permanece separada de las herramientas
+numéricas. Muestra diferencias de plataforma, material, tamaño, flujo y
+confinamiento con citas y discrepancias. Está disponible también con fixtures:
+su presencia no indica que se haya importado NASA. La tabla admite desplazamiento
+horizontal por teclado o gesto en pantallas estrechas. Saffire I puede consultarse
+por su duración reportada en su propia campaña; no se introduce como tasa de
+propagación de BASS-II.
 
 ## Informe, recuperación y respaldo
 

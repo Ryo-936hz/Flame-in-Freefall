@@ -1,6 +1,38 @@
-# Prompt maestro para la siguiente conversación local
+# Contexto maestro — continuidad de la demo integrada
 
-Este prompt reanuda el proyecto en el equipo que puede acceder al disco Windows. Copia el bloque completo y adjunta o abre este paquete documental. La entrega actual ha terminado en documentación; el siguiente asistente no debe asumir que ya existe un esqueleto publicado.
+La base ya está implementada y publicada. La PR #3 se fusionó en `main` mediante
+`0b732cb`; P2 de `lujan` forma parte de esa integración. Para trabajo nuevo se usa
+`origin/main` y una rama propia. Las referencias iniciales y P6 son históricas.
+La petición actual del usuario y [AGENTS](../AGENTS.md) prevalecen sobre el bloque
+de construcción original conservado al final.
+
+## Prompt vigente de continuidad
+
+```text
+Actúa como responsable de ingeniería e integración de FlameLab SI para Los TTS.
+Trabaja en C:/Users/user/Desktop/NASA/Flame-in-Freefall conservando el trabajo existente.
+Lee AGENTS.md, docs/START_HERE.md, IMPLEMENTATION_STATUS.md, TEAM_HANDOFF.md,
+PRODUCT.md y DEMO.md; después los contratos y el paquete del área asignada.
+Comprueba Git antes de editar. La base compartida es origin/main; no reinicies
+desde team-start-v1 ni desde una etiqueta antigua. Integra cambios mediante merge.
+P1/P3/P4, P2 y P6 están integrados; el host P5 es 9f54700. AskSI/CSS posteriores
+siguen en la rama P5 y deben conservarse al actualizarla.
+El cierre adicional P2 está implementado y verificado localmente en raul:
+catálogo, métricas y contraste Saffire, código 20aab80404fc2f0fc188d718cac47d0d4bf31d54.
+El cierre se entrega mediante la PR #4 sobre `main`; la PR3 anterior ya está fusionada.
+Lee docs/INTEGRATION_P2_MAIN.md y VERIFICATION.md para su alcance y pruebas.
+Comprueba el estado real antes de ampliar el trabajo; no rehagas funciones cerradas.
+Usa contratos generados, fuentes trazables y modo demo sin credenciales.
+Conserva las etiquetas sintético/preparado/ilustrativo y las limitaciones científicas.
+No conviertas diez puntos BASS-II revisados descriptivamente en validación global,
+ni mezcles cuantitativamente Saffire con BASS-II sin la revisión correspondiente.
+```
+
+## Historial: prompt de construcción inicial
+
+El bloque siguiente documenta la fase anterior a la implementación. Sus referencias
+a «solo documentación», repositorio vacío o frontend todavía reservado no describen
+el estado actual y no autorizan deshacerlo. Se conserva para rastrear decisiones:
 
 ```text
 Actúa como responsable de ingeniería e integración de FlameLab SI para Los TTS.

@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { demoRanking } from "../../src/lib/client.ts";
-import { buildRanking, demoDraft, describeRanking } from "../../src/lib/filters.ts";
+import { buildRanking, demoDraft, describeRanking, METRICS } from "../../src/lib/filters.ts";
 import { createLatest } from "../../src/lib/latest.ts";
 
 test("the demo form produces exactly the documented demo filters", () => {
@@ -53,4 +54,13 @@ test("a late response from an older request is not current", () => {
   assert.equal(latest.isCurrent(second), true);
   latest.cancel();
   assert.equal(latest.isCurrent(second), false);
+});
+
+
+test("the metric selector exposes every canonical API metric, including source-specific P2 outcomes", () => {
+  const schema = JSON.parse(readFileSync(new URL("../../../../packages/contracts/openapi.json", import.meta.url), "utf8"));
+  const expected: string[] = schema.components.schemas.ResearchRequest.properties.metric.enum;
+  const actual = METRICS.map((item) => item.key);
+  assert.deepEqual([...actual].sort(), [...expected].sort());
+  assert.equal(new Set(actual).size, actual.length);
 });

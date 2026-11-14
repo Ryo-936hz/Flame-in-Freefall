@@ -1,21 +1,17 @@
 # Estado real de FlameLab SI
 
-**Integración posterior de main:** se conservó el cambio de favicon `9f22d21`
-mediante merge `576e608`, manteniendo el HTML y las funciones de P5/P6.
-La referencia común actual es `flamelab-p6-demo-2026-11-14-r2`; la primera etiqueta
-se conserva sin mover. El código funcional y sus pruebas completas son los
-registrados abajo; la única diferencia de aplicación posterior es esa línea de favicon.
+Actualizado: 14 de noviembre de 2026. La [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3)
+está fusionada en `main` mediante **`0b732cb`**. Conserva P1/P3/P4, la integración
+P2 de `lujan`, P6 `80ceba4`, el host P5 `9f54700` y el favicon posterior.
+La base actual del equipo es `origin/main`; la etiqueta P6
+`flamelab-p6-demo-2026-11-14-r2` queda como historial y no se mueve.
 
-**P6 terminado para la demo integrada:** escenarios genéricos y presets BASS-II,
-informe, recuperación y recorridos de navegador comprobados. Código **`66934638e37c1396eeab638631d54a2159ab7930`**;
-la PR #3 permanece pendiente de integración en `main`. La comprobación real BASS-II
-es local y opt-in; el CI utiliza datos sintéticos. Ver [relevo P6](handoffs/P6.md).
+**Cierre adicional P2 implementado y verificado localmente en `raul`:** tarjeta
+documental Saffire, reintentos/identidades del catálogo y selector de las 14 métricas.
+Código **`20aab80404fc2f0fc188d718cac47d0d4bf31d54`**. El cierre se entrega mediante la PR #4 sobre `main`; la PR #3 anterior ya está fusionada. [Guía P2](INTEGRATION_P2_MAIN.md),
+[guion](DEMO.md), [relevo](TEAM_HANDOFF.md) y [verificación](VERIFICATION.md).
 
-Actualizado: 14 de noviembre de 2026. P6 integrado en `raul` sobre `main`
-`f8e6a01`, conservando las ramas P6 `80ceba4` y P5 `9f54700` mediante merge.
-Código verificado **`66934638e37c1396eeab638631d54a2159ab7930`**, [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3) abierta para integración;
-este incremento todavía no está en `main`. [Guion](DEMO.md),
-[relevo P6](handoffs/P6.md) y [verificación](VERIFICATION.md).
+El cierre se publica en la [PR #4](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/4); el CI de cada revisión puede consultarse allí. La base compartida es `origin/main`.
 
 ## Implementado para la demo
 
@@ -30,13 +26,25 @@ este incremento todavía no está en `main`. [Guion](DEMO.md),
 | Mission Lab P6 | A/B con métrica explícita, segmentos y motivos; vigencia ante cambios; hipótesis etiquetadas y consulta insuficiente con plan guardado. |
 | Presets BASS-II P6 | Tres consultas exactas y A/B 6→5; texto aprobado condicionado a IDs, valores, muestras y fuentes; M8 literal y lunar sin flujo. |
 | Informe/recuperación P6 | Texto literal del backend y descarga idéntica, replay, recuperación por ID/recientes; guardas compartidas ante Reset o una investigación posterior. |
-| Check/CI | Ciencia/IA, contratos, 76 pruebas cliente, HTTP/reinicio y E2E real aislado con Chromium fijado por lockfile. |
+| Comprobación local | Ciencia/IA, contratos, 77 pruebas cliente, HTTP/reinicio y recorridos sintético/real aislados con Chromium fijado por lockfile. |
 
 La interfaz no interpreta texto libre ni ofrece un formulario de previsualización
 del catálogo: el catálogo acotado y su previsualización están disponibles por API. P6 muestra el plan
 persistido de su consulta. El recorrido visual usa el modo explícito.
 
-## Verificación ejecutada
+## Verificación del cierre P2 — código 20aab80
+
+Windows, código `20aab80404fc2f0fc188d718cac47d0d4bf31d54`. `check.ps1` terminó con salida 0:
+**342 Python aprobadas, 1 omisión PostgreSQL, 77 cliente**, Ruff, deriva de contratos,
+tipado/build, ciencia 6 heredadas + 6 segmentos + disponibilidad, IA 18, corpus 7/7
+y recorrido HTTP con reinicio. La prueba de navegador sintética pasó **25 pasos /
+64 comprobaciones** y la real P2 **17 pasos / 101 comprobaciones**, ambas sin fallos.
+
+Clon limpio Windows de este código: setup y check -E2E con salida 0,
+340 Python/3 omisiones, 77 cliente y navegador 25/64. Detalles del entorno y
+CI en [VERIFICATION](VERIFICATION.md); no se reutilizan resultados del hito anterior.
+
+## Verificación del hito P6 — código 6693463
 
 - Puerta Windows con ambos bundles reales: **342 Python aprobadas, 1 omitida**
   (PostgreSQL sin servidor local), **76 cliente**, tipos/build y HTTP/reinicio correctos.
@@ -62,7 +70,7 @@ BASS-II usa el paquete real aprobado y pasó 7 pasos / 44 comprobaciones.
   como revisadas. Continúan las cuestiones de métricas, censura, independencia,
   comparabilidad y condiciones de redistribución fuera del alcance aprobado.
 - **P5 posterior:** el host integrado es `9f54700`. AskSI/CSS posteriores (`45edc50`/`8adec7a`)
-  siguen en la rama P5 y no están acreditados por este E2E. P5 debe incorporar la PR #3
+  siguen en la rama P5 y no están acreditados por este E2E. P5 debe incorporar `origin/main`
   conservando sus avances y revisar citas históricas/guardas antes de cerrar AskSI.
 - **Producto/validación:** quedan una revisión con lector de pantalla y móvil físico,
   evaluación de proveedor real y despliegue con controles de acceso. No se necesitan
@@ -71,6 +79,9 @@ BASS-II usa el paquete real aprobado y pasó 7 pasos / 44 comprobaciones.
 No implementados: lenguaje natural general, extracción PDF/LLM general, RAG
 multimodal, embeddings, bootstrap, regresión física validada, visión de vídeo,
 CFD, diseño inverso ni autonomía experimental.
+
+Las pruebas del hito P6 conservan su SHA y no sustituyen las comprobaciones del
+cierre P2 registradas arriba.
 
 ## Historial y continuidad
 

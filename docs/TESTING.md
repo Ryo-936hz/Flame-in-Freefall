@@ -8,9 +8,11 @@ ejecutados. Una prueba aprobada no demuestra que el corpus científico sea corre
 
 Existen pruebas Python de contratos, datos, ciencia, API, persistencia y proveedor simulado; el cliente tiene
 pruebas TypeScript, verificación de tipos y compilación. La generación de OpenAPI/tipos y su comprobación
-de deriva forman parte del check. SQLite se prueba localmente. PostgreSQL/pgvector, CI remoto y llamadas
-reales a un proveedor no se declaran probados por tener configuración o mocks. La cifra final no se copia
-aquí: consultar el registro único VERIFICATION.
+de deriva forman parte del check. SQLite se prueba localmente; PostgreSQL 17 y el recorrido Chromium
+sintético pasaron en CI del hito P6, con jobs Windows/Linux y PostgreSQL separados. La ejecución real
+BASS-II es local y opt-in. Las pruebas nuevas se acreditan solo con su SHA y resultado; no se hereda
+el éxito de un hito anterior. pgvector y llamadas reales a un proveedor siguen fuera de lo probado.
+La cifra final no se copia aquí: consultar el registro único VERIFICATION.
 
 ## Niveles
 
@@ -21,7 +23,7 @@ aquí: consultar el registro único VERIFICATION.
 | Ciencia | Elegibilidad, ranking, cobertura y comparación. | P3 |
 | IA | Herramientas, citas, errores y separación demo/proveedor. | P4 |
 | Cliente | Tipado, estados y consumo de respuestas. | P5 |
-| Recorrido | Pregunta, análisis, evidencia, escenario e informe. | P1 + P6 |
+| Recorrido | Pregunta, análisis, evidencia, escenario, informe, recuperación y respuestas tardías frente a Reset/nueva consulta. | P1 + P6 |
 
 ## Casos científicos de alto valor
 
@@ -57,10 +59,17 @@ Cuando cambia el contrato, regenerar OpenAPI/tipos y comprobar que no existe der
 
 ## Validación manual de la demo
 
-En esta base, cada cifra del recorrido remite a su fixture sintético y localizador, sin enlaces NASA que
-pretendan respaldarla. Ejecutar la consulta conocida, cambiar un filtro, probar evidencia insuficiente y revisar
-etiquetas de datos/modo. Antes de incorporar una serie real se deberá abrir la fuente original y revisar todos
-los valores mostrados, unidades, identidad y localizador. Registrar ejecución y revisión humana por separado.
+El recorrido predeterminado remite a su fixture sintético y localizadores, sin usar enlaces NASA para
+respaldar cifras fabricadas. Ejecutar la consulta conocida, cambiar filtros/métrica, probar insuficiencia
+y comprobar etiquetas, fuentes, informe y recuperación. El recorrido real BASS-II requiere el paquete
+P2 1.1.1 y conserva la conformidad descriptiva limitada de P3; comprueba IDs, muestras, segmentos,
+valores, fuentes y aviso M8. Registrar ejecución software y revisión de fuentes por separado.
+
+La incorporación de nuevas cifras al guion exige revisar sus originales, unidades, identidad y localizador.
+Navegar otros estudios del catálogo no los convierte en científicamente revisados. Saffire se presenta
+como contraste documental; la tarjeta no introduce puntos ni prueba importación del corpus.
+[DEMO](DEMO.md) explica ambos recorridos y sus requisitos. La prueba visual en viewport móvil
+no acredita un lector de pantalla ni un teléfono físico.
 
 ## Qué no afirmar
 

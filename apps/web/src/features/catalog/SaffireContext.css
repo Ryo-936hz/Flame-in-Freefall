@@ -1,0 +1,18 @@
+.saffire-context { min-width: 0; overflow-wrap: anywhere; }
+.saffire-context h2 { font-size: 1.1rem; margin-bottom: 8px; }
+.saffire-context p { margin: 10px 0; }
+.saffire-context__label { font-size: 0.85rem; font-weight: 600; }
+.saffire-context__table { position: relative; min-width: 0; overflow-x: auto; margin: 12px 0; }
+.saffire-context table { width: 100%; min-width: 640px; border-collapse: collapse; }
+.saffire-context caption { text-align: left; white-space: normal; padding: 8px 0; }
+.saffire-context th, .saffire-context td { padding: 10px; border: 1px solid var(--rule-strong); text-align: left; vertical-align: top; white-space: normal; overflow-wrap: anywhere; }
+.saffire-context th { font-weight: 600; }
+.saffire-context a { color: var(--signal); text-decoration: underline; }
+.saffire-context summary { cursor: pointer; font-weight: 600; }
+.saffire-context ul { padding-left: 22px; }
+.saffire-context li { margin: 8px 0; }
+.saffire-context__availability { font-size: 0.9rem; }
+.saffire-context__table:focus-visible, .saffire-context summary:focus-visible, .saffire-context a:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .saffire-context th, .saffire-context td { padding: 6px; font-size: 0.8rem; }
+}

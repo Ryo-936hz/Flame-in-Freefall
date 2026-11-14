@@ -30,4 +30,25 @@ The primary quantitative source is Olson et al., NASA/TM-20210011385 (October 20
 
 The investigation DOI `10.60555/4qc4-de67` matches the local ISA record, and NASA PSI lists license `CC0-1.0` for the investigation. The separate NTRS memorandum record lists public distribution and copyright metadata “Use by or on behalf of the US Gov. Permitted.” The generated transcription and original files stay local. These catalog statements have distinct scope. [NASA PSI-25 investigation](https://psi.nasa.gov/physci/repo/data/investigations/PSI-25) · [NASA NTRS record](https://ntrs.nasa.gov/citations/20210011385?linkId=139860916)
 
-Checks performed in WSL used Python `hashlib`, `zipfile` and `csv`. PyMuPDF 2.1 produced the text and image for the visual review of Table 5.1 and Figure 5.2. An independent reading-order extraction matched all 180 data cells in the generated quality report after normalizing whitespace. Direct comparison returned 39 known points across 18 sample IDs. With flow as the varied condition, unresolved controls kept the 20 selected tests in separate groups, including two groups without known spread observations. An explicit 6 cm/s filter retained four points, each from the requested condition. Requiring a stage oxygen measurement yielded no eligible tests. P3 review of comparability and P1 review of the integrated contract remain pending.
+Checks performed in WSL used Python `hashlib`, `zipfile` and `csv`. PyMuPDF 2.1 produced the text and image for the visual review of Table 5.1 and Figure 5.2. An independent reading-order extraction matched all 180 data cells in the generated quality report after normalizing whitespace. Direct comparison returned 39 known points across 18 sample IDs. With flow as the varied condition, unresolved controls kept the 20 selected tests in separate groups, including two groups without known spread observations. An explicit 6 cm/s filter retained four points, each from the requested condition. Requiring a stage oxygen measurement yielded no eligible tests. At the time of this initial audit, P3 comparability and P1 contract reviews were pending. The subsequent decisions below supersede that blanket status without resolving every scientific question.
+
+
+## Subsequent integration and limited P3 decision
+
+The shared segment contract and its consumers have since been integrated into
+`main`; PR #3 merged as `0b732cb` includes the P2/P3 data and P6 demo connections.
+The [P3 decision](handoffs/P3_BASS_II_DECISION_DEMO.md) approves the descriptive
+use of ten specified BASS-II observations from seven samples, with the M8
+table/figure discrepancy visible and the lunar case free of an inherited flow filter.
+This is not a global scientific approval or a causal estimate of the flow effect.
+
+The [P2 demo package 1.1.1](handoffs/P2_DEMO.md) preserves the base bundle's values,
+identities and review flags. Its two changes to the bundle are the M8 discrepancy
+notices added to the corresponding evidence texts. It does not mark the corpus
+as reviewed; the API remains `scientific_unverified`. Package/case-copy changes
+and the base extraction have distinct hashes and scopes.
+
+Per-segment oxygen remains unmeasured; the M8 discrepancy, nominal/operational
+dimensions, cross-campaign comparability, and applicable redistribution terms
+remain open within their documented scope. The other campaigns are not approved
+by these ten points or by passing software tests.

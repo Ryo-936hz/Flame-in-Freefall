@@ -2,21 +2,24 @@
 
 ## Base común
 
-Para el incremento actual consultar [relevo P6](handoffs/P6.md) y [DEMO](DEMO.md).
-[INTEGRATION_P134](INTEGRATION_P134.md) conserva la entrega anterior de backend.
-La referencia de primera incorporación descrita abajo es histórica; los avances
-se integran desde la entrega vigente indicada en TEAM_HANDOFF.
+La base vigente es **`origin/main`**, que incluye la PR #3 fusionada mediante
+`0b732cb` y la integración de P2. [TEAM_HANDOFF](TEAM_HANDOFF.md) identifica el
+incremento actual; [DEMO](DEMO.md) describe el recorrido y [VERIFICATION](VERIFICATION.md)
+registra las pruebas por SHA. El cierre adicional P2 está implementado y verificado
+localmente en `raul`, código `20aab80404fc2f0fc188d718cac47d0d4bf31d54`, entregado mediante la PR #4 sobre `main`. [INTEGRATION_P2_MAIN](INTEGRATION_P2_MAIN.md) distingue ese
+incremento de la PR #3 ya fusionada y de las pruebas históricas.
 
-Cada persona utiliza su propio clon y una rama de tarea. `main` integra el código
-compartido en GitHub. Los seis puestos crean su primera rama desde
-`origin/codex/team-start-v1`, no desde un `main` que puede haber avanzado. Esa rama
-de referencia se conserva sin mover por acuerdo del equipo; no se afirma que exista
-una regla técnica de protección. [TEAM_START](TEAM_START.md) contiene los comandos.
+Cada persona utiliza su propio clon y rama de tarea. Una rama nueva parte de
+`origin/main`; antes de trabajar juntos se acuerda y anota el SHA común. Una rama
+existente conserva sus cambios y hace merge de `origin/main`, resolviendo conflictos
+con sus responsables. [TEAM_START](TEAM_START.md) contiene los comandos.
 Las suscripciones y los chats no comparten memoria: el repositorio es el contexto común.
 
-El arranque siguió [BUILD_ORDER](BUILD_ORDER.md). P1 mantiene el contrato y el
-recorrido común; las PR pequeñas se revisan e integran en `main`. El bundle local
-anterior se conserva como archivo histórico. La matriz de rutas está en
+`codex/team-start-v1` y las etiquetas P6 permanecen congeladas como historia.
+[BUILD_ORDER](BUILD_ORDER.md) conserva la construcción inicial y
+[INTEGRATION_P134](INTEGRATION_P134.md) el cierre anterior del backend. Ninguna
+de esas referencias exige deshacer avances. P1 mantiene el contrato y el recorrido
+común; las PR se revisan e integran en `main`. La matriz de rutas está en
 [REPOSITORY_LAYOUT](REPOSITORY_LAYOUT.md).
 
 ## Inicio de una tarea
@@ -40,7 +43,10 @@ Los nombres de ramas son ejemplos. No crear seis ramas vacías para simular avan
 | Evidence Canvas y marco visual | P5 | P6 y P1 para contratos. |
 | Mission Lab e informe/demo | P6 | P5 y P3. |
 
-Las carpetas y sus propietarios se detallan en REPOSITORY_LAYOUT y en cada paquete. Las rutas del frontend final y evaluación científica todavía pueden ser fronteras previstas; leer su estado antes de crear código.
+Las carpetas y sus propietarios se detallan en REPOSITORY_LAYOUT y en cada paquete.
+Evidence Canvas, Mission Lab y las evaluaciones ya tienen implementación; comprobar
+el árbol y el estado antes de añadir o modificar código. Las tareas del primer
+reparto delimitan áreas, no constituyen una orden de reimplementar lo terminado.
 
 ## Cambios compartidos
 

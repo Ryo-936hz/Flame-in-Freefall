@@ -105,6 +105,35 @@ Comprueba las fuentes M8 y su informe literales, descarga, recuperación tras
 reiniciar API y recargar navegador, y layout de 1440/390 px. La entrada real nunca
 se copia a Git ni se modifica. Las capturas se guardan solo en la ruta solicitada.
 
+### Catálogo P2, campañas y contexto Saffire
+
+El mismo recorrido opt-in también utiliza `p2-catalog-acceptance.mjs` para comprobar:
+
+- Los 24 IDs y títulos del catálogo de la API aparecen en el selector de estudios.
+- FLEX, SAME, SAME-R, CFI-G y Saffire I conservan sus métricas específicas;
+  Flame Design aporta configuraciones sin observaciones y DAFT/Saffire II–III
+  mantienen su alcance documental en este bundle.
+- Páginas de fuentes/observaciones BASS-II con desplazamiento 0 → 20 → 0,
+  identidad de ensayo y segmento, estados de ausencia y valores/unidades originales.
+- Un fallo HTTP 503 deliberado en catálogo, página o fuente permite reintentar
+  contra la API real. Cambiar estudio/página limpia la fuente anterior.
+- Una investigación desde el formulario por cada campaña numérica anterior:
+  selección de la métrica, un objetivo de material presente en la fuente, aislamiento
+  de sus ensayos, valores y unidades en la tabla e informe persistido literal. No
+  se infiere gravedad ni se fuerza una conclusión si falta eje X. Un objetivo vacío
+  permanece insuficiente incluso con cobertura mínima cero; para explorar sin
+  objetivos se utiliza el catálogo.
+- Saffire se muestra en una tarjeta documental separada con enlaces atribuidos,
+  discrepancias y aviso de que su presencia no confirma una importación. No añade
+  puntos BASS ni ofrece acciones de ranking; Saffire I conserva únicamente su
+  duración publicada y Saffire II/III no aportan tasa BASS normalizada.
+
+La tarjeta Saffire se comprueba también en el recorrido sintético del CI. El
+catálogo de 24 estudios, las métricas de campañas y los reintentos sobre sus
+fuentes reales requieren el bundle privado explícito y no se atribuyen a ese CI.
+Los fallos 503 son solo inyecciones de transporte para comprobar recuperación;
+ningún valor científico ni respuesta de investigación se sustituye con mocks.
+
 Este resultado verifica software, identidad y trazabilidad del guion; no convierte
 el corpus `scientific_unverified` en validado ni estima causalidad, riesgo o física
 lunar. Registrar por separado sus resultados y SHA; no atribuirlos al CI sintético.

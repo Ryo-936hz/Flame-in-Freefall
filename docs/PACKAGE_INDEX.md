@@ -1,14 +1,20 @@
 # Índice del paquete de contexto
 
-El paquete original contenía únicamente Markdown. Este repositorio incorpora ya la base local integrada y conserva esos documentos como contexto del equipo. Seis asistentes deben ampliar el mismo contrato y la misma referencia de base, sin interpretar propuestas como funciones implementadas.
+El paquete original contenía únicamente Markdown. La aplicación está ahora
+integrada en `main` (PR #3, `0b732cb`) y conserva ese historial documental. El
+equipo parte de `origin/main` y mantiene un solo contrato. El cierre adicional P2
+está implementado y verificado localmente en `raul`, código `20aab80404fc2f0fc188d718cac47d0d4bf31d54`,
+entregado mediante la PR #4 sobre `main`. Su [guía de integración](INTEGRATION_P2_MAIN.md)
+y [verificación](VERIFICATION.md) identifican alcance, arranque real y pruebas por SHA.
+Las propuestas futuras no se describen como capacidades ya implementadas.
 
 ## Recorrido inicial
 
 1. Lee [README](../README.md) y [AGENTS](../AGENTS.md).
-2. Consulta [SETUP_WINDOWS](SETUP_WINDOWS.md) para ejecutar la base y [TEAM_HANDOFF](TEAM_HANDOFF.md) para la referencia común.
+2. Sigue [TEAM_START](TEAM_START.md) y [SETUP_WINDOWS](SETUP_WINDOWS.md) para arrancar; [TEAM_HANDOFF](TEAM_HANDOFF.md) fija la continuidad. Para el corpus real, utiliza [INTEGRATION_P2_MAIN](INTEGRATION_P2_MAIN.md).
 3. Confirma [hechos e incógnitas](FACTS_AND_UNKNOWNS.md), [estado](IMPLEMENTATION_STATUS.md) y [verificaciones](VERIFICATION.md).
 4. Usa [PRODUCT](PRODUCT.md), [ARCHITECTURE](ARCHITECTURE.md) y los [contratos](CONTRACTS.md) para ampliar el recorrido integrado. El [prompt maestro](LOCAL_CODEX_MASTER_PROMPT.md) conserva el mandato de arranque.
-5. Asigna P1–P6 siguiendo [WORKFLOW](WORKFLOW.md) y los paquetes de equipo; el diseño final sigue reservado a P5/P6.
+5. Coordina el incremento de P1–P6 siguiendo [WORKFLOW](WORKFLOW.md) y el relevo vigente. El host P5/P6 ya está integrado; conserva las ramas y los cambios posteriores de cada puesto.
 
 ## Qué aporta cada bloque
 
@@ -18,9 +24,9 @@ El paquete original contenía únicamente Markdown. Este repositorio incorpora y
 | Contratos | Evitar que cada asistente invente campos, rutas y formas de comunicación. |
 | Ciencia y datos | Mantener procedencia, comparabilidad, unidades y ausencia de evidencia. |
 | IA | Conectar herramientas y explicaciones con citas, evaluación y límites verificables. |
-| Implementación | Ordenar la construcción local, instalación y pruebas antes de repartir el desarrollo. |
+| Implementación | Instalar, comprobar y mantener la base compartida; conservar el proceso inicial como historia. |
 | Equipo y prompts | Delimitar responsables, archivos compartidos, dependencias y relevos. |
-| Diseño | Conservar la dirección visual para la fase de frontend sin construirla ahora. |
+| Diseño | Conservar la dirección visual y los límites de la interfaz implementada; distinguir evolución futura de funciones actuales. |
 | ADR | Explicar por qué se eligió cada decisión y cómo cambiarla sin incoherencia. |
 
 ## Índice documental
@@ -43,6 +49,14 @@ El paquete original contenía únicamente Markdown. Este repositorio incorpora y
 - [docs/EVALUATION.md](EVALUATION.md) — Evaluación de ciencia e IA.
 - [docs/FACTS_AND_UNKNOWNS.md](FACTS_AND_UNKNOWNS.md) — Hechos decisiones e incógnitas.
 - [docs/IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) — Estado real de la base y pendientes.
+- [docs/INTEGRATION_P2_MAIN.md](INTEGRATION_P2_MAIN.md) — Integración vigente, arranque compartido e importación Windows del corpus P2.
+- [docs/INTEGRATION_P134.md](INTEGRATION_P134.md) — Historial del cierre de backend P1/P3/P4.
+- [docs/P2_NASA_24.md](P2_NASA_24.md) — Cobertura, extracción y límites del corpus de 24 estudios.
+- [docs/P2_SOURCE_AUDIT.md](P2_SOURCE_AUDIT.md) — Auditoría de fuentes y alcance del dictamen posterior.
+- [docs/P2_SAFFIRE_CONTEXT.md](P2_SAFFIRE_CONTEXT.md) — Contraste documental Saffire y discrepancias de fuentes.
+- [docs/handoffs/P2_DEMO.md](handoffs/P2_DEMO.md) — Paquete interno P2 1.1.1, casos y condiciones de uso.
+- [docs/handoffs/P3_BASS_II_DECISION_DEMO.md](handoffs/P3_BASS_II_DECISION_DEMO.md) — Conformidad descriptiva limitada y diez puntos identificados.
+- [docs/handoffs/P6.md](handoffs/P6.md) — Alcance de Mission Lab, informe y recuperación.
 - [docs/LOCAL_CODEX_MASTER_PROMPT.md](LOCAL_CODEX_MASTER_PROMPT.md) — Prompt maestro histórico de arranque local.
 - [docs/OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) — Preguntas abiertas.
 - [docs/PRODUCT.md](PRODUCT.md) — Producto y alcance.
@@ -57,6 +71,7 @@ El paquete original contenía únicamente Markdown. Este repositorio incorpora y
 - [docs/WORKFLOW.md](WORKFLOW.md) — Trabajo de seis personas con asistentes.
 - [docs/DATA_INSPECTION.md](DATA_INSPECTION.md) — Inventario real, hallazgos y límites de extracción.
 - [docs/TEAM_HANDOFF.md](TEAM_HANDOFF.md) — Referencia común y reparto de siguientes incrementos.
+- [docs/TEAM_START.md](TEAM_START.md) — Clon nuevo desde main, rama propia y actualización conservando cambios.
 - [docs/VERIFICATION.md](VERIFICATION.md) — Entorno, comandos ejecutados, resultados y límites.
 - [docs/adr/0001-canonical-contracts.md](adr/0001-canonical-contracts.md) — ADR 0001 Contratos canónicos y monorepo.
 - [docs/adr/0002-local-and-postgres.md](adr/0002-local-and-postgres.md) — ADR 0002 SQLite local y camino PostgreSQL.
@@ -83,4 +98,11 @@ El paquete original contenía únicamente Markdown. Este repositorio incorpora y
 
 ## Alcance de la entrega
 
-El código local, los generados y scripts se consultan en REPOSITORY_LAYOUT y README. El ZIP ya fue inspeccionado: su catálogo de metadatos no equivale a observaciones NASA importadas. La demo numérica es sintética; la API es local y no está desplegada. Los resultados ejecutados pertenecen a VERIFICATION, no a la mera presencia de un archivo o enlace en este índice.
+El código, los generados y scripts se describen en REPOSITORY_LAYOUT y README.
+La demo predeterminada y el CI son sintéticos; el recorrido real BASS-II es opt-in
+y requiere importar el paquete P2 local. El catálogo de metadatos, el corpus
+completo importado y la tarjeta documental Saffire tienen ámbitos distintos.
+El corpus no se distribuye mediante Git y conserva `scientific_unverified`.
+La API se ejecuta localmente; no se acredita un despliegue público.
+Los resultados por SHA están en VERIFICATION y no se infieren de un enlace o
+de las pruebas de una versión anterior.

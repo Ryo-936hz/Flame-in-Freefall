@@ -3,6 +3,80 @@
 Los resultados vigentes aparecen primero; el resto conserva el historial.
 Ninguna prueba de software equivale a validación científica.
 
+## Cierre integrado P2/P6 — 14 noviembre 2026
+
+Código **`20aab80404fc2f0fc188d718cac47d0d4bf31d54`**, basado en el merge de
+[PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3), `0b732cb`.
+`lujan` (`f8e6a01`) ya es ancestro de esa base. El cierre añade consumo de las
+14 métricas, catálogo recuperable e identificable, control accesible de cobertura
+y contexto Saffire separado. No cambia contratos, datos ni cálculos científicos.
+[Arranque y datos reales](INTEGRATION_P2_MAIN.md).
+
+### Puerta local sobre el código del cierre
+
+Windows, Python 3.12.14, Node 24.22.1, PowerShell 7.6.9; proveedor `demo`.
+`scripts/check.ps1` con los bundles BASS-II y NASA-24 locales: salida 0.
+Los dos runners Chromium se ejecutaron aparte sobre los mismos archivos,
+sin cambios funcionales entre sus pruebas y el commit.
+
+| Comprobación | Resultado observado |
+|---|---|
+| Python | **342 aprobadas, 1 omitida** (PostgreSQL sin servidor local); un aviso Starlette/httpx. |
+| Ciencia/IA | 6 casos heredados + 6 segmentos; disponibilidad aprobada; IA 18/18; corpus real 7/7. |
+| Contratos/cliente | Ruff, deriva OpenAPI/TypeScript, tipado y **77 pruebas cliente** aprobados. |
+| Build y HTTP | Build correcto; SQLite, planes, casos, informe y persistencia tras reinicio aprobados. |
+| Chromium sintético | **25 pasos / 64 comprobaciones**, 0 fallos, salida 0. |
+| Chromium P2 1.1.1 real | **17 pasos / 101 comprobaciones**, 0 fallos, salida 0. |
+| Importación P2 dedicada | 24 estudios, 1.058 registros, 1.673 observaciones; primera carga `changed: true`, segunda `changed: false`. |
+
+El recorrido real lista los 24 estudios y comprueba nueve perfiles representativos,
+páginas BASS-II 0/20/0, IDs, valores/unidades originales, ausencias y fuentes
+literales. Provoca tres fallos 503 para verificar reintentos de catálogo, página y
+fuente. Son fallos de red controlados; no sustituye los datos de NASA por mocks.
+Las investigaciones de FLEX, SAME, SAME-R, CFI-G y Saffire I conservan campañas,
+valores, unidades y reporte literal. Un objetivo vacío sigue siendo insuficiente
+incluso con cobertura mínima cero; no se inventa un ranking. Se mantiene el guion
+BASS-II 6/5 cm/s, diez observaciones/siete muestras, M8, lunar sin flujo y reinicio.
+
+La tarjeta Saffire permanece documental y separada también con fixtures.
+Capturas de Saffire en escritorio y 390 px, tabla CFI-G y contenido BASS del catálogo
+inspeccionadas. El catálogo vive en una columna desplazable: la captura completa
+por elemento contiene áreas recortadas fuera del viewport y no acredita una vista
+continua de toda la página. No se afirma prueba con lector de pantalla o móvil físico.
+
+Los ensayos de desarrollo detectaron selectores de prueba incorrectos (details,
+StrictMode y datalist) y la etiqueta inaccesible del slider, corregida en el producto.
+Un timeout de reintento no se reprodujo con la UI congelada; la ejecución final
+completa pasó sin ampliar timeouts ni silenciar errores.
+
+Paquete real comprobado: SHA-256
+`cb8b782fd73dbe4df0576b8047f3dea781a37d7c06c962ad2e978e607a00191d`.
+Los bundles de ciencia conservan los hashes BASS-II `a2779a6e3a2b335298408c2dc5184e4bef916ad29cf7821737e148c5e5920007`
+y NASA-24 `7dc69717b4bc6151025df2993d9cf66622db3a8b7242798a1d7bfe8b8e335781`.
+Los originales y el ZIP no se modificaron ni se subieron a Git. El corpus sigue
+`scientific_unverified`; las pruebas no amplían la conformidad descriptiva de P3.
+
+### Clon limpio y CI del cierre
+
+Clon nuevo de `20aab80404fc2f0fc188d718cac47d0d4bf31d54`, sin copiar `.env`, bundles,
+`.venv` ni `node_modules`: `setup.ps1` y `check.ps1 -E2E` terminaron con salida 0.
+**340 Python aprobadas, 3 omisiones** (dos bundles opt-in y PostgreSQL local),
+**77 cliente**, evaluaciones, contratos, build/HTTP y **25 pasos / 64 checks**
+de navegador aprobados. Dependencias propias; se comparte el Windows, los runtimes
+y la caché de Chromium. El checkout quedó limpio.
+
+El CI del código `20aab80` ejecuta cinco trabajos (Windows/Linux, PostgreSQL 17 y
+navegador en ambos sistemas); su resultado por trabajo está en
+[43625147190](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43625147190).
+La actualización documental posterior no cambia código, pruebas ni dependencias.
+El CI de su head final y del merge puede consultarse en la
+[PR #4](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/4) y en el
+[workflow de main](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/workflows/verify.yml?query=branch%3Amain).
+No se infiere que pgvector haya sido validado por usar su contenedor PostgreSQL.
+El CI del merge base `0b732cb` ya terminó correctamente en sus cinco trabajos:
+[43622953719](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/runs/43622953719).
+Ese resultado no sustituye las verificaciones del incremento `20aab80`.
+
 ## Integración concurrente de favicon — 14 noviembre 2026
 
 Después del cierre funcional, `main` añadió `9f22d21`, una línea de favicon.

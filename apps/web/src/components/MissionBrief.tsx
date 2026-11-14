@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useId, useMemo, useRef } from "react";
 import { gsap, prefersReducedMotion, useGSAP } from "../lib/motion";
 import type { RankingRequest } from "../lib/client";
 import { CONDITIONS, HABITATS, METRICS, ROLE_LABELS, activeHabitat, applyHabitat, buildRanking, describeRanking } from "../lib/filters";
@@ -16,6 +16,7 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
   /** Categorical values present in the active corpus, for datalist hints. */
   suggestions: Partial<Record<ConditionKey, string[]>>;
 }) {
+  const coverageId = useId();
   const built = useMemo(() => buildRanking(draft), [draft]);
   const setCondition = (key: ConditionKey, patch: Partial<BriefDraft["conditions"][ConditionKey]>) =>
     onChange({ ...draft, conditions: { ...draft.conditions, [key]: { ...draft.conditions[key], ...patch } } });
@@ -111,12 +112,13 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
             onChange={(event) => onChange({ ...draft, limit: Math.min(50, Math.max(1, Number(event.target.value) || 1)) })} />
         </label>
       </div>
-      <label className="field">
-        <span className="field-top"><span className="cap">Minimum coverage</span><output className="num">{Math.round(draft.minimumCoverage * 100)}%</output></span>
-        <input type="range" min={0} max={1} step={0.05} value={draft.minimumCoverage}
+      <div className="field">
+        <span className="field-top"><label className="cap" htmlFor={coverageId}>Minimum coverage</label><output className="num" htmlFor={coverageId}>{Math.round(draft.minimumCoverage * 100)}%</output></span>
+        <input id={coverageId} type="range" min={0} max={1} step={0.05} value={draft.minimumCoverage}
+          aria-valuetext={`${Math.round(draft.minimumCoverage * 100)}%`}
           style={{ ["--p" as string]: `${draft.minimumCoverage * 100}%` }}
           onChange={(event) => onChange({ ...draft, minimumCoverage: Number(event.target.value) })} />
-      </label>
+      </div>
       <label className="check">
         <input type="checkbox" checked={draft.allowSynthetic} onChange={(event) => onChange({ ...draft, allowSynthetic: event.target.checked })} />
         <span>Include synthetic demo data <small>(not NASA measurements)</small></span>

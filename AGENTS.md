@@ -1,21 +1,34 @@
 # Instrucciones de trabajo para FlameLab SI
 
-Estas instrucciones se aplican al proyecto FlameLab SI. La petición vigente autoriza publicar el esqueleto integrado en GitHub y preparar el arranque de seis personas. La fase documental y el historial de construcción local son antecedentes. La integración compartida usa `main`; `origin/codex/team-start-v1` conserva la primera entrega. Para continuar, usa la referencia vigente de TEAM_HANDOFF y crea una rama propia. Lee primero `docs/TEAM_START.md`, `docs/START_HERE.md`, `docs/IMPLEMENTATION_STATUS.md` y `docs/TEAM_HANDOFF.md`; después utiliza tu paquete `docs/team/Px_*.md`. El prompt maestro y BUILD_ORDER conservan el proceso de construcción.
+La petición vigente autoriza integrar y terminar la demo compartida, conservar
+el trabajo del equipo y publicarlo mediante el flujo de integración. `main` es
+la base actual: la PR #3 se fusionó como `0b732cb`, incluyendo P2 y P6 sobre P1/P3/P4.
+Un trabajo nuevo crea su rama desde `origin/main`; una rama existente conserva sus
+cambios e integra esa base mediante merge. No se reinicia desde referencias antiguas.
+Lee `docs/TEAM_START.md`, `docs/START_HERE.md`, `docs/IMPLEMENTATION_STATUS.md` y
+`docs/TEAM_HANDOFF.md`; después el paquete del área. El prompt maestro conserva
+un bloque histórico de construcción expresamente separado de sus instrucciones vigentes.
 
 ## Asignación vigente
 
-El usuario ha asignado conjuntamente **P1, P3 y P4** a este trabajo en `raul` para
-cerrar su parte de la demo. La integración P2 de `main` y la rama P4 se conservan
-mediante merge. P1/P3/P4 coordinan aquí contratos, ciencia e IA según ADR 0009.
-P2 y P5 conservan sus rutas; no se da por terminado su trabajo por cerrar
-backend. `docs/INTEGRATION_P134.md` conserva el cierre anterior de esos tres puestos.
-`team-start-v1` es una referencia histórica congelada, no la base para deshacer
-avances. Las guías antiguas se interpretan con el estado vigente del código.
+El usuario asignó P1/P3/P4 y después P6, y ahora pide integrar `main` con P2 y cerrar
+el recorrido completo. El cierre adicional está implementado y verificado localmente
+en `raul`, código `20aab80404fc2f0fc188d718cac47d0d4bf31d54`: catálogo/fuentes, selección de métricas
+P2 y contraste Saffire. El cierre se entrega mediante la PR #4 sobre `main`; no se
+confunde con la PR #3 ya fusionada. Consultar `docs/INTEGRATION_P2_MAIN.md` y
+`docs/VERIFICATION.md`. Coordina las rutas compartidas y conserva las contribuciones
+mediante merge; los siguientes cambios parten del estado real, sin rehacer lo cerrado.
 
-El usuario asigna ahora también **P6**: terminar Mission Lab, informe, recuperación
-y aceptación de extremo a extremo. La integración conserva P5 `9f54700` como host
-y sus funciones visuales; los cambios compartidos se limitan al montaje, acceso a
-fuentes y coordinación de solicitudes. Consultar `docs/handoffs/P6.md` y ADR 0010.
+La entrega P1/P3/P4 se conserva en `docs/INTEGRATION_P134.md`; P6 en
+`docs/handoffs/P6.md` y ADR 0010. El host P5 integrado es `9f54700`.
+AskSI/CSS posteriores de P5 siguen en su rama y deben conservarse al incorporar
+`origin/main`; no se atribuyen sus funciones ni pruebas a este cierre.
+P2 mantiene la procedencia y los límites de su corpus. Diez puntos BASS-II tienen
+conformidad descriptiva; no equivale a aprobar todo el corpus.
+
+`team-start-v1` y las etiquetas P6, incluida `flamelab-p6-demo-2026-11-14-r2`, son
+referencias históricas congeladas. Los resultados de pruebas pertenecen al SHA
+registrado; cualquier incremento posterior necesita sus propias comprobaciones.
 
 ## Autoridades y contexto
 

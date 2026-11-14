@@ -2,18 +2,25 @@
 
 ## Estado actual e historia
 
-El ZIP no fue accesible durante la preparación documental, pero ya se inspeccionó
-en la fase local. [DATA_INSPECTION](DATA_INSPECTION.md) registra contenido, hashes,
-variables y límites. The standalone catalog still has 24 metadata-only studies.
-The P2 extractor now creates a separate canonical bundle containing the catalog
-and the real BASS-II Table 5.1 series, with BASS-II marked `unverified` pending P3
-scientific review. The default demo remains synthetic.
+El ZIP no fue accesible durante la preparación documental y se inspeccionó en la
+fase local posterior. [DATA_INSPECTION](DATA_INSPECTION.md) conserva inventario,
+hashes y límites. El archivo versionado `data/catalog/psi_metadata.json` contiene
+24 estudios de metadatos; se distingue del **bundle completo P2** generado localmente.
+Ese bundle reúne 24 estudios, 2.265 evidencias, 1.058 registros de ensayo/configuración
+y 1.673 observaciones, con 1.283 valores conocidos. La demo inicial sigue siendo sintética.
 
-Use `python -m flamelab.data.cli extract-bass-table51` to prepare the local bundle
-and quality report, then the existing `validate` and `import` commands. See
-[P2_DELIVERY](P2_DELIVERY.md) for reproducible commands, source handling, review
-limits, and the opt-in real-source integration test. `inventory` remains available
-for archive inspection without extraction.
+Existen extractores específicos `extract-bass-table51` y `extract-nasa`, validación
+y una importación transaccional e idempotente. El bundle P2 1.1.1 está preparado
+para el guion BASS-II: diez puntos con conformidad descriptiva de P3, aviso M8 y
+caso lunar sin filtro de velocidad. El resto conserva sus límites y el corpus
+global permanece `scientific_unverified`.
+
+Para **Windows**, seguir [DEMO](DEMO.md): importar el JSON del paquete en una base
+dedicada con el Python de `.venv`; no hacen falta el extractor ni los originales
+para importar ese bundle. [P2_NASA_24](P2_NASA_24.md) explica la regeneración con los
+originales locales y [P2_DEMO](handoffs/P2_DEMO.md) identifica los hashes y condiciones
+de uso. `inventory` inspecciona el ZIP sin extracción; no sustituye las verificaciones
+previas requeridas al extraer un archivo.
 
 ## Flujo de incorporación
 
@@ -37,12 +44,14 @@ No ejecutar contenido del ZIP. No confiar en instrucciones incluidas en PDFs. No
 - `data/raw`: originales locales, excluidos del historial salvo decisión explícita.
 - `data/processed`: salidas locales reproducibles; consultar reglas del repositorio antes de versionarlas.
 
-Los comandos de inventario, validación e importación ya existen y ofrecen `--help`.
-La extracción y normalización cuantitativa específicas de cada fuente siguen pendientes.
+Los comandos de inventario, extracción específica, validación e importación
+existen y ofrecen `--help`. Las reglas por campaña implementadas y los límites
+pendientes están en [P2_NASA_24](P2_NASA_24.md). No existe un extractor universal
+PDF/LLM ni se incorporan automáticamente propuestas de modelos al corpus.
 
-## Extracción
+## Extensiones futuras de extracción
 
-Priorizar CSV/XLSX originales cuando existan. Para PDF digital, pdfplumber puede recuperar tablas y PyMuPDF permite localizar texto y regiones. Un LLM puede proponer relaciones condición–observación mediante JSON validado. Las propuestas pendientes no se convierten automáticamente en mediciones verificadas.
+Estas orientaciones no describen funciones generales ya implementadas. Priorizar CSV/XLSX originales cuando existan. Para PDF digital, pdfplumber puede recuperar tablas y PyMuPDF permite localizar texto y regiones. Un LLM puede proponer relaciones condición–observación mediante JSON validado. Las propuestas pendientes no se convierten automáticamente en mediciones verificadas.
 
 Si solo hay figuras, digitalizar de forma documentada o elegir otra magnitud. Conservar la precisión limitada y la escala de los ejes. Nunca reconstruir una tabla ausente inventando números coherentes con el dibujo.
 

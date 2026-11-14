@@ -1,8 +1,10 @@
 # Preparación Windows
 
 Para un nuevo miembro del equipo, seguir primero [TEAM_START](TEAM_START.md):
-clonar GitHub y crear la rama del puesto desde `origin/codex/team-start-v1`.
-La ruta del clon es libre; no copiar la ruta del equipo de integración.
+clonar GitHub y crear una rama propia desde **`origin/main`**. La PR #3 ya está
+fusionada en esa base mediante `0b732cb`. En un clon existente, conservar los
+cambios propios y hacer merge de `origin/main`; no reiniciar desde una etiqueta
+histórica. La ruta del clon es libre; no copiar la ruta del equipo de integración.
 
 Clon original: `C:\Users\user\Desktop\NASA\Flame-in-Freefall`. El paquete original estaba
 en `NASA\FlameLab_Contexto_Codex\FlameLab_Contexto`; este y Documents se conservaron.
@@ -14,7 +16,9 @@ No se requieren Docker ni claves para la demo.
    Node 24.22.1, Git 2.55.0.windows.5 y PowerShell 7 en Windows.
 2. Ejecutar `./scripts/setup.ps1` desde el clon. Respeta `uv.lock`, `package-lock.json`
    y `.env` existente; crea entorno `.venv` y configuración demo si faltan.
-3. Ejecutar `./scripts/check.ps1`.
+3. Ejecutar `./scripts/check.ps1`. Para incluir navegador: instalar Chromium con
+   `node node_modules/playwright/cli.js install chromium` y ejecutar
+   `./scripts/check.ps1 -E2E`. La prueba crea sus propios servicios y base temporal.
 4. En dos terminales: `./scripts/dev-api.ps1` y `./scripts/dev-web.ps1`.
 5. Abrir `http://127.0.0.1:5173`. Ctrl+C detiene cada servidor.
 
@@ -34,10 +38,14 @@ servicios globales.
   resolvió cerrando el proceso propio, sin permisos de administrador.
 - SQLite requiere archivo; memoria se rechaza porque los motores usan conexiones
   separadas. Predeterminado `work/flamelab.db`.
-- Semilla demo solo sobre base vacía. Para otro corpus usar importación `--replace`
-  explícita o nueva URL SQLite; los expedientes anteriores conservan su snapshot.
-- El catálogo real no contiene ensayos/mediciones. La API de catálogo dará perfil
-  metadata_only y evidencia insuficiente para comparaciones numéricas.
+- Semilla demo solo sobre base vacía. Para cargar el corpus P2, seguir
+  [DEMO](DEMO.md) usando una base dedicada. La importación rechaza reemplazar
+  silenciosamente un corpus distinto; los expedientes conservan su snapshot.
+- `data/catalog/psi_metadata.json` contiene solo metadatos de 24 estudios. El
+  **bundle completo P2** añade 1.058 registros y 1.673 observaciones, con 1.283
+  valores conocidos, y se mantiene `scientific_unverified`. Son artefactos distintos.
+  Los diez puntos del guion BASS-II tienen conformidad descriptiva de P3, con límites.
+  Importar el catálogo de metadatos no instala esas mediciones.
 - Detalles de resultados/aviso Starlette en `VERIFICATION.md`.
 
 ## Proveedor externo opcional
@@ -52,18 +60,23 @@ limitados, deadline global, esquema/citas validados. El modelo solo sintetiza;
 no reemplaza cálculos. Validar IDs no prueba respaldo semántico: revisión humana
 pendiente. Referencia: [Structured Outputs oficial](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses).
 
-## PostgreSQL preparado, no probado
+## PostgreSQL verificado en CI; pgvector fuera del alcance probado
 
-SQLAlchemy/Alembic y dependencia opcional: `uv sync --locked --extra postgres`.
+PostgreSQL 17 pasó migraciones, reemplazo de corpus y recuperación histórica en
+el CI del hito P6; consultar el SHA y el run en [VERIFICATION](VERIFICATION.md).
+El check local omite esa prueba si falta `FLAMELAB_TEST_POSTGRES_URL`.
+Para ejecutarla, instalar la dependencia opcional (`uv sync --locked --extra postgres`)
+y usar una base **desechable de prueba** con `apps/api/tests/test_postgres_integration.py`.
+SQLite basta para arrancar la demo; no se necesita instalar PostgreSQL en Windows.
+
 `compose.yaml` prepara una imagen PostgreSQL/pgvector y exige contraseña local.
-Configurar URL `postgresql+psycopg://...` después. No se ejecutaron esos pasos.
-No hay extensión activada por migración, tabla vectorial ni embeddings. P1 debe
-verificar migración, concurrencia, copia/restauración y motor real antes de habilitarlo.
+El uso de esa imagen no acredita pgvector: no hay extensión activada por migración,
+tabla vectorial ni embeddings. No se presume validada la operación en producción.
 
 ## Base para seis personas
 
-Todos parten de `origin/codex/team-start-v1` publicado en GitHub, conservado sin
-mover por acuerdo del equipo. Comprobar `git rev-parse HEAD` frente a
-`git rev-parse origin/codex/team-start-v1`. Crear una rama `codex/p1-...` a
-`codex/p6-...` siguiendo TEAM_START. No se han creado seis versiones de contratos
-ni seis ramas vacías. El bundle anterior queda como archivo histórico local.
+Todos crean su rama desde `origin/main` y comparan el SHA completo de la base
+compartida siguiendo [TEAM_START](TEAM_START.md). Los clones existentes conservan
+su trabajo antes del merge. Las referencias `team-start-v1` y las etiquetas P6
+permanecen congeladas como historial. Los contratos son únicos y generados;
+no hay que reconstruir seis versiones de la aplicación.

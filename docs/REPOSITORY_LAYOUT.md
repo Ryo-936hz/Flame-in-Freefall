@@ -1,8 +1,8 @@
 # Estructura del repositorio y fronteras futuras
 
-La base compartida implementa dominio, API, datos, ciencia, IA, persistencia y cliente
-técnico. Las fronteras del frontend de producto y evaluación científica siguen
-preparadas. El estado está en [IMPLEMENTATION_STATUS](IMPLEMENTATION_STATUS.md), las
+La base compartida implementa dominio, API, datos, ciencia, IA, persistencia y
+cliente tipado con Evidence Canvas, Mission Lab, informe y recuperación. Hay
+evaluaciones ejecutables de ciencia e IA; no equivalen a validación física global. El estado está en [IMPLEMENTATION_STATUS](IMPLEMENTATION_STATUS.md), las
 verificaciones en [VERIFICATION](VERIFICATION.md), y el arranque desde GitHub en
 [TEAM_START](TEAM_START.md).
 
@@ -30,23 +30,26 @@ Los Markdown se copiaron al clon tras comparar contenido. Las futuras actualizac
 | `apps/api/alembic/` | Migraciones y revisiones del esquema. | P1 | P2. |
 | `apps/api/tests/` | Pruebas de módulos e integración. | Responsable del módulo | P1 coordina fixtures compartidos. |
 | `apps/web/src/lib/` | Cliente API tipado y utilidades de integración. | P5 | P1. |
-| `apps/web/src/features/evidence/` | Frontera documentada para Evidence Canvas futuro. | P5 | P3 y P6. |
-| `apps/web/src/features/mission-lab/` | Frontera documentada para Mission Lab futuro. | P6 | P5 y P3. |
+| `apps/web/src/features/evidence/` | Tabla, gráfico, selección y fuentes con identidad de corpus/expediente. | P5 | P3 y P6. |
+| `apps/web/src/features/mission-lab/` | Escenarios A/B, insuficiencia, vigencia y presets BASS-II acotados. | P6 | P5 y P3. |
+| `apps/web/src/features/report/` | Informe literal, descarga, eventos y recuperación con guardas. | P6 | P1 y P5. |
+| `apps/web/src/features/catalog/` | Catálogo P2, fuentes y contexto documental Saffire en el cierre adicional. | P2 / integración | P3 y P5. |
+| `apps/web/tests/e2e/` | Recorridos aislados de navegador sintético y BASS-II real opt-in. | P6 | P1 y P2. |
 | `apps/web/src/App.tsx` y componentes comunes | Composición, estados y estilos compartidos. | P5 | P6; P1 para conexión. |
 | `packages/contracts/` | OpenAPI y tipos TypeScript generados. | P1 | P5; nadie edita generados a mano. |
 | `data/catalog/` | Metadatos y referencias públicas. | P2 | P3. |
 | `data/fixtures/` | Corpus sintético pequeño y explícito. | P2 | P3 y P1. |
-| `data/raw/`, `data/processed/` | Destinos locales previstos/excluidos; no contienen una serie NASA publicada. | P2 | P1 para exclusiones. |
-| `evals/` | Frontera futura para consultas científicas etiquetadas; no confundir pruebas software con evaluación científica independiente. | P6 coordina | P3 evalúa ciencia y P4 IA. |
+| `data/raw/`, `data/processed/`, `datasets/` | Originales y extracciones locales excluidos; no se distribuyen por clonar Git. | P2 | P1 para exclusiones. |
+| `evals/` | Casos ejecutables de ciencia/segmentos/disponibilidad, IA y auditoría opt-in de corpus; no validación física. | P3/P4 | P6 coordina aceptación. |
 | `scripts/` | Preparación, desarrollo, generación y verificación. | P1 | Consumidor del script. |
-| `.github/workflows/` | Workflow configurado; ejecución remota pendiente. | P1 | Responsables de pruebas. |
+| `.github/workflows/` | Verificación Windows/Linux, PostgreSQL y navegador en ambos sistemas; resultados por SHA en VERIFICATION. | P1 | Responsables de pruebas. |
 | `docs/` | Producto, decisiones, contexto y relevos. | Autor del cambio | Responsable del área. |
 
-Las migraciones están en `apps/api/alembic/` y las pruebas Python en `apps/api/tests/`. Evidence Canvas y Mission Lab solo contienen sus fronteras: el arnés de App no constituye el frontend final. `work/`, `.venv/` y dependencias instaladas son locales y quedan fuera de Git.
+Las migraciones están en `apps/api/alembic/` y las pruebas Python en `apps/api/tests/`. App monta Evidence Canvas y los paneles P6; los cambios compartidos coordinan métrica, fuentes y tickets para descartar respuestas antiguas. `work/`, `.venv/` y dependencias instaladas son locales y quedan fuera de Git.
 
 ## Archivos raíz implementados
 
-`pyproject.toml`, `uv.lock`, `package.json`, `package-lock.json`, `.env.example`, `.gitignore`, `alembic.ini` y `compose.yaml` están presentes. P1 coordina cambios compartidos. Compose prepara PostgreSQL/pgvector; no demuestra que ese motor se haya ejecutado. Una dependencia nueva se incorpora una sola vez y se verifica con sus consumidores.
+`pyproject.toml`, `uv.lock`, `package.json`, `package-lock.json`, `.env.example`, `.gitignore`, `alembic.ini` y `compose.yaml` están presentes. P1 coordina cambios compartidos. Compose prepara PostgreSQL/pgvector. PostgreSQL 17 sí se ejecutó en CI del hito P6; pgvector no está implementado ni se infiere probado por la imagen. Una dependencia nueva se incorpora una sola vez y se verifica con sus consumidores.
 
 ## Dirección de dependencias
 
