@@ -1,14 +1,43 @@
-# Optional future integration. Docker/PostgreSQL/pgvector NOT verified in this delivery.
+# FlameLab SI en Docker (Linux y Windows con Docker Desktop).
+#   docker compose up -d --build      -> http://127.0.0.1:8080
+# FLAMELAB_DATA: catalog (por defecto), demo (sintético) o empty.
+# PostgreSQL es opcional y no está verificado: perfil "postgres".
 services:
+  api:
+    build: { context: ., target: api }
+    image: flamelab-api:local
+    environment:
+      FLAMELAB_DATA: ${FLAMELAB_DATA:-catalog}
+      FLAMELAB_AI_PROVIDER: ${FLAMELAB_AI_PROVIDER:-demo}
+    # Opcional: .env local (p. ej. proveedor de IA externo). Nunca claves en VITE_* ni en la imagen.
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - flamelab-work:/app/work
+    restart: unless-stopped
+
+  web:
+    build: { context: ., target: web }
+    image: flamelab-web:local
+    depends_on:
+      api: { condition: service_healthy }
+    ports:
+      - "127.0.0.1:${FLAMELAB_WEB_PORT:-8080}:80"
+    restart: unless-stopped
+
   postgres:
+    profiles: ["postgres"]
     image: pgvector/pgvector:pg17
     environment:
       POSTGRES_USER: flamelab
       POSTGRES_DB: flamelab
-      POSTGRES_PASSWORD: ${FLAMELAB_POSTGRES_PASSWORD:?Set a local password before starting PostgreSQL}
+      POSTGRES_PASSWORD: ${FLAMELAB_POSTGRES_PASSWORD:-}  # obligatorio: la imagen no arranca sin contraseña
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+
 volumes:
+  flamelab-work:
   postgres-data:
