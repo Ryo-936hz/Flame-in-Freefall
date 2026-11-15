@@ -122,6 +122,40 @@ def study_summary(study: Study, bundle: DatasetBundle) -> ChatSource:
                       text=f"{study.title} ({study.id.removeprefix('psi:')}) has {len(trials)} trial records in FlameLab. {quantified} Data status: {status}.")
 
 
+def flame_spread_extreme(bundle: DatasetBundle, study_ids: set[str], highest: bool, published_only: bool) -> tuple[str, list[str], list[ChatSource]]:
+    studies = {study.id: study for study in bundle.studies}
+    trials = {trial.id: trial for trial in bundle.trials if not study_ids or trial.study_id in study_ids}
+    observations = [item for item in bundle.observations
+                    if item.trial_id in trials and item.metric == "flame_spread_rate_mm_s" and item.value is not None]
+    allowed = {"published"} if published_only else {"published", "digitized"}
+    matches = [item for item in observations if item.provenance in allowed]
+    synthetic = not matches and not published_only
+    if synthetic:
+        matches = [item for item in observations if item.provenance == "synthetic"]
+    scope = "the requested studies" if study_ids else "the active FlameLab corpus"
+    if not matches:
+        return f"I couldn’t find recorded {'published ' if published_only else ''}flame spread rates in {scope}.", [], []
+
+    extreme = max if highest else min
+    value = extreme(item.value for item in matches)
+    tied = [item for item in matches if item.value == value]
+    first = tied[0]
+    trial = trials[first.trial_id]
+    study = studies[trial.study_id]
+    evidence = {entry.id: entry for entry in bundle.evidence}
+    refs = [evidence[item.evidence_ids[0]] for item in tied[:3]]
+    direction = "highest" if highest else "lowest"
+    cohort = "synthetic demo observations" if synthetic else "published observations" if published_only else "published or digitized observations"
+    answer = (f"The {direction} flame spread rate among {cohort} in {scope} is {value:g} {first.unit}. "
+              f"It was recorded in {study.title} ({study.id.removeprefix('psi:')}), trial {trial.id}, "
+              f"with the source “{refs[0].title}”.")
+    if len(tied) > 1:
+        answer += f" {len(tied)} observations share this value."
+    details = [f"Compared all {len(matches)} {cohort} in scope with a known flame spread rate."]
+    sources = [ChatSource(section="evidence", title=ref.title, text=ref.locator, evidence_id=ref.id) for ref in refs]
+    return answer, details, sources
+
+
 def retrieve(request: ChatRequest, bundle: DatasetBundle, run: ResearchResponse | None) -> list[ChatSource]:
     query = terms(request.question)
     previous = terms(request.previous_question or "")
@@ -231,6 +265,15 @@ async def answer_chat(
     query = terms(request.question)
     precise_trial = bool(re.search(r"\bm\d+\b", request.question.lower()))
     named_studies = study_scope(request.question)
+    highest = bool(query & {"highest", "maximum", "max", "fastest", "mayor", "maximo", "maxima"})
+    lowest = bool(query & {"lowest", "minimum", "min", "slowest", "menor", "minimo", "minima"})
+    if highest != lowest and {"flame", "spread"} <= query:
+        if precise_trial or query & {"microgravity", "lunar", "martian", "earth"} or re.search(r"\b(?:at|with)\s+\d", request.question.casefold()):
+            answer, details, sources = "Use Investigate to set those conditions before comparing recorded flame spread rates.", [], []
+        else:
+            answer, details, sources = flame_spread_extreme(bundle, named_studies, highest, bool(query & {"published", "publicada", "publicado"}))
+        return ChatResponse(provider="catalog", answer=answer, technical_details=details, sources=sources,
+                            elapsed_ms=round((perf_counter() - start) * 1000))
     requested_studies = named_studies
     if query & {"compare", "comparison", "plot", "chart", "graph", "comparar", "compara", "grafica"}:
         question_lower = request.question.casefold()
