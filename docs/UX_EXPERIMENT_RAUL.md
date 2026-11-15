@@ -1,5 +1,7 @@
 # Experimento UX de `raul`
 
+> **Registro histórico del diseño anterior.** Desde el incremento AI Research, `raul` adopta el dashboard de `main` (`d46d27b`). El alcance vigente y su guion están en [AI_RESEARCH_CASE](AI_RESEARCH_CASE.md). Las secciones siguientes conservan el experimento anterior y sus pruebas.
+
 ## Alcance vigente
 
 El usuario pide varias pantallas y menos densidad y texto repetido, manteniendo

@@ -1,17 +1,29 @@
 # Instrucciones de trabajo para FlameLab SI
 
-## Petición vigente: experimento UX solo en `raul`
+## Petición vigente: AI Research en `raul`
 
-La base estable del equipo permanece en `main`, commit `4833000d98fcb9d197a01e4d7622c8639115131d`.
-El usuario pide probar una interfaz de varias pantallas, con menos densidad y
-texto repetido, conservando estilo, estado y límites científicos. Este incremento
-permanece exclusivamente en `raul`: **no fusionar PR ni actualizar `main` con él**.
-No cambia backend, contratos, cálculos ni datos. Consultar
-[alcance y guion del experimento](docs/UX_EXPERIMENT_RAUL.md).
+El usuario pide incorporar `origin/main` en `raul`, adoptar el diseño nuevo de
+`main` y añadir una pantalla AI Research con un caso preparado BASS-II, agentes
+animados, fuentes publicadas y revisión humana. La base incorporada es `main`
+**`d46d27b`**. Este incremento se entrega exclusivamente en `raul`: **no actualizar
+`main` ni fusionar una PR hacia ella como parte de este trabajo**.
 
-Las autorizaciones de integración y publicación que siguen describen la entrega
-anterior; no autorizan integrar este experimento. Las reglas de ingeniería,
-procedencia y colaboración de este archivo siguen aplicándose.
+El experimento de cinco pantallas de `72e6e2b` queda como historial en
+[UX_EXPERIMENT_RAUL](docs/UX_EXPERIMENT_RAUL.md); su composición ya no es la
+interfaz vigente. Se conserva su historia Git al integrar `main`, sin reset
+destructivo. [Guion y alcance actuales](docs/AI_RESEARCH_CASE.md).
+
+AI Research usa una secuencia predefinida y valores publicados cotejados. La
+animación no acredita ejecución de modelos ni agentes autónomos. La aprobación
+humana acepta el alcance descriptivo de este caso; no modifica la validación del
+corpus. Las cargas de evidencia desde la API conservan sus estados reales y sus
+textos literales. No atribuir una consulta API exitosa a una nota preparada.
+
+Las integraciones Qwen/Ollama, OpenAI y los cálculos del `main` incorporado se
+conservan. AI Research no llama a esos modelos ni cambia sus contratos. Las
+reglas científicas, de ingeniería y colaboración siguientes siguen aplicándose;
+los bloques de entregas anteriores son antecedentes, no instrucciones para
+restaurar interfaces antiguas o publicar este incremento en `main`.
 
 ## Antecedentes de la integración estable
 

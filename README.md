@@ -1,10 +1,13 @@
 # FlameLab SI — demo integrada
 
-> **Experimento UX exclusivo de `raul`.** La petición vigente reorganiza la interfaz
-> en cinco pantallas y conserva la paleta, la ciencia y los datos. La base estable
-> sigue en `main` (`4833000d98fcb9d197a01e4d7622c8639115131d`). No se fusiona una PR ni se actualiza
-> `main` con este experimento; no cambia backend ni contratos. El texto de integración
-> inferior conserva el historial. [Alcance y recorrido del rediseño](docs/UX_EXPERIMENT_RAUL.md).
+> **AI Research en `raul`.** Esta rama incorpora `main` (`d46d27b`) y conserva su
+> diseño nuevo. Añade un caso preparado BASS-II con agentes animados, fuentes
+> publicadas y una pausa para aceptar el alcance de la comparación. Abrir
+> `#/dashboard/ai-research` y pulsar **Start research**. La actividad de agentes es
+> coreografiada; no llama a modelos. [Guion, fuentes y límites](docs/AI_RESEARCH_CASE.md).
+> El experimento UX anterior (`72e6e2b`) queda como historial. Este incremento no
+> se integra en `main`; las entregas descritas a continuación conservan sus fechas
+> y resultados históricos.
 
 La [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3) está fusionada en
 `main` mediante `0b732cb`: P1/P3/P4, la ingesta y los contratos de P2, Mission Lab
