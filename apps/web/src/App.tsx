@@ -22,6 +22,7 @@ import Select from "./components/Select";
 import SynthesisPanel from "./components/SynthesisPanel";
 import Landing from "./pages/Landing";
 import Overview from "./pages/Overview";
+import AIResearch from "./features/ai-research/AIResearch";
 import FlameIllustration from "./components/FlameIllustration";
 import { MissionLabPanel } from "./features/mission-lab/MissionLabPanel";
 import { ReportPanel } from "./features/report/ReportPanel";
@@ -474,6 +475,10 @@ export default function App() {
             action={<button type="button" className="btn" onClick={() => void connect()}>Retry data loading</button>}>
             <ul>{dataIssues.map((issue) => <li key={issue}>{issue}</li>)}</ul>
           </StateMessage>}
+
+          <section className="view" data-view="ai-research" hidden={view !== "ai-research"} aria-labelledby="view-ai-research-title">
+            <AIResearch key={`ai-research-${labKey}`} api={api} active={route.page === "dashboard" && view === "ai-research"} />
+          </section>
 
           <section className="view" data-view="overview" hidden={view !== "overview"} aria-labelledby="view-overview-title">
             {viewHead("overview")}

@@ -1,0 +1,99 @@
+/* Prepared agent choreography. Global palette remains owned by the main shell. */
+.ar-arena { position: relative; min-width: 0; border: 1px solid var(--rule); border-radius: 16px; overflow: hidden; background: var(--surface); isolation: isolate; }
+.ar-arena-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 24px 0; }
+.ar-arena-caption { display: flex; align-items: center; gap: 8px; font: 10px var(--font-num); letter-spacing: .11em; color: var(--ink-3); }
+.ar-arena-caption > i { height: 5px; width: 5px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 12px color-mix(in srgb, var(--signal) 35%, transparent); }
+.ar-prepared { color: var(--ink-3); font: 10px var(--font-num); border: 1px solid var(--rule); border-radius: 20px; padding: 4px 8px; }
+.ar-world { height: 510px; min-width: 0; position: relative; margin: 0 14px; background-image: radial-gradient(var(--rule) .8px, transparent .8px); background-size: 18px 18px; }
+.ar-connections { position: absolute; width: 100%; height: 100%; pointer-events: none; }
+.ar-connections path { fill: none; vector-effect: non-scaling-stroke; }
+.ar-track { stroke: var(--rule); stroke-width: 1; }
+.ar-flow { stroke: var(--signal); stroke-width: 1.5; stroke-dasharray: 6 26; opacity: .3; animation: ar-current 2.4s linear infinite; }
+.ar-flow-two { animation-delay: -.7s; }
+.ar-flow-three { animation-delay: -1.3s; }
+.ar-document, .ar-record { position: absolute; width: 26%; max-width: 220px; padding: 16px; border: 1px solid var(--rule); background: var(--surface); border-radius: 9px; text-align: left; display: flex; flex-direction: column; gap: 6px; z-index: 2; box-shadow: 0 5px 20px color-mix(in srgb, var(--bg) 40%, transparent); }
+.ar-document { transition: border-color .2s, box-shadow .2s; }
+.ar-document:hover { border-color: var(--signal); box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 6%, transparent); }
+.ar-document:focus-visible { outline-offset: 4px; }
+.ar-document-report { left: 3%; top: 7%; }
+.ar-document-table { right: 3%; top: 7%; }
+.ar-document-notes { left: 3%; bottom: 7%; }
+.ar-doc-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+.ar-file-icon { font: 9px var(--font-num); letter-spacing: .04em; color: var(--ink-3); }
+.ar-source-arrow { color: var(--ink-3); font-size: 15px; line-height: 1; }
+.ar-document b, .ar-record b { font-size: 13px; font-weight: 550; letter-spacing: -.02em; color: var(--ink); }
+.ar-doc-sub, .ar-record > span:not(.ar-file-icon) { font-size: 10px; color: var(--ink-3); line-height: 1.4; }
+.ar-paper { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 8px; position: relative; overflow: hidden; }
+.ar-paper > i { height: 3px; width: 95%; background: var(--rule); border-radius: 1px; }
+.ar-paper > i:nth-child(2) { width: 72%; }
+.ar-paper > i:nth-child(3) { width: 85%; }
+.ar-paper > i:nth-child(4) { width: 58%; }
+.ar-paper-table { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px 10px; }
+.ar-paper-table > i { width: 100% !important; height: 4px; }
+.ar-paper-table > i:nth-child(-n+3) { background: color-mix(in srgb, var(--signal) 30%, var(--rule)); }
+.ar-scan { position: absolute; height: 16px; left: 0; right: 0; top: -20px; background: linear-gradient(transparent, color-mix(in srgb, var(--signal) 18%, transparent)); border-bottom: 1px solid color-mix(in srgb, var(--signal) 50%, transparent); animation: ar-scan 1.7s linear infinite; }
+.ar-document-table .ar-scan { animation-delay: -.8s; }
+.ar-doc-bottom { font: 8px var(--font-num); letter-spacing: .07em; color: var(--ink-3); margin-top: 3px; }
+.ar-note-mark { display: flex; gap: 6px; align-items: center; font-size: 10px; color: var(--warn); margin: 7px 0; }
+.ar-note-mark > i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+.ar-record { right: 3%; bottom: 7%; border-style: dashed; opacity: .65; }
+.ar-record-lines { display: grid; gap: 5px; margin: 8px 0; }
+.ar-record-lines > i { width: 85%; height: 3px; background: var(--rule); }
+.ar-record-lines > i:last-child { width: 50%; }
+.ar-arena[data-stage="write"] .ar-record, .ar-arena[data-stage="complete"] .ar-record { opacity: 1; border-color: var(--signal); }
+.ar-nucleus { position: absolute; left: 50%; top: 48%; transform: translate(-50%, -50%); width: 170px; height: 170px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px; border: 1px solid var(--rule); border-radius: 50%; background: radial-gradient(circle, var(--sunk), var(--surface) 70%); }
+.ar-nucleus-orbit { position: absolute; inset: -12px; border: 1px dashed var(--rule); border-radius: 50%; animation: ar-orbit 45s linear infinite; }
+.ar-nucleus-cross { color: var(--signal); font-size: 26px; line-height: 1; }
+.ar-nucleus b { font: 13px var(--font-num); letter-spacing: .05em; }
+.ar-nucleus > span:last-child { font-size: 10px; color: var(--ink-3); max-width: 120px; text-align: center; }
+.ar-characters { pointer-events: none; }
+.ar-agent { position: absolute; width: 60px; height: 72px; z-index: 4; display: flex; flex-direction: column; align-items: center; animation-duration: 12s; animation-timing-function: cubic-bezier(.45, 0, .2, 1); animation-iteration-count: infinite; }
+.ar-agent-coordinator { left: 43%; top: 12%; animation-name: ar-roam-coordinator; }
+.ar-agent-scout { left: 29%; top: 37%; animation-name: ar-roam-scout; animation-delay: -.8s; }
+.ar-agent-analyst { left: 65%; top: 41%; animation-name: ar-roam-analyst; animation-delay: -2s; }
+.ar-agent-critic { left: 29%; top: 72%; animation-name: ar-roam-critic; animation-delay: -1.4s; }
+.ar-agent-writer { left: 61%; top: 72%; animation-name: ar-roam-writer; animation-delay: -3s; }
+.ar-agent-name { font: 9px var(--font-num); color: var(--ink-2); background: var(--surface); padding: 3px 5px; border: 1px solid var(--rule); border-radius: 3px; white-space: nowrap; margin-top: 1px; }
+.ar-agent[data-active="true"] .ar-agent-name { color: var(--signal); border-color: color-mix(in srgb, var(--signal) 35%, transparent); }
+.ar-dot { position: relative; width: 46px; height: 44px; display: block; }
+.ar-dot-body { position: absolute; width: 34px; height: 32px; left: 6px; top: 2px; background: var(--ink); color: var(--surface); border-radius: 48% 48% 42% 42%; box-shadow: inset -5px -5px 0 color-mix(in srgb, var(--surface) 16%, transparent); animation: ar-bob 1.15s ease-in-out infinite alternate; animation-delay: calc(var(--ar-index) * -.18s); }
+.ar-dot-eyes { display: flex; gap: 6px; position: absolute; top: 12px; left: 9px; animation: ar-blink 5s step-end infinite; animation-delay: calc(var(--ar-index) * -.7s); }
+.ar-dot-eyes i { width: 3px; height: 5px; border-radius: 2px; background: currentColor; }
+.ar-dot-mouth { position: absolute; width: 6px; height: 3px; left: 14px; top: 22px; border-bottom: 1px solid currentColor; border-radius: 50%; }
+.ar-dot-shadow { position: absolute; left: 9px; top: 38px; width: 28px; height: 3px; border-radius: 50%; background: var(--rule-strong); opacity: .25; }
+.ar-dot-halo { position: absolute; inset: -7px -5px 0; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--signal) 12%, transparent), transparent 70%); }
+.ar-dot-coordinator .ar-dot-body { background: var(--signal); color: var(--signal-ink); }
+.ar-dot-coordinator .ar-dot-body::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--signal); position: absolute; left: 15px; top: -7px; box-shadow: 0 0 0 2px var(--surface); }
+.ar-dot-scout .ar-dot-body { border-radius: 50%; }
+.ar-dot-scout .ar-dot-eyes { gap: 4px; left: 6px; top: 9px; padding: 3px; border: 1px solid currentColor; border-radius: 5px; }
+.ar-dot-analyst .ar-dot-body { border-radius: 9px 9px 12px 12px; }
+.ar-dot-analyst .ar-dot-eyes i { border-radius: 0; height: 4px; width: 4px; }
+.ar-dot-critic .ar-dot-body { background: var(--sunk); color: var(--ink); border: 1px solid var(--ink-3); }
+.ar-dot-critic .ar-dot-eyes { transform: rotate(-8deg); }
+.ar-dot-writer .ar-dot-body { border-radius: 42% 42% 20% 20%; transform: rotate(5deg); }
+.ar-dot-writer .ar-dot-body::after { content: ""; position: absolute; width: 3px; height: 13px; right: -3px; top: 16px; border-radius: 2px; background: var(--signal); transform: rotate(25deg); border: 1px solid var(--surface); }
+.ar-agent-trail { position: absolute; left: -19px; top: 13px; width: 30px; height: 10px; border-top: 1px solid var(--rule-strong); border-bottom: 1px solid var(--rule); opacity: .25; transform: skewX(-30deg); }
+.ar-team { padding: 18px 24px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; border-top: 1px solid var(--rule); background: var(--surface); }
+.ar-team-member { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.ar-team-member b { display: block; font-size: 11px; font-weight: 500; color: var(--ink-2); }
+.ar-team-member small { display: block; font-size: 9px; color: var(--ink-3); margin-top: 2px; }
+.ar-team-indicator { width: 5px; height: 5px; border-radius: 50%; background: var(--ink-3); opacity: .4; }
+.ar-team-member[data-active="true"] .ar-team-indicator { background: var(--signal); opacity: 1; box-shadow: 0 0 9px color-mix(in srgb, var(--signal) 40%, transparent); }
+.ar-team-member[data-active="true"] b { color: var(--signal); }
+.ar-arena[data-resting="true"] *, .ar-arena[data-resting="true"] *::before, .ar-arena[data-resting="true"] *::after { animation-play-state: paused !important; }
+.ar-arena[data-resting="true"] .ar-flow, .ar-arena[data-resting="true"] .ar-scan, .ar-arena[data-resting="true"] .ar-agent-trail { opacity: 0; }
+.ar-arena[data-stage="review"] .ar-nucleus { border-color: var(--warn); }
+.ar-arena[data-stage="review"] .ar-nucleus-cross { color: var(--warn); }
+@keyframes ar-current { to { stroke-dashoffset: -128; } }
+@keyframes ar-scan { to { transform: translateY(70px); } }
+@keyframes ar-orbit { to { transform: rotate(360deg); } }
+@keyframes ar-bob { to { translate: 0 -4px; } }
+@keyframes ar-blink { 0%, 44%, 48%, 100% { scale: 1 1; } 46% { scale: 1 .15; } }
+@keyframes ar-roam-coordinator { 0%,100% { left: 43%; top: 12%; } 15%,22% { left: 32%; top: 23%; } 40%,49% { left: 58%; top: 22%; } 64%,72% { left: 47%; top: 67%; } 89% { left: 36%; top: 49%; } }
+@keyframes ar-roam-scout { 0%,100% { left: 29%; top: 37%; } 18%,27% { left: 12%; top: 42%; } 43%,54% { left: 65%; top: 34%; } 73%,82% { left: 31%; top: 67%; } }
+@keyframes ar-roam-analyst { 0%,100% { left: 65%; top: 41%; } 17%,26% { left: 68%; top: 11%; } 42%,51% { left: 47%; top: 63%; } 67%,75% { left: 28%; top: 32%; } 89% { left: 69%; top: 50%; } }
+@keyframes ar-roam-critic { 0%,100% { left: 29%; top: 72%; } 16%,25% { left: 31%; top: 55%; } 43%,53% { left: 65%; top: 31%; } 72%,81% { left: 45%; top: 69%; } }
+@keyframes ar-roam-writer { 0%,100% { left: 61%; top: 72%; } 20%,29% { left: 66%; top: 49%; } 45%,54% { left: 29%; top: 34%; } 74%,82% { left: 64%; top: 65%; } }
+@media (max-width: 1000px) { .ar-world { height: 470px; } .ar-document, .ar-record { width: 29%; padding: 12px; } .ar-nucleus { width: 135px; height: 135px; } .ar-team { padding: 16px; gap: 7px; } }
+@media (max-width: 600px) { .ar-arena-top { padding: 16px 14px 0; } .ar-world { height: 460px; margin: 8px; } .ar-document, .ar-record { width: 36%; padding: 9px; gap: 5px; } .ar-document-report, .ar-document-notes { left: 1%; } .ar-document-table, .ar-record { right: 1%; } .ar-document b, .ar-record b { font-size: 11px; } .ar-doc-sub, .ar-record > span:not(.ar-file-icon) { font-size: 9px; } .ar-doc-bottom { font-size: 7px; } .ar-paper { gap: 4px; margin: 5px 0; } .ar-paper-table { gap: 4px; } .ar-nucleus { width: 100px; height: 100px; top: 49%; } .ar-nucleus b { font-size: 11px; } .ar-nucleus > span:last-child { font-size: 8px; padding: 0 8px; } .ar-nucleus-cross { font-size: 20px; } .ar-nucleus-orbit { inset: -7px; } .ar-agent { scale: .82; transform-origin: center; } .ar-team { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; } .ar-agent-name { font-size: 8px; } .ar-note-mark { font-size: 9px; } }
+@media (prefers-reduced-motion: reduce) { .ar-arena *, .ar-arena *::before, .ar-arena *::after { animation: none !important; transition: none !important; } .ar-flow, .ar-scan, .ar-agent-trail { display: none; } }

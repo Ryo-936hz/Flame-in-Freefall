@@ -10,6 +10,7 @@ import ThemeSwitch from "./ThemeSwitch";
 import { Mark, RollText, Tag } from "./ui";
 
 export const VIEW_META: Record<View, { label: string; summary: string }> = {
+  "ai-research": { label: "AI Research", summary: "BASS-II prepared research case with source tracing and human review." },
   overview: { label: "Overview", summary: "Corpus, latest investigation and system status at a glance." },
   investigate: { label: "Investigate", summary: "Describe the conditions, rank compatible trials and read each result with its source." },
   chat: { label: "Ask SI", summary: "Ask about the app or the imported studies and follow the sources behind each answer." },
@@ -19,9 +20,9 @@ export const VIEW_META: Record<View, { label: string; summary: string }> = {
   saffire: { label: "Saffire context", summary: "Documentary scale context from published Saffire and BASS-II configurations. It adds no data points." },
 };
 
-const ORDER: View[] = ["overview", "investigate", "chat", "lab", "report", "catalog", "saffire"];
+const ORDER: View[] = ["overview", "investigate", "chat", "ai-research", "lab", "report", "catalog", "saffire"];
 const GROUPS: { title: string; views: View[] }[] = [
-  { title: "Workspace", views: ["overview", "investigate", "chat", "lab", "report"] },
+  { title: "Workspace", views: ["overview", "investigate", "chat", "ai-research", "lab", "report"] },
   { title: "Reference", views: ["catalog", "saffire"] },
 ];
 
