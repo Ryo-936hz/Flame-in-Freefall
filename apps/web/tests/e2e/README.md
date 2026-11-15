@@ -137,3 +137,13 @@ ningún valor científico ni respuesta de investigación se sustituye con mocks.
 Este resultado verifica software, identidad y trazabilidad del guion; no convierte
 el corpus `scientific_unverified` en validado ni estima causalidad, riesgo o física
 lunar. Registrar por separado sus resultados y SHA; no atribuirlos al CI sintético.
+
+## AI Research: caso preparado independiente
+
+`node apps/web/tests/e2e/ai-research-walkthrough.mjs` verifica el recorrido visual,
+la pausa humana, navegación, fuentes y exportación en un runtime aislado.
+Acepta `--screenshots=work/ai-research-synthetic` y, opcionalmente,
+`--bundle="C:\ruta\privada\bundle.json"` para comprobar los registros reales.
+Sin bundle comprueba la ausencia explícita de registros NASA en el corpus sintético.
+El caso preparado no se presenta como una investigación generada por ese corpus.
+[Guion, alcance y resultados](../../../../docs/AI_RESEARCH_CASE.md).

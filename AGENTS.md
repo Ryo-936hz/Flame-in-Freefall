@@ -1,5 +1,31 @@
 # Instrucciones de trabajo para FlameLab SI
 
+## Integración de AI Research y Qwen
+
+La integración conserva el diseño y las contribuciones de `main` **`9914356`**,
+añade AI Research y la referencia M13 desde `origin/raul` **`16723f9`** y activa
+Qwen en Ask SI mediante Docker Compose. La entrega sigue el flujo de pull request
+hacia `main`. El buscador abre la referencia M13 con valores publicados y citas.
+[Guion M13](docs/FILMING_M13.md).
+
+El experimento de cinco pantallas de `72e6e2b` queda como historial en
+[UX_EXPERIMENT_RAUL](docs/UX_EXPERIMENT_RAUL.md); su composición ya no es la
+interfaz vigente. Se conserva su historia Git al integrar `main`, sin reset
+destructivo. [Guion y alcance actuales](docs/AI_RESEARCH_CASE.md).
+
+AI Research usa una secuencia predefinida y valores publicados cotejados. La
+animación no acredita ejecución de modelos ni agentes autónomos. La aprobación
+humana acepta el alcance descriptivo de este caso; no modifica la validación del
+corpus. Las cargas de evidencia desde la API conservan sus estados reales y sus
+textos literales. No atribuir una consulta API exitosa a una nota preparada.
+
+AI Research mantiene su secuencia preparada. Ask SI usa Qwen para seleccionar
+fuentes, y los cálculos científicos se ejecutan en la API. Las reglas científicas,
+de ingeniería y colaboración siguientes siguen aplicándose. Los bloques de
+entregas anteriores conservan el historial del proyecto.
+
+## Antecedentes de la integración estable
+
 La petición vigente autoriza integrar y terminar la demo compartida, conservar
 el trabajo del equipo y publicarlo mediante el flujo de integración. `main` es
 la base actual: la PR #3 se fusionó como `0b732cb`, incluyendo P2 y P6 sobre P1/P3/P4.

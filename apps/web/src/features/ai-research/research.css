@@ -1,0 +1,78 @@
+/* AI Research inherits the main dashboard's palette, fonts and spacing. */
+.air { max-width: 1340px; margin: 0 auto; }
+.air-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:24px; }
+.air-heading h1 { display:flex; align-items:center; gap:14px; margin:7px 0 0; font-size:clamp(28px,3vw,40px); font-weight:500; letter-spacing:-.045em; }
+.air-heading-dot { width:9px; height:9px; border-radius:50%; background:var(--signal); }
+.air-badge { display:inline-block; border:1px solid var(--rule); border-radius:30px; padding:6px 12px; color:var(--ink-3); font-family:var(--font-num); font-size:10px; white-space:nowrap; }
+.air-query { display:flex; justify-content:space-between; align-items:center; gap:24px; border:1px solid var(--rule); background:var(--surface); padding:20px 24px; border-radius:10px; }
+.air-query .cap { color:var(--ink-3); }
+.air-query p { margin:6px 0 0; font-size:17px; max-width:65ch; }
+.air-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+.air-actions .btn { white-space:nowrap; text-decoration:none; }
+.air-steps { display:grid; grid-template-columns:repeat(5,1fr); list-style:none; padding:0; margin:24px 0 18px; gap:8px; }
+.air-steps li { display:flex; align-items:center; gap:8px; padding:10px 8px; border-bottom:1px solid var(--rule); color:var(--ink-3); font-size:12px; }
+.air-step-number { font:10px var(--font-num); opacity:.7; }
+.air-steps li[data-status=active] { color:var(--ink); border-color:var(--signal); }
+.air-steps li[data-status=done] .air-step-number { color:var(--signal); opacity:1; }
+.air-steps small { margin-left:auto; font-size:9px; color:var(--ink-3); }
+.air-status { display:flex; align-items:center; gap:10px; min-height:62px; padding:14px 4px; font-size:12px; color:var(--ink-2); }
+.air-status-led { flex:none; width:5px; height:5px; border-radius:50%; background:var(--ink-3); }
+.air-status-led[data-working=true] { background:var(--signal); }
+.air-status-time { margin-left:auto; white-space:nowrap; font-size:10px; color:var(--ink-3); }
+.air-review,.air-result { display:grid; grid-template-columns:1fr 1fr; gap:36px; border:1px solid var(--rule-strong); border-radius:10px; background:var(--surface); padding:28px; margin:8px 0 28px; }
+.air-review h2,.air-result h2 { font-weight:500; font-size:25px; line-height:1.2; letter-spacing:-.03em; margin:12px 0; }
+.air-review p,.air-result p { font-size:14px; color:var(--ink-2); line-height:1.65; }
+.air-review-controls { display:grid; gap:14px; }
+.air-review-controls > label:not(.air-note) { display:flex; align-items:flex-start; gap:10px; font-size:12px; }
+.air-review-controls input { accent-color:var(--signal); margin:3px 0 0; width:15px; height:15px; flex:none; }
+.air-review-controls small { color:var(--ink-3); font-size:11px; }
+.air-review-controls .btn { justify-self:start; }
+.air-note { display:grid; gap:6px; font-size:11px; color:var(--ink-3); }
+.air-note textarea { padding:10px; resize:vertical; min-height:65px; width:100%; background:var(--sunk); color:var(--ink); border:1px solid var(--rule); border-radius:5px; }
+.air-result { grid-template-columns:1.7fr 1fr; border-color:var(--rule); }
+.air-result .air-result-limit { font-size:12px; color:var(--ink-3); }
+.air-metrics { display:flex; align-items:center; justify-content:space-around; gap:16px; margin:0; text-align:center; }
+.air-metrics dt { max-width:100px; color:var(--ink-3); font-size:10px; }
+.air-metrics dd { margin:12px 0 0; font-family:var(--font-num); font-size:38px; }
+.air-bottom { display:grid; grid-template-columns:1fr 1fr; align-items:start; gap:24px; }
+.air-sources,.air-values { border:1px solid var(--rule); border-radius:10px; padding:20px; background:var(--surface); min-width:0; }
+.air-sources h2 { display:flex; justify-content:space-between; font-size:14px; font-weight:500; margin:0 0 12px; }
+.air-sources h2 span { color:var(--ink-3); font-size:11px; }
+.air-sources > button { width:100%; display:flex; gap:14px; align-items:center; text-align:left; padding:14px 0; border:0; border-top:1px solid var(--rule); background:none; }
+.air-sources > button > .num { color:var(--ink-3); font-size:10px; }
+.air-sources > button > span:last-child { margin-left:auto; }
+.air-sources b { display:block; font-weight:450; font-size:13px; }
+.air-sources small { display:block; color:var(--ink-3); font-size:10px; margin-top:4px; overflow-wrap:anywhere; }
+.air-sources > button:hover b { color:var(--signal); }
+.air-values summary { cursor:pointer; font-size:13px; }
+.air-values summary span { float:right; font-size:10px; color:var(--ink-3); }
+.air-values p { font-size:12px; color:var(--ink-3); }
+.air-table-scroll { overflow-x:auto; }
+.air-values table { width:100%; border-collapse:collapse; font:11px var(--font-num); }
+.air-values th,.air-values td { text-align:left; padding:9px 7px; border-bottom:1px solid var(--rule); white-space:nowrap; }
+.air-values th { font-size:9px; color:var(--ink-3); font-weight:400; }
+.air-footnote { font:10px var(--font-num); color:var(--ink-3); margin-top:22px; }
+.air-dialog { color:var(--ink); background:var(--surface); border:1px solid var(--rule-strong); border-radius:12px; padding:28px; max-width:min(650px,calc(100vw - 32px)); max-height:85dvh; overflow-y:auto; }
+.air-dialog::backdrop { background:#000a; backdrop-filter:blur(4px); }
+.air-dialog-top { display:flex; align-items:center; justify-content:space-between; gap:24px; }
+.air-dialog h2 { font-size:25px; font-weight:500; }
+.air-dialog p { font-size:14px; line-height:1.7; }
+.air-dialog p.num { font-size:11px; overflow-wrap:anywhere; color:var(--ink-3); }
+.air-dialog hr { border:0; border-top:1px solid var(--rule); margin:25px 0; }
+.air-dialog pre { white-space:pre-wrap; overflow-wrap:anywhere; font-size:12px; line-height:1.6; }
+.air-dialog .btn { text-decoration:none; }
+@media(max-width:750px) {
+  .air-heading h1 { font-size:28px; }
+  .air-query { align-items:stretch; flex-direction:column; padding:18px; gap:16px; }
+  .air-query p { font-size:15px; }
+  .air-steps { gap:4px; }
+  .air-steps li { flex-wrap:wrap; padding:10px 2px; font-size:11px; gap:4px; }
+  .air-steps small { display:none; }
+  .air-status { align-items:flex-start; }
+  .air-status-led { margin-top:6px; }
+  .air-status-time { display:none; }
+  .air-review,.air-result,.air-bottom { grid-template-columns:1fr; gap:20px; }
+  .air-review,.air-result { padding:20px; }
+  .air-metrics { padding:16px 0; }
+  .air-dialog { padding:20px; }
+}

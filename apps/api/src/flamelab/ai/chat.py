@@ -305,7 +305,7 @@ async def answer_chat(
         try:
             indices = await choose(request.question, [{"index": i, "title": item.title[:105], "excerpt": item.text[:260]}
                                                        for i, item in enumerate(options)],
-                                   "Select the excerpts that directly answer the question. Omit unrelated records.", settings, latency_budget=4)
+                                   "Select the excerpts that directly answer the question. Omit unrelated records.", settings)
             if indices:
                 options = [options[i] for i in indices]
                 provider = "qwen"

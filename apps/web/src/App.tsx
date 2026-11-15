@@ -3,6 +3,7 @@ import { ApiError, createApi } from "./lib/client";
 import type { Health, Models, Profile, RankingRequest, ResearchResponse } from "./lib/client";
 import { PROVENANCE_LABEL } from "./lib/format";
 import type { SearchItem } from "./lib/search";
+import { isM13Question, M13_QUESTION, M13_REFERENCE } from "./lib/m13Reference";
 import CommandPalette from "./components/CommandPalette";
 import { applyHabitat, buildRanking, demoDraft, METRICS, metricLabel } from "./lib/filters";
 import type { BriefDraft, ConditionKey, HabitatId } from "./lib/filters";
@@ -22,6 +23,7 @@ import Select from "./components/Select";
 import SynthesisPanel from "./components/SynthesisPanel";
 import Landing from "./pages/Landing";
 import Overview from "./pages/Overview";
+import AIResearch from "./features/ai-research/AIResearch";
 import FlameIllustration from "./components/FlameIllustration";
 import { MissionLabPanel } from "./features/mission-lab/MissionLabPanel";
 import { ReportPanel } from "./features/report/ReportPanel";
@@ -262,7 +264,7 @@ export default function App() {
       setMessages((list) => list.map((message) => message.id === id ? next : message));
     replace({ id, role: "si", pending: true });
     try {
-      const answer = await api.chat(request);
+      const answer = isM13Question(request.question) ? M13_REFERENCE : await api.chat(request);
       if (chatLatest.current.isCurrent(token)) replace({ id, role: "si", answer });
     } catch (error) {
       if (chatLatest.current.isCurrent(token)) replace({ id, role: "si", error: failure(error), retry: request });
@@ -370,6 +372,7 @@ export default function App() {
   const searchIndex = useMemo<SearchItem[]>(() => {
     const studyTitle = new Map(studies.map((study) => [study.id, study.title]));
     return [
+      { kind: "question", id: "bass-m13-segments", title: M13_QUESTION, detail: "BASS-II · M13 · three segments · published flame spread rates", keywords: "BAS-II BASS-II M13 PSI-25 169m flame spread rate segments" },
       ...VIEWS.map((id): SearchItem => ({ kind: "section", id, title: VIEW_META[id].label, detail: VIEW_META[id].summary })),
       ...studies.map((study): SearchItem => ({ kind: "study", id: study.id, title: study.title, detail: `${study.id} · ${study.family}`, keywords: study.description })),
       ...trials.map((trial): SearchItem => ({
@@ -381,6 +384,7 @@ export default function App() {
   }, [studies, trials]);
 
   const onSearch = (item: SearchItem) => {
+    if (item.kind === "question") { ask(M13_QUESTION); window.location.hash = routeHash({ page: "dashboard", view: "chat" }); return; }
     if (item.kind === "section") { window.location.hash = routeHash({ page: "dashboard", view: item.id as View }); return; }
     if (item.kind === "study") { openStudy(item.id); return; }
     const trial = trials.find((candidate) => candidate.id === item.id);
@@ -478,6 +482,10 @@ export default function App() {
             action={<button type="button" className="btn" onClick={() => void connect()}>Retry data loading</button>}>
             <ul>{dataIssues.map((issue) => <li key={issue}>{issue}</li>)}</ul>
           </StateMessage>}
+
+          <section className="view" data-view="ai-research" hidden={view !== "ai-research"} aria-labelledby="view-ai-research-title">
+            <AIResearch key={`ai-research-${labKey}`} api={api} active={route.page === "dashboard" && view === "ai-research"} />
+          </section>
 
           <section className="view" data-view="overview" hidden={view !== "overview"} aria-labelledby="view-overview-title">
             {viewHead("overview")}

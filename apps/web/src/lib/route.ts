@@ -3,7 +3,7 @@
  * views. Plain anchors such as "#brief" or "#evidence" are not routes; they keep
  * the current page so in-page links and skip links still work.
  */
-export const VIEWS = ["overview", "investigate", "chat", "lab", "report", "catalog", "saffire"] as const;
+export const VIEWS = ["overview", "investigate", "chat", "ai-research", "lab", "report", "catalog", "saffire"] as const;
 export type View = typeof VIEWS[number];
 export type Route = { page: "home" } | { page: "dashboard"; view: View; studyIds?: [string, string] };
 

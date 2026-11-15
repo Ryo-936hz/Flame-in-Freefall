@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal, Self
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import AnyHttpUrl, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="FLAMELAB_", env_file=".env", extra="ignore", hide_input_in_errors=True)
     database_url: str = f"sqlite:///{(ROOT / 'work/flamelab.db').as_posix()}"
     ai_provider: Literal["demo", "openai", "qwen"] = "demo"
+    ollama_base_url: AnyHttpUrl = AnyHttpUrl("http://127.0.0.1:11434")
     ollama_model: str = "qwen3:0.6b"
     openai_api_key: SecretStr | None = None
     openai_model: str | None = None

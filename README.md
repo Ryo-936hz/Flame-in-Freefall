@@ -1,5 +1,12 @@
 # FlameLab SI — demo integrada
 
+> **AI Research** presenta un caso preparado BASS-II con agentes animados, fuentes
+> publicadas y una pausa para aceptar el alcance de la comparación. Abrir
+> `#/dashboard/ai-research` y pulsar **Start research**. La actividad de agentes es
+> coreografiada; no llama a modelos. [Guion, fuentes y límites](docs/AI_RESEARCH_CASE.md).
+> Ask SI usa Qwen para seleccionar fuentes cuando se arranca con Docker Compose.
+> El buscador y Ask SI también abren la [referencia publicada M13](docs/FILMING_M13.md).
+
 La [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3) está fusionada en
 `main` mediante `0b732cb`: P1/P3/P4, la ingesta y los contratos de P2, Mission Lab
 y recuperación P6, sobre el host P5 `9f54700`. La referencia de arranque del equipo
@@ -48,7 +55,7 @@ Tres vías, con la misma aplicación y los mismos datos:
 
 | Vía | Sistemas | Requisitos | URL de la interfaz | Estado |
 | --- | --- | --- | --- | --- |
-| [A. Docker](#a-docker-linux-y-windows) | Linux, Windows | Docker con Compose v2 (Docker Desktop + WSL 2 en Windows) | http://127.0.0.1:8080 | Verificada en Linux; Windows sin probar |
+| [A. Docker](#a-docker-linux-windows-y-macos) | Linux, Windows, macOS | Docker con Compose (Docker Desktop en Windows y macOS) | http://127.0.0.1:8080 | Verificada en Linux; Docker Desktop sin probar |
 | [B. Windows nativo](#b-windows-nativo) | Windows 10/11 | Git, Python 3.12, Node 24 con npm, PowerShell 7 | http://127.0.0.1:5173 | Vía documentada del equipo (`setup.ps1`); sin ejecutar en esta revisión |
 | [C. Linux nativo](#c-linux-nativo) | Linux | Git, Python 3.12, Node 24 con npm, pipx | http://127.0.0.1:5173 | Verificada en Linux Mint 22.3 |
 
@@ -73,7 +80,7 @@ con sus responsables y repetir las comprobaciones. No usar reset ni sustituir el
 clon para actualizarlo. Los seis deben comunicar el mismo SHA base de `origin/main`
 al iniciar una tarea compartida; [TEAM_START](docs/TEAM_START.md) detalla el flujo.
 
-### A. Docker (Linux y Windows)
+### A. Docker (Linux, Windows y macOS)
 
 ```bash
 docker compose up -d --build     # mismo comando en bash y en PowerShell
@@ -84,16 +91,28 @@ docker compose up -d --build     # mismo comando en bash y en PowerShell
 - nginx sirve la web compilada y redirige `/api`, `/openapi.json` y `/docs` a la
   API, que no publica puerto propio. Solo se escucha en `127.0.0.1`.
 - Por defecto carga el catálogo real (`FLAMELAB_DATA=catalog`).
-- Otras variables: `FLAMELAB_WEB_PORT` (8080) y `FLAMELAB_AI_PROVIDER` (`demo`). Un
-  `.env` local, si existe, se pasa a la API; nunca se copia a la imagen.
+- **Ask SI usa Qwen local por defecto.** Compose arranca Ollama dentro de Docker y
+  descarga `qwen3:0.6b` (523 MB) la primera vez. El modelo se conserva en un volumen.
+  Basta con CPU, sin instalar Ollama en el equipo ni configurar una cuenta o una clave.
+  El primer arranque requiere Internet y espacio libre para las imágenes y el modelo.
+  La imagen de Ollama ocupa unos 8,5 GB en Docker para Linux x86-64.
+- Si tu `.env` ya contiene `FLAMELAB_AI_PROVIDER=demo`, quita esa línea o cámbiala a
+  `FLAMELAB_AI_PROVIDER=qwen` para activar Qwen. `demo` conserva el modo de catálogo
+  y omite la descarga del modelo. `FLAMELAB_WEB_PORT` permite cambiar el puerto 8080.
+- Qwen selecciona fragmentos cuando Ask SI encuentra varias fuentes candidatas. Para
+  probarlo con el catálogo predeterminado, pregunta `Show evidence about microgravity`.
+  El JSON de `/api/v1/chat` indica `provider: "qwen"` cuando el modelo selecciona fuentes.
+  Las respuestas directas y la recuperación ante fallos de Ollama muestran `catalog`.
 
 ```bash
 docker compose ps            # api "healthy", web "Up"
+docker compose logs ollama-model  # progreso o error de la descarga inicial
 docker compose logs -f api
-docker compose down          # parar; con -v borra también las bases del volumen
+docker compose down          # parar; con -v borra también las bases y el modelo
 ```
 
 Decisión y alcance: [ADR 0011](docs/adr/0011-docker-local-deployment.md).
+Tamaño y ficha del modelo: [Qwen3 0.6B en Ollama](https://ollama.com/library/qwen3:0.6b).
 
 ### B. Windows nativo
 
@@ -138,6 +157,11 @@ npm run dev:web -- --host 127.0.0.1
 
 Sin `.env` ni variables, la API arranca con `work/flamelab.db` vacía
 (`data_mode: empty`). Vite redirige `/api`, `/openapi.json` y `/docs` a la API.
+
+Para usar Qwen con la API nativa de Windows o Linux, instala y arranca Ollama,
+ejecuta `ollama pull qwen3:0.6b` y pon `FLAMELAB_AI_PROVIDER=qwen` en `.env`
+antes de arrancar la API. El valor inicial de `FLAMELAB_OLLAMA_BASE_URL` es
+`http://127.0.0.1:11434`. [Instalación de Ollama](https://ollama.com/download).
 
 ### Cargar datos
 

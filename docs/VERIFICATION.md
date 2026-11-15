@@ -3,6 +3,24 @@
 Los resultados vigentes aparecen primero; el resto conserva el historial.
 Ninguna prueba de software equivale a validación científica.
 
+## Qwen local en Docker Compose
+
+Rama `codex/qwen-portable`, base `9914356`. En Ubuntu bajo WSL 2, con Python 3.12,
+Docker 29.8.1 y Compose 5.5.1, la API pasó 353 pruebas, con tres omisiones por
+datos o servicios opcionales. Ruff, `docker compose config --quiet` y la
+comprobación del esquema OpenAPI pasaron.
+
+Compose arrancó Ollama y empezó la descarga con un volumen vacío. Para verificar
+la inferencia sin esperar la transferencia completa se copió el mismo modelo
+desde una caché local al volumen de prueba. `ollama-model` salió con código 0 y
+`docker compose up -d --build --wait` compiló la web y la API. A través de nginx,
+`POST /api/v1/chat` devolvió `provider: "qwen"` con el fixture sintético y, tras
+arrancar de nuevo con el catálogo predeterminado, también con el catálogo incluido.
+Al parar el Ollama de prueba, el endpoint siguió respondiendo con fuentes y
+`provider: "catalog"`. La preparación en modo `demo` salió con código 0 sin
+descargar el modelo indicado. El registro de Ollama publica la imagen fijada para
+`linux/amd64` y `linux/arm64`. Docker Desktop en Windows y macOS queda pendiente.
+
 ## Cierre integrado P2/P6 — 14 noviembre 2026
 
 Código **`20aab80404fc2f0fc188d718cac47d0d4bf31d54`**, basado en el merge de
