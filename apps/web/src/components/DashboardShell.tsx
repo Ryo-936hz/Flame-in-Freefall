@@ -42,7 +42,7 @@ export function Sidebar({ view, health, profile, offline }: {
   return <aside className="sidebar" aria-label="Dashboard">
     <a className="sb-brand roll-host" href={routeHash({ page: "home" })} title="Back to the welcome page">
       <Mark />
-      <span className="sb-text"><b><RollText>Ignition Protocol</RollText></b><small>Los TTS</small></span>
+      <span className="sb-text"><b><RollText>FlameLab</RollText></b><small>Los TTS</small></span>
     </a>
     <nav className="sb-nav" aria-label="Views" onPointerMove={light}>
       {GROUPS.map(({ title, views }) => <Fragment key={title}>
@@ -84,7 +84,7 @@ export function DashboardHeader({ view, theme, onTheme, onToggleSidebar, onReset
       <Icon name="panel" />
     </button>
     <nav className="crumbs" aria-label="Breadcrumb">
-      <a href={routeHash({ page: "home" })}>Ignition Protocol</a>
+      <a className="brand-name" href={routeHash({ page: "home" })}>FlameLab</a>
       <span aria-hidden="true">/</span>
       <span aria-current="page">{VIEW_META[view].label}</span>
     </nav>

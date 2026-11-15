@@ -42,22 +42,29 @@ Mission Lab muestra el plan guardado de su consulta. No hacen falta credenciales
 
 El cierre se publica en la [PR #4](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/4); el CI de cada revisión puede consultarse allí. La base compartida es `origin/main`.
 
-## Arrancar en Windows
+## Instalación y arranque
 
-Requisitos: Git, Python 3.12, Node 24 con npm, PowerShell 7 y red
-para la primera instalación. `setup.ps1` utiliza los lockfiles; si falta uv instala
-0.9.5 dentro de `work/`. En este equipo detecta también los runtimes de Codex.
+Tres vías, con la misma aplicación y los mismos datos:
 
-```powershell
+| Vía | Sistemas | Requisitos | URL de la interfaz | Estado |
+| --- | --- | --- | --- | --- |
+| [A. Docker](#a-docker-linux-y-windows) | Linux, Windows | Docker con Compose v2 (Docker Desktop + WSL 2 en Windows) | http://127.0.0.1:8080 | Verificada en Linux; Windows sin probar |
+| [B. Windows nativo](#b-windows-nativo) | Windows 10/11 | Git, Python 3.12, Node 24 con npm, PowerShell 7 | http://127.0.0.1:5173 | Vía documentada del equipo (`setup.ps1`); sin ejecutar en esta revisión |
+| [C. Linux nativo](#c-linux-nativo) | Linux | Git, Python 3.12, Node 24 con npm, pipx | http://127.0.0.1:5173 | Verificada en Linux Mint 22.3 |
+
+Docker sirve para usar la demo sin instalar Python ni Node. Para desarrollar y
+ejecutar las comprobaciones (`check.ps1`, E2E) se usan las vías nativas. Los datos
+que se cargan se eligen igual en las tres: ver [Cargar datos](#cargar-datos).
+
+### Clonar
+
+```bash
 git clone https://github.com/Ryo-936hz/Flame-in-Freefall.git
-Set-Location Flame-in-Freefall
-# Clon nuevo: crear una rama propia desde la integración compartida.
+cd Flame-in-Freefall
+# Para trabajar: crear una rama propia desde la integración compartida.
 git fetch origin
 git switch --no-track -c codex/mi-tarea origin/main
 git rev-parse HEAD
-.\scripts\setup.ps1
-.\scripts\check.ps1
-.\scripts\dev-api.ps1
 ```
 
 Para una rama existente: guardar los cambios propios, ejecutar `git fetch origin`,
@@ -66,22 +73,127 @@ con sus responsables y repetir las comprobaciones. No usar reset ni sustituir el
 clon para actualizarlo. Los seis deben comunicar el mismo SHA base de `origin/main`
 al iniciar una tarea compartida; [TEAM_START](docs/TEAM_START.md) detalla el flujo.
 
-En otra terminal:
+### A. Docker (Linux y Windows)
 
-```powershell
-Set-Location 'C:\ruta\de\tu\clon\Flame-in-Freefall'
-.\scripts\dev-web.ps1
+```bash
+docker compose up -d --build     # mismo comando en bash y en PowerShell
 ```
 
-Abrir [interfaz integrada](http://127.0.0.1:5173), [salud](http://127.0.0.1:8000/api/v1/health)
+- Interfaz: http://127.0.0.1:8080 · salud: http://127.0.0.1:8080/api/v1/health ·
+  documentación HTTP: http://127.0.0.1:8080/docs
+- nginx sirve la web compilada y redirige `/api`, `/openapi.json` y `/docs` a la
+  API, que no publica puerto propio. Solo se escucha en `127.0.0.1`.
+- Por defecto carga el catálogo real (`FLAMELAB_DATA=catalog`).
+- Otras variables: `FLAMELAB_WEB_PORT` (8080) y `FLAMELAB_AI_PROVIDER` (`demo`). Un
+  `.env` local, si existe, se pasa a la API; nunca se copia a la imagen.
+
+```bash
+docker compose ps            # api "healthy", web "Up"
+docker compose logs -f api
+docker compose down          # parar; con -v borra también las bases del volumen
+```
+
+Decisión y alcance: [ADR 0011](docs/adr/0011-docker-local-deployment.md).
+
+### B. Windows nativo
+
+```powershell
+.\scripts\setup.ps1      # .venv desde uv.lock y node_modules desde package-lock.json
+.\scripts\check.ps1      # comprobaciones sin credenciales (ver más abajo)
+.\scripts\dev-api.ps1    # terminal 1: API en http://127.0.0.1:8000
+```
+
+En otra terminal, desde la raíz del clon:
+
+```powershell
+.\scripts\dev-web.ps1    # terminal 2: interfaz en http://127.0.0.1:5173
+```
+
+`setup.ps1` usa los lockfiles; si falta uv instala 0.9.5 dentro de `work/`, y
+detecta también los runtimes de Codex. Admite `-Python 'C:\ruta\python.exe'` y
+`-Uv 'C:\ruta\uv.exe'`. Crea `.env` desde `.env.example` solo si no existe; ese
+ejemplo activa la **demo sintética** sobre una base vacía (`work/flamelab.db`).
+
+Abrir [interfaz](http://127.0.0.1:5173), [salud](http://127.0.0.1:8000/api/v1/health)
 y [documentación HTTP](http://127.0.0.1:8000/docs). Ctrl+C detiene cada servidor.
 Detener Vite antes de repetir setup: Windows bloquea su módulo nativo mientras
 se ejecuta. No hace falta ejecutar como administrador.
 
-Setup crea `.env` solo si no existe. El ejemplo activa explícitamente la semilla
-sintética, únicamente sobre una base vacía; nunca sustituye un corpus existente.
-Sin esa configuración, la API arranca con corpus vacío. Se permiten parámetros
-`-Python 'C:\ruta\python.exe'` y `-Uv 'C:\ruta\uv.exe'`.
+### C. Linux nativo
+
+Los scripts `scripts/*.ps1` son para PowerShell; en Linux se ejecutan a mano los
+mismos comandos que contienen:
+
+```bash
+pipx install uv==0.9.5                 # misma versión que setup.ps1
+~/.local/bin/uv sync --locked          # .venv desde uv.lock
+npm ci --no-audit --no-fund            # node_modules desde package-lock.json
+cp -n .env.example .env                # opcional: igual que setup.ps1 (demo sintética)
+
+# terminal 1: API en http://127.0.0.1:8000
+.venv/bin/python -m uvicorn flamelab.main:app --host 127.0.0.1 --port 8000
+# terminal 2: interfaz en http://127.0.0.1:5173
+npm run dev:web -- --host 127.0.0.1
+```
+
+Sin `.env` ni variables, la API arranca con `work/flamelab.db` vacía
+(`data_mode: empty`). Vite redirige `/api`, `/openapi.json` y `/docs` a la API.
+
+### Cargar datos
+
+La API sirve **un corpus por base de datos**. Cada corpus va en su propia base
+SQLite para no mezclar datos sintéticos con estudios reales. `/api/v1/health`
+indica qué hay cargado en `data_mode`.
+
+| Corpus | Contenido | `data_mode` | Qué funciona |
+| --- | --- | --- | --- |
+| Demo sintética | `data/fixtures/demo.json`: 2 estudios, 5 ensayos y 6 observaciones **sintéticas**, no mediciones NASA | `synthetic` | Todo el recorrido: Investigate, A/B, informe |
+| Catálogo real | `data/catalog/psi_metadata.json`: 24 estudios, solo metadatos, sin ensayos | `metadata_only` | Study catalog; investigación y A/B devuelven evidencia insuficiente |
+| BASS-II (P2) | `bundle.json` del paquete interno 1.1.1, **no incluido en el repositorio** | `scientific_unverified` | Guion BASS-II de [DEMO](docs/DEMO.md) |
+| Vacío | sin datos | `empty` | Solo la estructura de la interfaz |
+
+**Docker:** elegir con `FLAMELAB_DATA` (`catalog` por defecto, `demo` o `empty`).
+La importación del catálogo es automática e idempotente.
+
+```bash
+FLAMELAB_DATA=demo docker compose up -d                 # Linux
+```
+
+```powershell
+$env:FLAMELAB_DATA = 'demo'; docker compose up -d       # Windows PowerShell
+```
+
+**Nativo:** importar en una base dedicada y arrancar la API apuntando a ella. La
+validación precede a la escritura; repetir el mismo contenido es idempotente y
+sustituir un corpus distinto exige `--replace` explícito.
+
+```bash
+# Linux — catálogo real
+.venv/bin/python -m flamelab.data.cli validate data/catalog/psi_metadata.json
+.venv/bin/python -m flamelab.data.cli import data/catalog/psi_metadata.json --database-url sqlite:///work/catalog.db
+FLAMELAB_DATABASE_URL=sqlite:///work/catalog.db FLAMELAB_SEED_DEMO=false \
+  .venv/bin/python -m uvicorn flamelab.main:app --host 127.0.0.1 --port 8000
+```
+
+```powershell
+# Windows — catálogo real
+.\.venv\Scripts\python.exe -m flamelab.data.cli validate data/catalog/psi_metadata.json
+.\.venv\Scripts\python.exe -m flamelab.data.cli import data/catalog/psi_metadata.json --database-url sqlite:///work/catalog.db
+$env:FLAMELAB_DATABASE_URL = 'sqlite:///work/catalog.db'
+$env:FLAMELAB_SEED_DEMO = 'false'
+.\scripts\dev-api.ps1
+```
+
+Resultado esperado de la importación: `"studies": 24, "trials": 0, "observations": 0`.
+Las variables de entorno tienen prioridad sobre `.env` y solo duran en esa terminal.
+
+- **Demo sintética:** `FLAMELAB_SEED_DEMO=true` sobre una base vacía (es lo que hace
+  el `.env` de ejemplo). Nunca sustituye un corpus existente.
+- **BASS-II:** mismo procedimiento con la ruta del `bundle.json` y otra base
+  (`sqlite:///work/p2-demo-v1.1.1.db`); ver [DEMO](docs/DEMO.md#guion-real-bass-ii-separado-del-fixture).
+  En Docker no está automatizado: el paquete no se distribuye con el repositorio.
+
+Registro de la verificación en Linux, con salidas reales: [DESPLIEGUE_LOCAL_LINUX](docs/DESPLIEGUE_LOCAL_LINUX.md).
 
 ## Verificar sin credenciales
 

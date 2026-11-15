@@ -20,7 +20,7 @@ GUIDE = (
     ("catalog", "Study catalog", "Open Catalog to browse campaigns, measurements and documents. Use the top search bar to jump to dashboard views or study records.", "catalog catalogo search buscar busqueda documentos"),
     ("evidence", "Source reader", "Select a chart point or citation to open its evidence. The reader shows the document, its locator, and the available excerpt.", "citation cita citas fuente fuentes evidence evidencia verificar"),
     ("synthesis", "Research findings", "Investigate shows cited findings and limitations from the current investigation. Open Report to read or download its saved record.", "synthesis sintesis resultados hallazgos resumen"),
-    ("dashboard", "Ignition Protocol overview", "Ignition Protocol brings combustion research into one workspace to find studies, compare recorded measurements, and trace results back to their sources.", "app dashboard flamelab ignition protocol funciones sirve inicio ayuda interfaz"),
+    ("dashboard", "FlameLab overview", "FlameLab brings combustion research into one workspace to find studies, compare recorded measurements, and trace results back to their sources.", "app dashboard flamelab funciones sirve inicio ayuda interfaz"),
 )
 ALIASES = {"llama": "flame", "llamas": "flame", "fuego": "fire", "flujo": "flow", "aire": "airflow",
            "oxigeno": "oxygen", "presion": "pressure", "propagacion": "spread", "extincion": "extinction",

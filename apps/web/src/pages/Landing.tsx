@@ -88,7 +88,7 @@ export default function Landing({ health, profile, offline, onRetry, theme, onTh
       <a className="sb-brand roll-host" href={routeHash({ page: "home" })}
         onClick={(event) => { event.preventDefault(); scrollToSection(null); }}>
         <Mark />
-        <span><b><RollText>Ignition Protocol</RollText></b><small>Los TTS</small></span>
+        <span><b><RollText>FlameLab</RollText></b><small>Los TTS</small></span>
       </a>
       <nav className="land-links" aria-label="Welcome page" ref={links}>
         <span className="ink" aria-hidden="true" />
@@ -108,7 +108,7 @@ export default function Landing({ health, profile, offline, onRetry, theme, onTh
         <div className="hero-copy">
           <p className="eyebrow">NASA Space Apps 2026 · Flame in Freefall</p>
           <h1>Find the combustion experiments that answer your fire-safety question.</h1>
-          <p className="lede">Ignition Protocol gathers microgravity combustion studies, compares the trials that match a spacecraft
+          <p className="lede"><span className="brand-name">FlameLab</span> gathers microgravity combustion studies, compares the trials that match a spacecraft
             or habitat scenario, and shows the source behind every result.</p>
           <div className="hero-cta">
             <a className="btn primary lg" href={routeHash({ page: "dashboard", view: "investigate" })}>Start an investigation <Icon name="arrow" /></a>
@@ -179,7 +179,7 @@ export default function Landing({ health, profile, offline, onRetry, theme, onTh
     </main>
 
     <footer className="foot">
-      <span>Ignition Protocol · Los TTS · NASA Space Apps 2026 “Flame in Freefall”</span>
+      <span><span className="brand-name">FlameLab</span> · Los TTS · NASA Space Apps 2026 “Flame in Freefall”</span>
       <span>Visual direction inspired by control-system software; no affiliation or third-party assets.</span>
     </footer>
   </div>;

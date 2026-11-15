@@ -21,3 +21,5 @@ Para una nueva decisión: siguiente número, fecha, estado, problema concreto, a
 - [0009 Plan visible, métricas y síntesis acotada](0009-visible-plans-and-metric-availability.md)
 
 - [0010 Mission Lab integrado y pruebas de navegador](0010-mission-lab-integration-and-browser-checks.md)
+
+- [0011 Despliegue local con Docker](0011-docker-local-deployment.md)
