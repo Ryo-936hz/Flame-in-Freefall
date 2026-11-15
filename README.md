@@ -1,6 +1,6 @@
 # FlameLab SI — demo integrada
 
-> **AI Research en `raul`.** Esta rama incorpora `main` (`d46d27b`) y conserva su
+> **AI Research en `raul`.** Esta rama incorpora `main` (`9914356`) y conserva su
 > diseño nuevo. Añade un caso preparado BASS-II con agentes animados, fuentes
 > publicadas y una pausa para aceptar el alcance de la comparación. Abrir
 > `#/dashboard/ai-research` y pulsar **Start research**. La actividad de agentes es

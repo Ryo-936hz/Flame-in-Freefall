@@ -5,7 +5,7 @@
 El usuario pide incorporar `origin/main` en `raul`, adoptar el diseño nuevo de
 `main` y añadir una pantalla AI Research con un caso preparado BASS-II, agentes
 animados, fuentes publicadas y revisión humana. La base incorporada es `main`
-**`d46d27b`**. Este incremento se entrega exclusivamente en `raul`: **no actualizar
+**`9914356`**. Este incremento se entrega exclusivamente en `raul`: **no actualizar
 `main` ni fusionar una PR hacia ella como parte de este trabajo**.
 
 El experimento de cinco pantallas de `72e6e2b` queda como historial en

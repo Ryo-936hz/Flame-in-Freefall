@@ -2,7 +2,7 @@
 
 ## Alcance y base
 
-Trabajo exclusivo de `raul`, sobre la integración de `origin/main` **`d46d27b`**.
+Trabajo exclusivo de `raul`, sobre la integración de `origin/main` **`9914356`**.
 Se adopta el diseño nuevo de `main`: navegación, paleta, tipografía y estructura
 actuales. El experimento UX de cinco pantallas de **`72e6e2b`** se conserva como
 historial en [UX_EXPERIMENT_RAUL](UX_EXPERIMENT_RAUL.md) y en Git; no describe el
@@ -113,16 +113,17 @@ puntos y su lectura descriptiva documentada.
 
 ### Verificación local · 15 de noviembre de 2026
 
-Código: `6f13ddf2247d466ea736770920ef77f8f1c8c4aa`, sobre el merge `b9951b7` de main en raul.
+Código AI Research: `6f13ddf2247d466ea736770920ef77f8f1c8c4aa`. Integración final: `f2d627c`, incorporando main `9914356`.
 
 | Comprobación | Resultado |
 |---|---|
 | TypeScript y build Vite | Correctos. |
-| Cliente | 86 pruebas, 0 fallos. |
+| Cliente | 86 pruebas, 0 fallos, repetidas tras la integración final. |
+| Chat incorporado desde main | 10 pruebas Python, 0 fallos. |
 | AI Research con corpus sintético aislado | 7 pasos, 39 comprobaciones, 0 fallos. |
-| AI Research con bundle P2 real aislado | 7 pasos, 39 comprobaciones, 0 fallos. |
+| AI Research con bundle P2 real aislado | 7 pasos, 39 comprobaciones, 0 fallos; repetido tras la integración final. |
 | Revisión visual | Escritorio y móvil de 390 px, temas oscuro/claro, diálogo de fuentes y revisión humana. |
-| API y contratos | Coinciden con main d46d27b; no se añaden endpoints ni modelos. |
+| API y contratos | Coinciden con main 9914356; no se añaden endpoints ni modelos. |
 
 El navegador verificó pausa manual, navegación fuera de la vista, reducción de
 movimiento, fuentes literales reales/ausencia explícita con corpus sintético,
@@ -151,3 +152,9 @@ La prueba real utilizó el bundle P2 SHA-256
 `cb8b782fd73dbe4df0576b8047f3dea781a37d7c06c962ad2e978e607a00191d`.
 Las capturas y logs quedan en `work/ai-research-*`, excluidos de Git.
 El código del test está en `apps/web/tests/e2e/ai-research-walkthrough.mjs`.
+
+La verificación sintética corresponde al incremento inicial `6f13ddf`; tras llegar
+main `9914356` se repitieron tipos, cliente, build y el recorrido AI Research con
+bundle real, además de las diez pruebas del chat modificado en main. El código
+AI Research no cambió en ese merge. Build terminó correctamente con un aviso de
+Vite por el bundle JavaScript de aproximadamente 500.55 kB minificado.

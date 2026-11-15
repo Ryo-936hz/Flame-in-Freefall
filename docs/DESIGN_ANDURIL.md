@@ -1,6 +1,6 @@
 # Dirección visual inspirada en sistemas de Anduril
 
-> **Registro histórico del diseño anterior.** Desde el incremento AI Research, `raul` adopta el dashboard de `main` (`d46d27b`). El alcance vigente y su guion están en [AI_RESEARCH_CASE](AI_RESEARCH_CASE.md). Las secciones siguientes conservan el experimento anterior y sus pruebas.
+> **Registro histórico del diseño anterior.** Desde el incremento AI Research, `raul` adopta el dashboard de `main` (`9914356`). El alcance vigente y su guion están en [AI_RESEARCH_CASE](AI_RESEARCH_CASE.md). Las secciones siguientes conservan el experimento anterior y sus pruebas.
 
 ## Composición experimental vigente en `raul`
 
