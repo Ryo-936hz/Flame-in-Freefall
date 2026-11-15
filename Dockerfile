@@ -23,7 +23,7 @@ RUN uv sync --locked --no-dev \
  && mkdir -p /app/work && chown flamelab /app/work
 USER flamelab
 EXPOSE 8000
-HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
+HEALTHCHECK --interval=10s --timeout=3s --start-period=60s --retries=5 \
   CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=2)"]
 ENTRYPOINT ["python", "/app/docker/api-entrypoint.py"]
 
