@@ -2,11 +2,12 @@
 
 ## Alcance y base
 
-Trabajo exclusivo de `raul`, sobre la integración de `origin/main` **`9914356`**.
+AI Research se desarrolló en `raul` sobre `origin/main` **`9914356`** y se entrega
+junto con el arranque de Qwen en Ask SI.
 Se adopta el diseño nuevo de `main`: navegación, paleta, tipografía y estructura
 actuales. El experimento UX de cinco pantallas de **`72e6e2b`** se conserva como
 historial en [UX_EXPERIMENT_RAUL](UX_EXPERIMENT_RAUL.md) y en Git; no describe el
-host vigente. Este incremento no se fusiona en `main`.
+host vigente.
 
 AI Research presenta una secuencia predefinida de cinco roles: Coordinator,
 Scout, Analyst, Critic y Writer. Los personajes se desplazan entre las

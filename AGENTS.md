@@ -1,12 +1,10 @@
 # Instrucciones de trabajo para FlameLab SI
 
-## Petición vigente: AI Research en `raul`
+## Integración de AI Research y Qwen
 
-El usuario pide incorporar `origin/main` en `raul`, adoptar el diseño nuevo de
-`main` y añadir una pantalla AI Research con un caso preparado BASS-II, agentes
-animados, fuentes publicadas y revisión humana. La base incorporada es `main`
-**`9914356`**. Este incremento se entrega exclusivamente en `raul`: **no actualizar
-`main` ni fusionar una PR hacia ella como parte de este trabajo**.
+La integración conserva el diseño y las contribuciones de `main` **`9914356`**,
+añade AI Research desde `origin/raul` **`f43d071`** y activa Qwen en Ask SI mediante
+Docker Compose. La entrega sigue el flujo de pull request hacia `main`.
 
 El experimento de cinco pantallas de `72e6e2b` queda como historial en
 [UX_EXPERIMENT_RAUL](docs/UX_EXPERIMENT_RAUL.md); su composición ya no es la
@@ -19,11 +17,10 @@ humana acepta el alcance descriptivo de este caso; no modifica la validación de
 corpus. Las cargas de evidencia desde la API conservan sus estados reales y sus
 textos literales. No atribuir una consulta API exitosa a una nota preparada.
 
-Las integraciones Qwen/Ollama, OpenAI y los cálculos del `main` incorporado se
-conservan. AI Research no llama a esos modelos ni cambia sus contratos. Las
-reglas científicas, de ingeniería y colaboración siguientes siguen aplicándose;
-los bloques de entregas anteriores son antecedentes, no instrucciones para
-restaurar interfaces antiguas o publicar este incremento en `main`.
+AI Research mantiene su secuencia preparada. Ask SI usa Qwen para seleccionar
+fuentes, y los cálculos científicos se ejecutan en la API. Las reglas científicas,
+de ingeniería y colaboración siguientes siguen aplicándose. Los bloques de
+entregas anteriores conservan el historial del proyecto.
 
 ## Antecedentes de la integración estable
 

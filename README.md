@@ -1,13 +1,10 @@
 # FlameLab SI — demo integrada
 
-> **AI Research en `raul`.** Esta rama incorpora `main` (`9914356`) y conserva su
-> diseño nuevo. Añade un caso preparado BASS-II con agentes animados, fuentes
+> **AI Research** presenta un caso preparado BASS-II con agentes animados, fuentes
 > publicadas y una pausa para aceptar el alcance de la comparación. Abrir
 > `#/dashboard/ai-research` y pulsar **Start research**. La actividad de agentes es
 > coreografiada; no llama a modelos. [Guion, fuentes y límites](docs/AI_RESEARCH_CASE.md).
-> El experimento UX anterior (`72e6e2b`) queda como historial. Este incremento no
-> se integra en `main`; las entregas descritas a continuación conservan sus fechas
-> y resultados históricos.
+> Ask SI usa Qwen para recuperar evidencia cuando se arranca con Docker Compose.
 
 La [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3) está fusionada en
 `main` mediante `0b732cb`: P1/P3/P4, la ingesta y los contratos de P2, Mission Lab
