@@ -104,12 +104,33 @@ docker compose up -d --build     # mismo comando en bash y en PowerShell
   El JSON de `/api/v1/chat` indica `provider: "qwen"` cuando el modelo selecciona fuentes.
   Las respuestas directas y la recuperación ante fallos de Ollama muestran `catalog`.
 
+**Primer arranque.** La descarga de la imagen de Ollama puede tardar más de diez
+minutos y `docker compose up` no muestra progreso mientras tanto. El orden es:
+`ollama` pasa a *healthy* → `ollama-model` descarga el modelo y termina con
+`Exited (0)` → `api` pasa a *healthy* → arranca `web`. Si ya tenías contenedores
+de una versión anterior sin Ollama, el mismo comando los reconstruye y sustituye.
+Los arranques siguientes reutilizan imágenes y modelo y tardan segundos.
+
 ```bash
-docker compose ps            # api "healthy", web "Up"
+docker compose ps -a         # ollama/api "healthy", ollama-model "Exited (0)", web "Up"
 docker compose logs ollama-model  # progreso o error de la descarga inicial
 docker compose logs -f api
 docker compose down          # parar; con -v borra también las bases y el modelo
 ```
+
+**Comprobar que Qwen responde** (bash; en PowerShell usa `curl.exe` y comillas
+simples alrededor del JSON):
+
+```bash
+curl -s http://127.0.0.1:8080/api/v1/health      # "ai_provider":"qwen"
+curl -s -X POST http://127.0.0.1:8080/api/v1/chat -H 'Content-Type: application/json' \
+  -d '{"question":"Show evidence about microgravity"}'   # "provider":"qwen"
+docker compose logs ollama | grep '/api/chat'   # llamada al modelo con código 200
+```
+
+La primera respuesta con Qwen tarda unos segundos mientras Ollama carga el modelo
+en memoria (unos 5 s en CPU en la comprobación del 15/11/2026, Docker 29.9 y
+Compose 5.6, Linux x86-64).
 
 Decisión y alcance: [ADR 0011](docs/adr/0011-docker-local-deployment.md).
 Tamaño y ficha del modelo: [Qwen3 0.6B en Ollama](https://ollama.com/library/qwen3:0.6b).
@@ -297,6 +318,25 @@ Código: `apps/api/src/flamelab/{data,science,ai,storage}` y `apps/web`. Migraci
 `apps/api/alembic`. Escalas científicas: `science/METHOD.md`. Fixtures: 2 estudios,
 5 ensayos y 6 observaciones sintéticas, incluido cero conocido y valor ausente.
 Repetir observaciones no crea réplicas independientes.
+
+## AI disclosure
+
+Este repositorio se ha desarrollado con asistencia de herramientas de IA generativa.
+Parte del código, las pruebas y la documentación se generó o editó con asistentes de
+programación (Codex y Claude Code) bajo la dirección del equipo. Los commits asistidos
+por Claude Code lo indican con el trailer `Co-Authored-By`; el resto del historial no
+marca de forma sistemática qué commits contaron con asistencia.
+
+- **Revisión:** los cambios llegan a `main` mediante pull request y se comprueban con
+  las pruebas y el CI descritos en [VERIFICATION](docs/VERIFICATION.md). La
+  responsabilidad sobre el código y las afirmaciones científicas es del equipo.
+- **IA en el producto:** Ask SI usa Qwen (`qwen3:0.6b`, local mediante Ollama en Docker
+  Compose) para seleccionar fuentes y redactar explicaciones. Los cálculos, filtros y
+  rankings se ejecutan en código verificable de la API, no en el modelo.
+- **AI Research** es una secuencia preparada: su actividad de agentes es animada y no
+  acredita la ejecución de modelos ni de agentes autónomos.
+- Los fixtures sintéticos no son mediciones NASA, y ningún texto generado por IA
+  sustituye a las fuentes citadas.
 
 ## Estado y relevo
 
