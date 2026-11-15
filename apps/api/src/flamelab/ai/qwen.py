@@ -15,7 +15,7 @@ class Choice(Contract):
     indices: list[int] = Field(max_length=3)
 
 
-async def choose(question: str, options: list[dict], instruction: str, settings: Settings, *, latency_budget: float | None = None) -> list[int]:
+async def choose(question: str, options: list[dict], instruction: str, settings: Settings) -> list[int]:
     context = json.dumps({"question": question, "options": options}, ensure_ascii=False)
     if len(context) > min(settings.ai_max_context_chars, 6500):
         raise ProviderFailure("provider_context_limit")
@@ -29,11 +29,12 @@ async def choose(question: str, options: list[dict], instruction: str, settings:
                "options": {"temperature": 0, "seed": 42, "num_ctx": 3072, "num_predict": 100},
                "format": Choice.model_json_schema(), "messages": [{"role": "system", "content": prompt},
                                                                     {"role": "user", "content": context}]}
-    timeout = min(settings.ai_timeout_seconds, latency_budget) if latency_budget is not None else settings.ai_timeout_seconds
+    timeout = settings.ai_timeout_seconds
+    url = f"{str(settings.ollama_base_url).rstrip('/')}/api/chat"
     try:
         async with asyncio.timeout(timeout):
             async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
-                async with client.stream("POST", "http://127.0.0.1:11434/api/chat", json=payload) as response:
+                async with client.stream("POST", url, json=payload) as response:
                     response.raise_for_status()
                     body = bytearray()
                     async for chunk in response.aiter_bytes():

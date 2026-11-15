@@ -1,6 +1,9 @@
 import asyncio
+import json
 
-from flamelab.ai import chat
+import httpx
+
+from flamelab.ai import chat, qwen
 from flamelab.ai.provider import ProviderFailure
 from flamelab.config import ROOT, Settings
 from flamelab.data.loader import load_bundle
@@ -81,6 +84,33 @@ def test_qwen_can_select_an_existing_excerpt(monkeypatch):
     answer = asyncio.run(chat.answer_chat(question, bundle, Settings(_env_file=None, ai_provider="qwen"), None))
     assert answer.provider == "qwen"
     assert answer.sources == options[1:2]
+
+
+def test_qwen_uses_the_configured_ollama_service(monkeypatch):
+    def ollama(request: httpx.Request) -> httpx.Response:
+        assert request.method == "POST"
+        assert request.url == httpx.URL("http://ollama:11434/api/chat")
+        payload = json.loads(request.content)
+        assert payload["model"] == "qwen3:1.7b"
+        assert payload["format"]["properties"]["indices"]["type"] == "array"
+        return httpx.Response(200, json={
+            "done": True,
+            "done_reason": "stop",
+            "message": {"content": '{"indices":[1]}'},
+        })
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(ollama))
+    monkeypatch.setattr(qwen.httpx, "AsyncClient", lambda **kwargs: client)
+    monkeypatch.setenv("FLAMELAB_AI_PROVIDER", "qwen")
+    monkeypatch.setenv("FLAMELAB_OLLAMA_BASE_URL", "http://ollama:11434/")
+    monkeypatch.setenv("FLAMELAB_OLLAMA_MODEL", "qwen3:1.7b")
+    bundle = load_bundle(ROOT / "data/fixtures/demo.json")
+    question = ChatRequest(question="flame spread rate")
+
+    answer = asyncio.run(chat.answer_chat(question, bundle, Settings(_env_file=None), None))
+
+    assert answer.provider == "qwen"
+    assert answer.sources == chat.retrieve(question, bundle, None)[1:2]
 
 
 def test_technical_method_has_a_scroll_free_answer_and_separate_details():

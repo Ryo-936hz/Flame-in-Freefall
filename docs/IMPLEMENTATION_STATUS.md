@@ -20,6 +20,7 @@ El cierre se publica en la [PR #4](https://github.com/Ryo-936hz/Flame-in-Freefal
 | Contrato/API | Pydantic estricto, corpus 1.1 con lectura 1.0, OpenAPI/TypeScript generados, plan público previsualizable y persistido. |
 | Ciencia | Condiciones efectivas, Gower/cobertura separados, disponibilidad de métrica antes del límite, controles/procedencia por estrato y cuentas sin crear réplicas de segmentos. |
 | IA demo | Catálogo determinista opt-in y modo explícito compatible; cálculos en herramientas, bloqueos y citas. Proveedor opcional probado con mocks, sin llamadas reales. |
+| Ask SI | Compose arranca Ollama y prepara `qwen3:0.6b` por defecto. Qwen selecciona fuentes del corpus; el catálogo responde si Ollama falla. [Arranque](../README.md#a-docker-linux-windows-y-macos) y [verificación](VERIFICATION.md#qwen-local-en-docker-compose). |
 | Persistencia | SQLite de archivo y PostgreSQL verificados; informes, planes y fuentes históricas sobreviven a reemplazo/reinicio. |
 | Datos P2/P3 | 24 estudios, 1.058 registros, 1.673 observaciones y 1.283 valores conocidos. BASS-II conserva 20 ensayos/43 segmentos/39 tasas conocidas; diez puntos aprobados para uso descriptivo limitado. |
 | Interfaz P5 integrada | Evidence Canvas, tabla/gráfico/selección/fuentes, filtros explícitos y catálogo P2. Ilustración conceptual rotulada. |
@@ -28,9 +29,9 @@ El cierre se publica en la [PR #4](https://github.com/Ryo-936hz/Flame-in-Freefal
 | Informe/recuperación P6 | Texto literal del backend y descarga idéntica, replay, recuperación por ID/recientes; guardas compartidas ante Reset o una investigación posterior. |
 | Comprobación local | Ciencia/IA, contratos, 77 pruebas cliente, HTTP/reinicio y recorridos sintético/real aislados con Chromium fijado por lockfile. |
 
-La interfaz no interpreta texto libre ni ofrece un formulario de previsualización
-del catálogo: el catálogo acotado y su previsualización están disponibles por API. P6 muestra el plan
-persistido de su consulta. El recorrido visual usa el modo explícito.
+Investigate usa filtros explícitos y P6 muestra el plan persistido de su consulta.
+La previsualización de planes del catálogo acotado está disponible por API. Ask SI
+acepta preguntas de texto libre y recupera fuentes del corpus activo.
 
 ## Verificación del cierre P2 — código 20aab80
 

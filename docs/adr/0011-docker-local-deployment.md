@@ -39,6 +39,13 @@ Se adopta la alternativa 3. No cambia código ni contratos de la aplicación.
   `bundle-<sha256[:12]>.db`, así que nunca se sustituye un corpus ni se usa `--replace`.
   La extracción desde los originales (`extract-nasa`, requiere PyMuPDF) sigue fuera
   de la imagen.
+- Ask SI usa Qwen en el arranque predeterminado de Compose. Se reutiliza el proveedor
+  existente con la imagen oficial de Ollama fijada por versión, CPU y un volumen para
+  los modelos. Un servicio de inicialización espera a Ollama y descarga el modelo
+  seleccionado si falta. La API arranca tras completar ese paso y llama a Ollama
+  por la red de Compose. El puerto de Ollama queda dentro de esa red y se desactiva
+  su modo nube. Los modos `demo` y `openai` omiten la descarga del modelo.
+  [Ollama en Docker](https://docs.ollama.com/docker).
 
 ## Consecuencias
 

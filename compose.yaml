@@ -1,5 +1,6 @@
-# FlameLab SI en Docker (Linux y Windows con Docker Desktop).
+# FlameLab SI en Docker (Linux, Windows y macOS).
 #   docker compose up -d --build      -> http://127.0.0.1:8080
+# Ask SI usa Qwen local; Ollama descarga el modelo al arrancar por primera vez.
 # FLAMELAB_DATA: catalog (por defecto), demo (sintético), bundle o empty.
 # bundle importa FLAMELAB_BUNDLE (bundle.json o paquete ZIP P2) de FLAMELAB_IMPORT_DIR.
 # PostgreSQL es opcional y no está verificado: perfil "postgres".
@@ -9,8 +10,12 @@ services:
     image: flamelab-api:local
     environment:
       FLAMELAB_DATA: ${FLAMELAB_DATA:-catalog}
-      FLAMELAB_AI_PROVIDER: ${FLAMELAB_AI_PROVIDER:-demo}
+      FLAMELAB_AI_PROVIDER: ${FLAMELAB_AI_PROVIDER:-qwen}
+      FLAMELAB_OLLAMA_BASE_URL: http://ollama:11434
+      FLAMELAB_OLLAMA_MODEL: ${FLAMELAB_OLLAMA_MODEL:-qwen3:0.6b}
       FLAMELAB_BUNDLE: ${FLAMELAB_BUNDLE:-}
+    depends_on:
+      ollama-model: { condition: service_completed_successfully }
     # Opcional: .env local (p. ej. proveedor de IA externo). Nunca claves en VITE_* ni en la imagen.
     env_file:
       - path: .env
@@ -20,6 +25,34 @@ services:
       # Carpeta local con bundles para FLAMELAB_DATA=bundle; solo lectura.
       - ${FLAMELAB_IMPORT_DIR:-./data/local}:/app/import:ro
     restart: unless-stopped
+
+  ollama:
+    image: &ollama-image ollama/ollama:0.40.16
+    environment:
+      OLLAMA_NO_CLOUD: "1"
+    volumes:
+      - ollama-models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "OLLAMA_HOST=127.0.0.1:11434 ollama list"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  ollama-model:
+    image: *ollama-image
+    depends_on:
+      ollama: { condition: service_healthy }
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      FLAMELAB_AI_PROVIDER: ${FLAMELAB_AI_PROVIDER:-qwen}
+      FLAMELAB_OLLAMA_MODEL: ${FLAMELAB_OLLAMA_MODEL:-qwen3:0.6b}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        if [ "$$FLAMELAB_AI_PROVIDER" = qwen ]; then
+          ollama show "$$FLAMELAB_OLLAMA_MODEL" >/dev/null 2>&1 || exec ollama pull "$$FLAMELAB_OLLAMA_MODEL"
+        fi
 
   web:
     build: { context: ., target: web }
@@ -44,4 +77,5 @@ services:
 
 volumes:
   flamelab-work:
+  ollama-models:
   postgres-data:

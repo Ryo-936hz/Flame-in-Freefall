@@ -55,7 +55,7 @@ npm run test:client:live   # con la API iniciada en modo demo
 
 Sigue la [guía de importación de P2](../../docs/INTEGRATION_P2_MAIN.md#activar-el-paquete-real-p2-sin-sobrescribir-otra-base) para cargar el corpus en una base dedicada. `/api/v1/health` debe indicar `scientific_unverified`.
 
-Para activar Qwen en Ask SI, inicia Ollama en el mismo equipo que la API y ejecuta `ollama pull qwen3:0.6b`. Arranca la API con `FLAMELAB_AI_PROVIDER=qwen` y el mismo `FLAMELAB_DATABASE_URL` donde importaste P2. Ask SI recupera fuentes del corpus. Si Ollama no está disponible, responde con los resultados del catálogo. Las mediciones y los rankings se calculan en la API.
+El arranque con Docker Compose activa Qwen en Ask SI y descarga el modelo automáticamente. Para usarlo con la API nativa, consulta el [arranque del repositorio](../../README.md#a-docker-linux-windows-y-macos). Ask SI recupera fuentes del corpus activo y, si Ollama falla, responde con la selección del catálogo. Las mediciones y los rankings se calculan en la API.
 
 `test:client` descubre todos los archivos `*.test.ts(x)` bajo `tests/`, incluidos P5/P6.
 Para comprobar el navegador, instalar una vez Chromium y ejecutar:
