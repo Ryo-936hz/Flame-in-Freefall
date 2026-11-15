@@ -57,7 +57,7 @@ export default function AgentArena({ stage, paused, onSource }: {
       <div className="ar-record" aria-hidden="true"><span className="ar-file-icon">RECORD</span><b>Evidence → findings</b><span>Sources stay attached</span><div className="ar-record-lines"><i /><i /><i /></div></div>
       <div className="ar-nucleus" aria-hidden="true"><span className="ar-nucleus-orbit" /><span className="ar-nucleus-cross">✦</span><b>BASS-II</b><span>{STAGE_LABEL[stage]}</span></div>
       <div className="ar-characters" aria-hidden="true">{AGENTS.map((agent, index) => <div className={`ar-agent ar-agent-${agent.kind}`} key={agent.kind} style={{ "--ar-index": index } as CSSProperties} data-active={agent.stage === stage ? "true" : "false"}>
-        <span className="ar-agent-trail" /><Dot kind={agent.kind} /><span className="ar-agent-name">{agent.name}</span>
+        <Dot kind={agent.kind} /><span className="ar-agent-name">{agent.name}</span>
       </div>)}</div>
     </div>
     <div className="ar-team" aria-label="Agent roles">{AGENTS.map((agent) => <div key={agent.kind} className="ar-team-member" data-active={agent.stage === stage ? "true" : "false"}>

@@ -1,9 +1,10 @@
+import { isM13Question } from "./m13Reference";
 /**
  * Plain name search over what the app has already loaded: dashboard sections,
  * catalog studies and corpus trials. It does not interpret questions; every
  * query word must appear in the item's text.
  */
-export type SearchKind = "section" | "study" | "trial";
+export type SearchKind = "section" | "study" | "trial" | "question";
 
 export interface SearchItem {
   kind: SearchKind;
@@ -14,8 +15,8 @@ export interface SearchItem {
   keywords?: string;
 }
 
-export const KIND_ORDER: SearchKind[] = ["section", "study", "trial"];
-export const KIND_LABEL: Record<SearchKind, string> = { section: "Sections", study: "Studies", trial: "Trials" };
+export const KIND_ORDER: SearchKind[] = ["question", "section", "study", "trial"];
+export const KIND_LABEL: Record<SearchKind, string> = { section: "Sections", study: "Studies", trial: "Trials", question: "Research questions" };
 
 /** Lowercase and drop accents so "catálogo" matches "catalogo". */
 export function normalize(text: string): string {
@@ -38,6 +39,7 @@ function score(item: SearchItem, words: string[]): number | null {
  * only the sections, so the palette doubles as navigation.
  */
 export function searchItems(items: SearchItem[], query: string, perKind = 6): SearchItem[] {
+  if (isM13Question(query)) return items.filter(item => item.kind === "question" && item.id === "bass-m13-segments");
   const words = normalize(query).split(/\s+/).filter(Boolean);
   if (!words.length) return items.filter((item) => item.kind === "section");
   const ranked = items

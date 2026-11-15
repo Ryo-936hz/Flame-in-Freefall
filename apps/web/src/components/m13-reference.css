@@ -1,0 +1,15 @@
+.m13-prompt { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-top:14px; width:100%; padding:18px; color:var(--ink); background:var(--surface); border:1px solid var(--rule); border-radius:10px; text-align:left; font-size:15px; }
+.m13-prompt:hover { border-color:var(--signal); }
+.m13-prompt > span { color:var(--signal); }
+.m13-reference { margin:20px 0; background:var(--surface); border:1px solid var(--rule); border-radius:10px; padding:20px; }
+.m13-reference header { display:flex; justify-content:space-between; gap:12px; font:11px var(--font-num); margin-bottom:18px; }
+.m13-reference header span { color:var(--ink-3); }
+.m13-reference table { width:100%; border-collapse:collapse; font-family:var(--font-num); }
+.m13-reference th { font-size:10px; font-weight:400; color:var(--ink-3); text-align:left; padding:10px 4px; }
+.m13-reference th small { display:block; font-size:9px; }
+.m13-reference td { padding:15px 4px; border-top:1px solid var(--rule); font-size:16px; white-space:nowrap; }
+.m13-reference td b { font-weight:500; color:var(--signal); }
+.m13-segment-dot { display:inline-block; width:5px; height:5px; background:var(--signal); border-radius:50%; margin-right:10px; }
+.m13-rate-bar { display:inline-block; margin-left:15px; height:3px; background:var(--signal); vertical-align:middle; opacity:.6; }
+.m13-reference p,.m13-reference > a { font-size:11px; color:var(--ink-3); }
+@media(max-width:600px) { .m13-reference { padding:14px; } .m13-reference td { font-size:14px; } .m13-rate-bar { display:none; } }

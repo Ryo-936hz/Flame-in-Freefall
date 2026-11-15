@@ -1,6 +1,8 @@
 # Instrucciones de trabajo para FlameLab SI
 
-## Petición vigente: AI Research en `raul`
+## Petición vigente: rama de grabación `raul`
+
+Además de AI Research, Ask SI y el buscador incorporan una respuesta local fija para M13 con valores publicados y citas. [Guion de grabación](docs/FILMING_M13.md). Las otras preguntas mantienen el recorrido habitual. La retirada de estelas de los dots se conserva.
 
 El usuario pide incorporar `origin/main` en `raul`, adoptar el diseño nuevo de
 `main` y añadir una pantalla AI Research con un caso preparado BASS-II, agentes
