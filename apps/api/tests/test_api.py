@@ -65,6 +65,22 @@ def test_health_catalog_and_entity_reads(client):
     assert profile["synthetic_trials"] == 5
 
 
+def test_study_chart_keeps_zero_excludes_missing_and_has_descriptive_counts(client):
+    flow = client.get("/api/v1/studies/synthetic:flow-study/chart")
+    assert flow.status_code == 200
+    assert flow.json()["study"]["id"] == "synthetic:flow-study"
+    assert flow.json()["metrics"] == [{
+        "metric": "flame_spread_rate_mm_s", "unit": "mm/s", "known_observations": 4, "median": 0.0775,
+    }]
+
+    contrast = client.get("/api/v1/studies/synthetic:contrast-study/chart")
+    assert contrast.status_code == 200
+    assert contrast.json()["metrics"] == [{
+        "metric": "flame_spread_rate_mm_s", "unit": "mm/s", "known_observations": 1, "median": 0,
+    }]
+    assert_error(client.get("/api/v1/studies/missing:study/chart"), 404)
+
+
 def test_research_evidence_report_and_events_survive_corpus_change(client):
     response = client.post("/api/v1/research", json=research_payload())
     assert response.status_code == 200
@@ -97,6 +113,8 @@ def test_research_evidence_report_and_events_survive_corpus_change(client):
     assert client.get("/api/v1/health").json()["data_mode"] == "metadata_only"
     assert len(client.get("/api/v1/studies").json()) == 24
     assert client.get("/api/v1/trials").json() == []
+    chart = client.get("/api/v1/studies/psi:PSI-25/chart")
+    assert chart.status_code == 200 and chart.json()["metrics"] == []
     assert client.get(run_url + "/report").text == report.text
     assert_error(client.get("/api/v1/evidence/" + evidence_id), 404)
     historical = client.get("/api/v1/evidence/" + evidence_id,

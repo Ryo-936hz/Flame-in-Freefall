@@ -5,7 +5,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRuntime } from "./runtime.mjs";
-import { verifySaffireContext } from "./p2-catalog-acceptance.mjs";
+import { askSI, chooseOption, openView, verifySaffireContext } from "./p2-catalog-acceptance.mjs";
 
 const allowed = new Set(["host", "root", "api-port", "web-port", "headed", "screenshots", "timeout"]);
 const args = Object.fromEntries(process.argv.slice(2).map((arg) => {
@@ -29,7 +29,10 @@ const { apiUrl: API, webUrl: WEB, directory: workDir, startApi, stop, waitHttp }
 const SHOTS = args.screenshots ? path.resolve(args.screenshots) : null;
 const host = {
   async ready(page) { await page.getByRole("heading", { name: "Mission Brief" }).waitFor(); },
-  async investigate(page) { await page.getByRole("button", { name: "Investigate", exact: true }).click(); },
+  async investigate(page) {
+    await openView(page, "investigate");
+    await page.getByRole("button", { name: "Investigate", exact: true }).click();
+  },
   async changeFilters(page) {
     const box = page.getByRole("spinbutton", { name: /Max\. trials/ });
     await box.fill((await box.inputValue()) === "2" ? "1" : "2");
@@ -163,30 +166,53 @@ try {
 
   await step("load host and P6 panels", async () => {
     await page.goto(WEB);
+    await page.getByRole("link", { name: /Start an investigation/ }).click();
     await host.ready(page);
-    await lab.waitFor(); await report.waitFor();
+    await openView(page, "report");
+    await report.waitFor();
+    await openView(page, "lab");
+    await lab.waitFor();
     check(await lab.getByText("Deterministic demo coordinator").count() === 0, "no provider text before a research");
   });
 
   await step("P2 catalog remains reachable", async () => {
-    await page.locator(".p6-catalog summary").click();
+    await openView(page, "catalog");
     const title = page.locator("#catalog-title");
     await title.waitFor();
     check(await title.isVisible(), "the integrated host retains the study catalog");
     const studies = page.getByRole("combobox", { name: "Estudio", exact: true });
-    await page.waitForFunction((select) => select?.options.length > 1, await studies.elementHandle());
-    const studyId = await studies.locator("option").nth(1).getAttribute("value");
-    const sources = page.waitForResponse((response) => new URL(response.url()).pathname.endsWith(`/studies/${encodeURIComponent(studyId)}/evidence`));
-    await studies.selectOption(studyId);
+    const candidates = await (await fetch(`${API}/api/v1/studies`)).json();
+    const study = candidates[1];
+    const sources = page.waitForResponse((response) => decodeURIComponent(new URL(response.url()).pathname).endsWith(`/studies/${study.id}/evidence`));
+    await chooseOption(page, studies, study.title);
     check((await sources).ok(), "catalog study evidence endpoint is reachable");
-    await page.locator(".p6-catalog summary").first().click();
   });
 
   await step("Saffire documentary context never claims imported NASA data", async () => {
     await verifySaffireContext({ page, check, screenshots: SHOTS });
   });
 
+  await step("Ask SI clarifies an unrelated topic and opens retrieved evidence", async () => {
+    const first = await askSI(page, 'What is "Micro cosmos"?');
+    check(first.sources.length === 0 && first.suggested_question === "Show evidence about microgravity", "unmatched text offers a research term");
+    const followUp = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/v1/chat");
+    await page.getByRole("button", { name: first.suggested_question, exact: true }).click();
+    const answer = await (await followUp).json();
+    const sourceIndex = answer.sources.findIndex((source) => source.evidence_id);
+    check(sourceIndex >= 0, "the clarification retrieves corpus sources");
+    const sources = page.locator(".chat .msg.si").last();
+    await sources.getByText(`Sources (${answer.sources.length})`, { exact: true }).click();
+    const evidenceId = answer.sources[sourceIndex].evidence_id;
+    const evidenceResponse = page.waitForResponse((response) => decodeURIComponent(new URL(response.url()).pathname) === `/api/v1/evidence/${evidenceId}`);
+    await sources.locator(".cites button").nth(sourceIndex).click();
+    const evidence = await (await evidenceResponse).json();
+    await host.viewer(page).locator(".ev-text").waitFor();
+    check(await host.viewer(page).locator(".ev-text").textContent() === evidence.text, "Ask SI opens the original cited record");
+    await page.getByRole("button", { name: "Close evidence", exact: true }).click();
+  });
+
   await step("A/B evidence opens before any research exists", async () => {
+    await openView(page, "lab");
     const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/scenarios/compare"));
     await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
     const body = await (await response).json();
@@ -194,15 +220,14 @@ try {
     const button = lab.getByRole("button", { name: /\(current corpus\)$/ }).first();
     await button.waitFor();
     const evidenceId = /Open evidence (.+) \(current corpus\)/.exec(await button.getAttribute("aria-label") ?? "")?.[1];
-    const sourceResponse = page.waitForResponse((r) => decodeURIComponent(new URL(r.url()).pathname).endsWith(`/evidence/${evidenceId}`));
     await button.click();
-    const returnedSource = await sourceResponse;
-    const sourceBody = await returnedSource.json();
-    const url = new URL(returnedSource.url());
+    const url = await lastEvidenceRequest(evidenceId);
+    const sourceBody = await (await fetch(url)).json();
     check(!url.searchParams.has("research_id"), "pre-research evidence reads the active corpus");
     await host.viewer(page).getByText(host.corpusMarker, { exact: false }).first().waitFor();
     await host.viewer(page).getByText(evidenceId, { exact: true }).waitFor();
     check(await host.viewer(page).locator(".ev-text").textContent() === sourceBody.text, "corpus source text is displayed literally");
+    await openView(page, "report");
     check(await report.getByText(/No active research\./).isVisible(), "opening corpus evidence does not invent a research record");
   });
 
@@ -213,6 +238,7 @@ try {
     researchId = body.id;
     check(typeof researchId === "string" && researchId.length > 0, `research id returned: ${researchId}`);
     check(body.provider === "demo", "provider is the deterministic demo coordinator");
+    await openView(page, "lab");
     await lab.getByText("Deterministic demo coordinator · no external model").waitFor();
     await lab.getByText(researchId, { exact: true }).first().waitFor();
     check(await lab.getByText(/prepared demo hypothesis|Prepared demo hypothesis/i).count() > 0 || body.hypotheses.length === 0,
@@ -338,21 +364,27 @@ try {
   });
 
   await step("changing filters after comparing marks the result as previous", async () => {
+    await openView(page, "investigate");
     await host.changeFilters(page);
+    await openView(page, "lab");
     const result = lab.locator('[data-result-kind="comparison"]');
     await page.waitForFunction((el) => el?.getAttribute("data-freshness") === "filters_changed", await result.elementHandle());
     await lab.getByText("Previous comparison — not computed with the current filters").waitFor();
     await lab.getByRole("heading", { name: /^Previous A\/B result/ }).waitFor();
     check(await lab.getByText("A · current filters").count() === 0, "A is no longer named 'current filters'");
     await shot(page, "3-stale");
+    await openView(page, "investigate");
     await host.restoreFilters(page);
+    await openView(page, "lab");
     await page.waitForFunction((el) => el?.getAttribute("data-freshness") === "current", await result.elementHandle());
     check(true, "restoring the same filters makes the comparison current again");
   });
 
   await step("metric changes invalidate A/B and recompute with the selected metric", async () => {
     const metric = page.getByRole("combobox", { name: "Metric", exact: true });
-    await metric.selectOption("heat_release_w");
+    await openView(page, "investigate");
+    await chooseOption(page, metric, "Heat release");
+    await openView(page, "lab");
     await freshness(comparisonResult(), "metric_changed");
     const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/scenarios/compare"));
     await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
@@ -360,7 +392,9 @@ try {
     check(body.metric === "heat_release_w", "the recomputed A/B uses heat_release_w");
     check(body.ranking_a.items.length === 0 && body.ranking_b.items.length === 0, "missing metric is not replaced by flame-spread measurements");
     await freshness(comparisonResult(), "current");
-    await metric.selectOption("flame_spread_rate_mm_s");
+    await openView(page, "investigate");
+    await chooseOption(page, metric, "Flame spread rate");
+    await openView(page, "lab");
     await freshness(comparisonResult(), "metric_changed");
     const restored = page.waitForResponse((r) => r.url().endsWith("/api/v1/scenarios/compare"));
     await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
@@ -379,17 +413,22 @@ try {
   });
 
   await step("question changes mark the prior query without invalidating numerical A/B", async () => {
+    await openView(page, "investigate");
     const question = page.getByRole("textbox", { name: /^Question/ });
     const original = await question.inputValue();
     await question.fill("A revised research description for the same explicit filters.");
+    await openView(page, "lab");
     await freshness(queryResult(), "question_changed");
     await freshness(comparisonResult(), "current");
+    await openView(page, "investigate");
     await question.fill(original);
+    await openView(page, "lab");
     await freshness(queryResult(), "current");
     check(true, "query freshness tracks question text independently of A/B");
   });
 
   await step("report shown == GET /report == downloaded file", async () => {
+    await openView(page, "report");
     const pre = report.locator(`pre[data-research-id="${researchId}"]`).first();
     await pre.waitFor();
     reportText = await pre.textContent() ?? "";
@@ -422,16 +461,18 @@ try {
     api = startApi();
     await waitHttp(`${API}/api/v1/health`, api);
     await page.reload();
-    await host.ready(page);
+    await openView(page, "report");
     await report.getByText("No active research.").first().waitFor();
     await report.getByRole("button", { name: "Reopen last research" }).click();
     const pre = report.locator(`pre[data-research-id="${researchId}"]`).first();
     await pre.waitFor();
     check(await pre.textContent() === reportText, "recovered report equals the report shown before restart");
+    await openView(page, "lab");
     await lab.getByText(researchId, { exact: true }).first().waitFor();
   });
 
   await step("Reset cancels a pending recovery and A/B result", async () => {
+    await openView(page, "report");
     const pendingRecovery = await holdNext(`/api/v1/research/${researchId}`);
     await report.getByLabel("Research id", { exact: true }).fill(researchId);
     await report.getByRole("button", { name: "Recover", exact: true }).click();
@@ -443,6 +484,7 @@ try {
     check(await page.locator(".run-id").count() === 0, "Reset leaves no active host research");
 
     const pendingComparison = await holdNext("/api/v1/scenarios/compare", "POST");
+    await openView(page, "lab");
     await lab.getByRole("button", { name: /^Compare A vs B/ }).click();
     await pendingComparison.seen;
     await page.getByRole("button", { name: "Reset", exact: true }).click();
@@ -451,16 +493,19 @@ try {
   });
 
   await step("a new investigation wins over an earlier pending recovery", async () => {
+    await openView(page, "report");
     const pendingRecovery = await holdNext(`/api/v1/research/${researchId}`);
     await report.getByLabel("Research id", { exact: true }).fill(researchId);
     await report.getByRole("button", { name: "Recover", exact: true }).click();
     await pendingRecovery.seen;
+    await openView(page, "investigate");
     await page.getByRole("textbox", { name: /^Question/ }).fill("New investigation after a pending recovery.");
     const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/research") && r.request().method() === "POST");
     await host.investigate(page);
     const body = await (await response).json();
     check(body.id !== researchId, "the later investigation has its own record");
     researchId = body.id;
+    await openView(page, "report");
     const pre = report.locator(`pre[data-research-id="${researchId}"]`).first();
     await pre.waitFor();
     pendingRecovery.release(); await pendingRecovery.done; await settle();
@@ -494,6 +539,7 @@ try {
   });
 
   await step("BASS-II presets cannot claim the approved source result on synthetic fixtures", async () => {
+    await openView(page, "lab");
     const bass = lab.getByRole("region", { name: "BASS-II · approved source cases", exact: true });
     for (const [key, name] of [["bass_6", "Run BASS-II · 6 cm/s"], ["lunar", "Run BASS-II · lunar"]]) {
       const response = page.waitForResponse((r) => r.url().endsWith("/api/v1/research") && r.request().method() === "POST");
@@ -521,6 +567,7 @@ try {
     await page.getByRole("button", { name: "Reset", exact: true }).click();
     pending.release(); await pending.done; await settle();
     check(await bass.locator("[data-bass-case], [data-bass-comparison]").count() === 0, "late source-case response cannot repopulate reset panels");
+    await openView(page, "report");
     check(await page.locator(".run-id").count() === 0 && await report.getByText(/No active research\./).isVisible(), "late source-case response cannot reopen the workspace research");
   });
 

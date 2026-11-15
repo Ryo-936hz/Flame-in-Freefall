@@ -1,6 +1,7 @@
 import hashlib
 import json
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from flamelab.domain.contracts import DatasetBundle, ResearchResponse
@@ -12,8 +13,12 @@ def canonical_bundle(bundle: DatasetBundle) -> str:
     return json.dumps(bundle.model_dump(mode="json"), sort_keys=True, ensure_ascii=False, separators=(",", ":"))
 
 
+def _payload_digest(payload: str) -> str:
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def bundle_digest(bundle: DatasetBundle) -> str:
-    return hashlib.sha256(canonical_bundle(bundle).encode("utf-8")).hexdigest()
+    return _payload_digest(canonical_bundle(bundle))
 
 
 class Repository:
@@ -21,24 +26,31 @@ class Repository:
         self.session = session
 
     def get_bundle(self) -> DatasetBundle:
+        return self.get_snapshot(self.get_active_digest())
+
+    def get_active_digest(self) -> str | None:
         active = self.session.get(ActiveDataset, 1)
-        if active is None:
+        return active.digest if active is not None else None
+
+    def get_snapshot(self, digest: str | None) -> DatasetBundle:
+        if digest is None:
             return DatasetBundle(dataset_id="system:empty", description="Empty corpus; no seed enabled")
-        return read_bundle(self.session.get(DatasetSnapshot, active.digest).payload)
+        return read_bundle(self.session.get(DatasetSnapshot, digest).payload)
 
     def replace_bundle(self, bundle: DatasetBundle, allow_replace: bool = False) -> bool:
         # Revalidate even model instances before touching persistent state.
         bundle = DatasetBundle.model_validate_json(bundle.model_dump_json())
-        digest = bundle_digest(bundle)
+        payload = canonical_bundle(bundle)
+        digest = _payload_digest(payload)
         active = self.session.get(ActiveDataset, 1)
         if active:
             # Older snapshots omit later additive fields. Compare their validated current
             # representation before requiring explicit replacement of the same corpus.
-            if active.digest == digest or bundle_digest(self.get_bundle()) == digest:
+            if active.digest == digest or bundle_digest(self.get_snapshot(active.digest)) == digest:
                 return False
         if active and not allow_replace:
             raise ValueError("a different corpus is active; use explicit --replace")
-        self._snapshot(bundle)
+        self._store_snapshot(digest, bundle.dataset_id, payload)
         if active:
             active.digest = digest
         else:
@@ -46,19 +58,19 @@ class Repository:
         self.session.commit()
         return True
 
-    def _snapshot(self, bundle: DatasetBundle) -> str:
-        digest = bundle_digest(bundle)
-        if self.session.get(DatasetSnapshot, digest) is None:
-            self.session.add(DatasetSnapshot(digest=digest, dataset_id=bundle.dataset_id, payload=canonical_bundle(bundle)))
+    def _store_snapshot(self, digest: str, dataset_id: str, payload: str) -> None:
+        if self.session.scalar(select(DatasetSnapshot.digest).where(DatasetSnapshot.digest == digest)) is None:
+            self.session.add(DatasetSnapshot(digest=digest, dataset_id=dataset_id, payload=payload))
             self.session.flush()
-        return digest
 
     def save_run(self, response: ResearchResponse, bundle: DatasetBundle | None = None) -> None:
         response = ResearchResponse.model_validate_json(response.model_dump_json())
         bundle = bundle if bundle is not None else self.get_bundle()
         if response.ranking.dataset_id != bundle.dataset_id:
             raise ValueError("research dataset does not match its snapshot")
-        digest = self._snapshot(bundle)
+        payload = canonical_bundle(bundle)
+        digest = _payload_digest(payload)
+        self._store_snapshot(digest, bundle.dataset_id, payload)
         self.session.add(ResearchRun(id=response.id, dataset_digest=digest, payload=response.model_dump_json()))
         self.session.commit()
 
@@ -72,4 +84,4 @@ class Repository:
         row = self.session.get(ResearchRun, run_id)
         if row is None:
             raise KeyError(run_id)
-        return read_bundle(self.session.get(DatasetSnapshot, row.dataset_digest).payload)
+        return self.get_snapshot(row.dataset_digest)
