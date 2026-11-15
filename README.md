@@ -4,7 +4,8 @@
 > publicadas y una pausa para aceptar el alcance de la comparación. Abrir
 > `#/dashboard/ai-research` y pulsar **Start research**. La actividad de agentes es
 > coreografiada; no llama a modelos. [Guion, fuentes y límites](docs/AI_RESEARCH_CASE.md).
-> Ask SI usa Qwen para recuperar evidencia cuando se arranca con Docker Compose.
+> Ask SI usa Qwen para seleccionar fuentes cuando se arranca con Docker Compose.
+> El buscador y Ask SI también abren la [referencia publicada M13](docs/FILMING_M13.md).
 
 La [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3) está fusionada en
 `main` mediante `0b732cb`: P1/P3/P4, la ingesta y los contratos de P2, Mission Lab

@@ -6,6 +6,8 @@ import type { HabitatId } from "../lib/filters";
 import { shortId } from "../lib/format";
 import { gsap, prefersReducedMotion, useGSAP } from "../lib/motion";
 import { Tag } from "./ui";
+import { M13_QUESTION, M13_REFERENCE, M13_ROWS } from "../lib/m13Reference";
+import "./m13-reference.css";
 
 export type ChatMessage =
   | { id: number; role: "user"; text: string }
@@ -74,7 +76,7 @@ export default function ChatPanel({ open, onClose, messages, busy, activeRunId, 
     </p>
 
     <ol className="chat-log" ref={log} aria-live="polite">
-      {messages.length === 0 && <li className="chat-empty">Ask a question or pick a habitat.</li>}
+      {messages.length === 0 && <li className="chat-empty"><span>Explore a published measurement</span><button type="button" className="m13-prompt" disabled={busy} onClick={() => onAsk(M13_QUESTION)}>{M13_QUESTION}<span aria-hidden="true">↗</span></button></li>}
       {messages.map((message) => {
         if (message.role === "user") return <li key={message.id} className="msg user">{message.text}</li>;
         if ("pending" in message) return <li key={message.id} className="msg si"><span className="typing" aria-label="Investigating"><i /><i /><i /></span></li>;
@@ -89,6 +91,15 @@ export default function ChatPanel({ open, onClose, messages, busy, activeRunId, 
           const pair = answer.comparison_studies;
           return <li key={message.id} className="msg si">
             <p>{answer.answer}</p>
+            {answer === M13_REFERENCE && <section className="m13-reference" aria-label="M13 segment measurements">
+              <header><b>BASS-II / M13</b><span>Published reference · Sample 169m</span></header>
+              <table><thead><tr><th>Segment</th><th>Flow <small>cm/s</small></th><th>Flame spread <small>mm/s</small></th></tr></thead><tbody>
+                {M13_ROWS.map(row => <tr key={row.segment}><td><span className="m13-segment-dot" />0{row.segment}</td><td>{row.flow}</td><td><b>{row.rate}</b><span className="m13-rate-bar" style={{ width: `${Number(row.rate) / 0.047 * 48}px` }} aria-hidden="true" /></td></tr>)}
+              </tbody></table>
+              <p>Three successive observations · one sample · source order, not elapsed time.</p>
+              <a href="https://ntrs.nasa.gov/api/citations/20210011385/downloads/TM-20210011385.pdf#page=65" target="_blank" rel="noreferrer">NASA/TM-20210011385 · Table 5.1 ↗</a>
+            </section>}
+
             {followUp && <button type="button" className="btn ghost" disabled={busy} onClick={() => onAsk(followUp)}>{followUp}</button>}
             {pair?.length === 2 && <button type="button" className="btn ghost" onClick={() => onCompare(pair)}>Open study comparison</button>}
             {!!answer.technical_details?.length && <details className="msg-steps">

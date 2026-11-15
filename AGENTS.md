@@ -3,8 +3,10 @@
 ## Integración de AI Research y Qwen
 
 La integración conserva el diseño y las contribuciones de `main` **`9914356`**,
-añade AI Research desde `origin/raul` **`f43d071`** y activa Qwen en Ask SI mediante
-Docker Compose. La entrega sigue el flujo de pull request hacia `main`.
+añade AI Research y la referencia M13 desde `origin/raul` **`16723f9`** y activa
+Qwen en Ask SI mediante Docker Compose. La entrega sigue el flujo de pull request
+hacia `main`. El buscador abre la referencia M13 con valores publicados y citas.
+[Guion M13](docs/FILMING_M13.md).
 
 El experimento de cinco pantallas de `72e6e2b` queda como historial en
 [UX_EXPERIMENT_RAUL](docs/UX_EXPERIMENT_RAUL.md); su composición ya no es la

@@ -5,7 +5,7 @@ import type { SearchItem } from "../lib/search";
 import { Icon } from "./icons";
 import type { IconName } from "./icons";
 
-const KIND_ICON: Record<SearchItem["kind"], IconName> = { section: "arrow", study: "catalog", trial: "report" };
+const KIND_ICON: Record<SearchItem["kind"], IconName> = { section: "arrow", study: "catalog", trial: "report", question: "chat" };
 
 /**
  * Header search: a trigger that looks like a field, and a modal list opened with
@@ -103,7 +103,7 @@ export default function CommandPalette({ items, enabled, onSelect }: {
           </div>;
         })}
       </div>
-      <p className="palette-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span>Matches names only; it does not answer questions.</span></p>
+      <p className="palette-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span>Select a research question to open its answer in Ask SI.</span></p>
     </dialog>
   </>;
 }

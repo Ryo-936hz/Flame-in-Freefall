@@ -184,6 +184,30 @@ try {
     check(await research.locator('.air-review, .air-result').count() === 0, 'reset removes review decisions and final output');
     await page.unroute(pattern, handler);
   });
+  await step('search opens the published M13 reference and its matching corpus record', async () => {
+    let chatRequests = 0;
+    const trackChat = request => {
+      if (new URL(request.url()).pathname === '/api/v1/chat') chatRequests += 1;
+    };
+    page.on('request', trackChat);
+    await page.getByRole('button', { name: /Search studies, trials and sections/ }).click();
+    const search = page.getByRole('combobox', { name: 'Search studies, trials and sections' });
+    await search.fill('What was the flame spread rate in each segment of BAS-II M13?');
+    await search.press('Enter');
+    const reference = page.getByRole('region', { name: 'M13 segment measurements' });
+    await reference.waitFor();
+    check((await reference.innerText()).includes('Published reference'), 'M13 is labelled as a published reference');
+    const rows = await reference.locator('tbody tr').allTextContents();
+    check(rows.length === 3 && ['0.047', '0.035', '0.033'].every((rate, index) => rows[index].includes(rate)), 'all three published rates appear in source order');
+    check(chatRequests === 0, 'the prepared reference did not call the chat model');
+    page.off('request', trackChat);
+
+    const chat = page.getByRole('complementary', { name: 'Ask SI conversation' });
+    await chat.getByText('Sources (3)', { exact: true }).click();
+    const source = page.waitForResponse(response => decodeURIComponent(new URL(response.url()).pathname) === '/api/v1/evidence/psi:PSI-25:M13:stage:3:table51');
+    await chat.getByRole('button', { name: /M13 · segment 3/ }).click();
+    check((await source).status() === (args.bundle ? 200 : 404), 'M13 cites the right active-corpus record and respects fixture absence');
+  });
   await step('no uncaught browser errors', async () => check(errors.length === 0, `browser errors: ${errors.join(' | ') || 'none'}`));
 } catch (error) {
   exitCode = 1;
