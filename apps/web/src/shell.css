@@ -36,10 +36,13 @@
   font-family: "Geist Sans Variable"; font-style: normal; font-display: swap; font-weight: 100 900;
   src: url("./assets/fonts/geist-latin-wght-normal.woff2") format("woff2-variations");
 }
+:root { --font-brand: "Geist Sans Variable", "SF Pro Display", -apple-system, "Helvetica Neue", Arial, sans-serif; }
 .sb-brand b {
-  display: block; font-family: "Geist Sans Variable", "SF Pro Display", -apple-system, "Helvetica Neue", Arial, sans-serif;
+  display: block; font-family: var(--font-brand);
   font-size: 16px; font-weight: 600; letter-spacing: -0.01em; text-transform: none; line-height: 1.1;
 }
+/* "FlameLab" inside running text uses the same face as the brand mark. */
+.brand-name { font-family: var(--font-brand); font-weight: 600; letter-spacing: -0.01em; }
 .sb-brand small { display: block; font-size: 11.5px; color: var(--ink-3); }
 
 /* ============================== Welcome page ============================== */

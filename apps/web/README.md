@@ -1,4 +1,4 @@
-# Cliente Ignition Protocol · interfaz integrada de demo (P5/P6)
+# Cliente FlameLab · interfaz integrada de demo (P5/P6)
 
 Sustituye al arnés técnico por una interfaz utilizable para la demo: formular
 pregunta y filtros sin editar JSON, investigar y explorar gráfico, tabla, ranking
