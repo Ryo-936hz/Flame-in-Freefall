@@ -225,7 +225,7 @@ try {
     const sourceBody = await (await fetch(url)).json();
     check(!url.searchParams.has("research_id"), "pre-research evidence reads the active corpus");
     await host.viewer(page).getByText(host.corpusMarker, { exact: false }).first().waitFor();
-    await host.viewer(page).getByText(evidenceId, { exact: true }).waitFor();
+    await host.viewer(page).locator("h3").getAttribute("title").then((title) => check(title === evidenceId, "the source retains its identifier"));
     check(await host.viewer(page).locator(".ev-text").textContent() === sourceBody.text, "corpus source text is displayed literally");
     await openView(page, "report");
     check(await report.getByText(/No active research\./).isVisible(), "opening corpus evidence does not invent a research record");
@@ -253,7 +253,7 @@ try {
     const evidenceId = /Open evidence (.+) \(saved research\)/.exec(name ?? "")?.[1] ?? "";
     await button.click();
     const viewer = host.viewer(page);
-    await viewer.getByText(evidenceId).first().waitFor();
+    await viewer.getByRole("heading", { level: 3 }).and(viewer.getByTitle(evidenceId, { exact: true })).waitFor();
     const url = await lastEvidenceRequest(evidenceId);
     check(url.searchParams.get("research_id") === researchId, `record evidence requested with research_id=${researchId}`);
     await page.waitForTimeout(200);
@@ -361,7 +361,7 @@ try {
     const before = evidenceRequests.length;
     await button.click();
     await host.viewer(page).getByText(host.corpusMarker).first().waitFor();
-    await host.viewer(page).getByText(evidenceId).first().waitFor();
+    await host.viewer(page).getByRole("heading", { level: 3 }).and(host.viewer(page).getByTitle(evidenceId, { exact: true })).waitFor();
     const url = evidenceRequests.slice(before).filter((u) => decodeURIComponent(u.pathname).endsWith(`/evidence/${evidenceId}`)).pop();
     check(url !== undefined && !url.searchParams.has("research_id"), "corpus evidence requested without research_id");
   });

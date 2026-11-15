@@ -332,7 +332,10 @@ export default function App() {
     const ids = evidenceFor(result, selection);
     return selection.evidenceId && !ids.includes(selection.evidenceId) ? [selection.evidenceId, ...ids] : ids;
   }, [result, selection, evidenceSource, citationRunId]);
-  const context = selection.observationId ? shortId(selection.observationId) : selection.trialId ? (labels.get(selection.trialId) ?? shortId(selection.trialId)) : null;
+  const selectedSegment = selection.observationId && result?.comparison?.points.find((point) =>
+    point.observation_id === selection.observationId)?.segment_id;
+  const trialContext = selection.trialId ? labels.get(selection.trialId) ?? shortId(selection.trialId) : null;
+  const context = trialContext && selectedSegment ? `${trialContext} · Segment ${selectedSegment.split(":").at(-1)}` : trialContext;
 
   const onOpenEvidence = useCallback((evidenceId: string, trialId: string | null, source: EvidenceSource = "record") => {
     setCitationRunId(null);

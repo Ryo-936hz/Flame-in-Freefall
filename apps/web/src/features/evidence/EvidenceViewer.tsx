@@ -3,12 +3,19 @@ import { gsap, prefersReducedMotion, useGSAP } from "../../lib/motion";
 import type { Api, Evidence } from "../../lib/client";
 import { ApiError, sourceLink } from "../../lib/client";
 import { createLatest } from "../../lib/latest";
-import { shortId } from "../../lib/format";
 import { tx } from "../../lib/backendText";
 import { Panel, ProvenanceTag, StateMessage, Tag } from "../../components/ui";
 
 type Load = { state: "idle" } | { state: "loading"; key: string } | { state: "ready"; key: string; evidence: Evidence } | { state: "error"; key: string; message: string };
 
+function sourceTab(id: string, index: number): string {
+  if (id.endsWith(":operational")) return "Trial conditions";
+  if (/:(?:stage|segment):\d+:table51$/i.test(id)) return "Segment measurements";
+  if (id.endsWith(":table51")) return "Summary table";
+  if (id.endsWith(":configuration")) return "Test configuration";
+  if (id.endsWith(":oxygen")) return "Oxygen method";
+  return `Source ${index + 1}`;
+}
 /**
  * Shows the evidence behind the current selection. It always passes the
  * research_id for record sources; corpus reads are explicit and also work before a run.
@@ -55,10 +62,10 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
   }, { scope: body, dependencies: [evidence?.id] });
   const link = sourceLink(evidence?.source_url);
 
-  return <Panel id="evidence" title="Evidence" className="evidence" meta={context && <span className="id">{context}</span>}>
+  return <Panel id="evidence" title="Evidence" className="evidence" meta={context && <span>{context}</span>}>
     <div className="panel-b" ref={body}>
       {ids.length > 1 && <div className="ev-tabs" role="group" aria-label="Evidence for the selection">
-        {ids.map((id) => <button type="button" key={id} className="chip" aria-pressed={id === activeId} onClick={() => onPick(id)}>{shortId(id)}</button>)}
+        {ids.map((id, index) => <button type="button" key={id} className="chip" title={id} aria-pressed={id === activeId} onClick={() => onPick(id)}>{sourceTab(id, index)}</button>)}
       </div>}
       {shown.state === "idle" && <StateMessage kind="empty" title="Nothing selected">
         <p>Pick a chart point, a table row or a citation to see its source.</p>
@@ -73,18 +80,22 @@ export default function EvidenceViewer({ api, researchId, ids, retrieved, active
           <Tag tone={evidence.reviewed ? "neutral" : "warn"}>{evidence.reviewed ? "Reviewed" : "Review pending"}</Tag>
           {!retrieved && <Tag tone="warn">Active corpus · not in this research record</Tag>}
         </div>
-        <h3>{tx(evidence.title)}</h3>
-        <dl className="ev-meta">
-          <div><dt>ID</dt><dd className="id">{evidence.id}</dd></div>
-          <div><dt>Study</dt><dd className="id">{evidence.study_id}</dd></div>
-          <div><dt>Locator</dt><dd className="id">{evidence.locator}{evidence.page != null ? ` · PDF page ${evidence.page}` : ""}</dd></div>
-        </dl>
+        <h3 title={evidence.id}>{tx(evidence.title)}</h3>
+        <dl className="ev-meta"><div><dt>Location in source</dt>
+          <dd>{evidence.locator.split(/\. PSI-\d+\/|, SHA-256 /)[0]}</dd></div></dl>
         <pre className="ev-text">{evidence.text}</pre>
         {link
           ? <a className="btn" href={link} target="_blank" rel="noreferrer">Open public source ↗</a>
           : <p className="hint">{evidence.provenance === "synthetic"
             ? "Synthetic fixture: it does not link to any NASA measurement."
             : "No public URL. The source can be found with the file locator; no link is invented."}</p>}
+        <details><summary>Record identifiers and file details</summary>
+          <dl className="ev-meta">
+            <div><dt>Evidence ID</dt><dd className="id">{evidence.id}</dd></div>
+            <div><dt>Study ID</dt><dd className="id">{evidence.study_id}</dd></div>
+            <div><dt>Full locator</dt><dd className="id">{evidence.locator}</dd></div>
+          </dl>
+        </details>
       </article>}
     </div>
   </Panel>;
