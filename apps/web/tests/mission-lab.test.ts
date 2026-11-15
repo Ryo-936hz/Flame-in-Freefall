@@ -169,9 +169,9 @@ test("flow_scored_2 on the default filters scores flow instead of varying it", (
   assert.equal(b.limit, demoRanking.limit);
   assert.deepEqual(demoRanking, snapshot);
   assert.deepEqual(describeScenarioChanges(demoRanking, b), [
-    "flow_velocity_cm_s target set to 2",
-    "flow_velocity_cm_s removed from varied conditions",
-    "flow_velocity_cm_s weight unset (default 1) → 1"
+    "Flow velocity target set to 2 cm/s",
+    "Flow velocity removed from varied conditions",
+    "Flow velocity weight unset (default 1) → 1"
   ]);
 });
 
@@ -184,8 +184,8 @@ test("flow_scored_2 drops a flow prerequisite instead of requiring it", () => {
   assert.ok((b.weights?.flow_velocity_cm_s ?? 0) > 0);
   assert.deepEqual(flowRequired, snapshot);
   const changes = describeScenarioChanges(flowRequired, b);
-  assert.ok(changes.includes("flow_velocity_cm_s removed from required matches"));
-  assert.ok(changes.includes("flow_velocity_cm_s target 5 → 2"));
+  assert.ok(changes.includes("Flow velocity removed from required matches"));
+  assert.ok(changes.includes("Flow velocity · 5 cm/s → 2 cm/s"));
 });
 
 test("flow_scored_2 turns a zero weight into a positive one and keeps positive weights", () => {
@@ -194,8 +194,8 @@ test("flow_scored_2 turns a zero weight into a positive one and keeps positive w
   assert.equal(b.weights?.flow_velocity_cm_s, 1);
   assert.deepEqual(flowZeroWeight, snapshot);
   assert.deepEqual(describeScenarioChanges(flowZeroWeight, b), [
-    "flow_velocity_cm_s target 5 → 2",
-    "flow_velocity_cm_s weight 0 → 1"
+    "Flow velocity · 5 cm/s → 2 cm/s",
+    "Flow velocity weight 0 → 1"
   ]);
   const weighted: RankingRequest = { ...flowZeroWeight, weights: { flow_velocity_cm_s: 2.5 } };
   const kept = buildDemoScenario(weighted, "flow_scored_2").scenario_b;
@@ -224,11 +224,11 @@ test("describeScenarioChanges reports nothing for equivalent requests and lists 
   const explicitDefaults: RankingRequest = { ...demoRanking, weights: {}, study_ids: [], condition_scope: "trial" };
   assert.deepEqual(describeScenarioChanges(demoRanking, explicitDefaults), []);
   assert.deepEqual(describeScenarioChanges(demoRanking, buildDemoScenario(demoRanking, "gravity_lunar").scenario_b),
-    ["gravity_regime target microgravity → lunar"]);
+    ["Gravity regime · Microgravity → Lunar gravity"]);
   assert.deepEqual(describeScenarioChanges(demoRanking, buildDemoScenario(demoRanking, "exclude_synthetic").scenario_b),
     ["Synthetic fixtures allowed → not allowed"]);
   assert.deepEqual(describeScenarioChanges(demoRanking, { ...demoRanking, minimum_coverage: 0.8, limit: 5, study_ids: ["synthetic:study-a"] }),
-    ["Minimum coverage 0.6 → 0.8", "Limit 3 → 5", "synthetic:study-a added to selected studies"]);
+    ["Minimum coverage 60% → 80%", "Limit 3 → 5", "synthetic:study-a added to selected studies"]);
 });
 
 test("preset texts are in English and describe fixtures as synthetic, not NASA data", () => {
@@ -239,8 +239,8 @@ test("preset texts are in English and describe fixtures as synthetic, not NASA d
     assert.doesNotMatch(preset.expectation, /(?<!not )NASA measurement/);
   }
   const flow = scenarioPresets.find((preset) => preset.id === "flow_scored_2");
-  assert.match(flow?.change ?? "", /leaves required matches and varied conditions/);
-  assert.match(flow?.expectation ?? "", /synthetic demo fixtures \(not NASA measurements\)/);
+  assert.match(flow?.change ?? "", /similarity to a flow of 2 cm\/s/);
+  assert.match(flow?.expectation ?? "", /synthetic demo fixtures/);
 });
 
 
@@ -280,7 +280,7 @@ test("different scored segments remain one kept trial with both contexts availab
   assert.equal(diff.selectedB, 1);
   assert.match(describeSegments(diff.kept[0]?.a ?? null), /Scored segment: synthetic:segment-a/);
   assert.match(describeSegments(diff.kept[0]?.b ?? null), /Eligible segments: synthetic:segment-b, synthetic:segment-c/);
-  assert.match(describeSegments(b), /not independent replicates/);
+  assert.match(describeSegments(b), /Eligible segments/);
   assert.match(describeSegments(trial("synthetic:no-segments", 0)), /Trial-level ranking/);
   assert.equal(describeSegments(null), "Trial not selected in this scenario.");
 });
@@ -288,7 +288,7 @@ test("different scored segments remain one kept trial with both contexts availab
 
 test("empty selection explanations distinguish metric-aware and conditions-only responses", () => {
   const metricAware = diffScenarioRankings({ ...response({}), metric: "heat_release_w" });
-  assert.ok(metricAware.summary.some((line) => line.includes("available measurements of heat_release_w")));
+  assert.ok(metricAware.summary.some((line) => line.includes("available measurements of Heat release")));
   const legacy = diffScenarioRankings(response({}));
   assert.ok(legacy.summary.some((line) => line.includes("metric availability was not requested")));
 });

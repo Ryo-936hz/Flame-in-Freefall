@@ -29,3 +29,7 @@ data/processed/
 *.zip
 *.pdf
 *.docx
+
+# Bundles locales para FLAMELAB_DATA=bundle en Docker (no se versionan)
+data/local/*
+!data/local/README.md

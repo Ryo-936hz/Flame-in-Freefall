@@ -4,6 +4,10 @@ import casesText from "../../../../../data/catalog/p2-demo-cases-v1.1.0.json?raw
 import copyText from "../../../../../data/catalog/p2-demo-copy-v1.1.1.json?raw";
 import { ApiError } from "../../lib/client";
 import type { Models, ResearchResponse } from "../../lib/client";
+import { conditionLabel, metricLabel } from "../../lib/filters";
+import { PROVENANCE_LABEL, shortId } from "../../lib/format";
+import { tx } from "../../lib/backendText";
+import ScatterChart from "../evidence/ScatterChart";
 import type { MissionSlotProps } from "./slot";
 import { createRequestGuard, describeRequest } from "./comparisonState";
 import { describeSegments, diffScenarioRankings } from "./scenarios";
@@ -36,26 +40,28 @@ function RunDetails({ run, active, onOpen, onEvidence }: {
   run: ResearchResponse; active: boolean; onOpen(): void; onEvidence(id: string): void;
 }) {
   const points = run.comparison?.points ?? [];
+  const xLabel = run.comparison?.x_condition ? conditionLabel(run.comparison.x_condition) : "Condition";
+  const yLabel = run.comparison ? metricLabel(run.comparison.metric) : "Measurement";
   const m8Sources = run.evidence.filter((source) => source.id.startsWith(`${BASS_STUDY}:M8:stage:`) && source.id.endsWith(":table51"));
   return <div className="ml-bass-run" data-research-id={run.id}>
-    <p>Observed API status: <strong>{run.status}</strong> · {run.ranking.items.length} selected trials · {points.length} observations.</p>
-    <p><code>{run.id}</code> · {active ? "Active research in the workspace" : "Saved result; another research is active"}.</p>
+    <p><strong>{run.status === "completed" ? "Completed" : "Insufficient evidence"}</strong> · {run.ranking.items.length} selected trials · {points.length} observations.</p>
     {!active && <button type="button" onClick={onOpen}>Open this BASS-II research</button>}
-    <p>{run.summary}</p>
+    <p>{tx(run.summary)}</p>
     {run.plan && <details><summary>Saved filters and metric</summary>
-      <p>Metric: <code>{run.plan.metric}</code> · X <code>{run.plan.x_condition ?? "not assigned"}</code></p>
+      <p>{metricLabel(run.plan.metric)} · Horizontal axis {run.plan.x_condition ? conditionLabel(run.plan.x_condition) : "not assigned"}</p>
       <ul className="ml-filters">{describeRequest(run.plan.ranking).map((line) => <li key={line}>{line}</li>)}</ul>
     </details>}
     {points.length > 0 && <table className="ml-table ml-bass-points">
       <caption>Observations returned by the API. Original values/units are retained when available, together with segment and sample identity; rows are not additional independent replicates.</caption>
-      <thead><tr><th>Trial / segment / observation</th><th>Sample</th><th>X: {run.comparison?.x_condition ?? "unassigned"}</th><th>Y: {run.comparison?.metric ?? "unassigned"}</th><th>Source</th></tr></thead>
+      <thead><tr><th>Trial / segment</th><th>Sample</th><th>{xLabel}</th><th>{yLabel}</th><th>Source</th></tr></thead>
       <tbody>{points.map((point) => <tr key={point.observation_id}>
-        <th scope="row" data-label="Trial / segment"><code>{point.trial_id}</code><br/><code>{point.segment_id ?? "not assigned"}</code><br/><code>{point.observation_id}</code></th>
-        <td data-label="Sample"><code>{point.independent_unit_id}</code><br/>{point.independent_unit_status}</td>
-        <td data-label={`X: ${run.comparison?.x_condition ?? "unassigned"}`}>{point.x ?? "unavailable"} {run.comparison?.x_unit ?? ""}</td>
-        <td data-label={`Y: ${run.comparison?.metric ?? "unassigned"}`}>{point.original_value ?? point.y} {point.original_unit ?? run.comparison?.unit}<br/><span className="ml-tag">{point.provenance}</span></td>
-        <td data-label="Source">{point.evidence_ids.map((id) => <button className="reference" type="button" key={id} disabled={!active}
-          onClick={() => onEvidence(id)} aria-label={`Open evidence ${id} (saved BASS-II research)`}>{id}</button>)}</td>
+        <th scope="row" data-label="Trial / segment" title={point.observation_id}>{point.trial_id.split(":").at(-1)}<br/>
+          {point.segment_id ? `Segment ${point.segment_id.split(":").at(-1)}` : "No segment"}</th>
+        <td data-label="Sample" title={point.independent_unit_id}>{point.independent_unit_status === "identified" ? point.independent_unit_id.split(":").at(-1) : "Unresolved"}</td>
+        <td data-label={xLabel}>{point.x ?? "Unavailable"} {run.comparison?.x_unit ?? ""}</td>
+        <td data-label={yLabel}>{point.original_value ?? point.y} {point.original_unit ?? run.comparison?.unit}<br/><span className="ml-tag">{PROVENANCE_LABEL[point.provenance]}</span></td>
+        <td data-label="Source">{point.evidence_ids.map((id, index) => <button className="reference" type="button" key={id} disabled={!active} title={id}
+          onClick={() => onEvidence(id)} aria-label={`Open evidence ${id} (saved BASS-II research)`}>{point.evidence_ids.length === 1 ? "Open source" : `Source ${index + 1}`}</button>)}</td>
       </tr>)}</tbody>
     </table>}
     {points.length > 0 && !active && <p className="ml-muted">Open this saved research before opening its evidence; citations are read from that research snapshot.</p>}
@@ -126,6 +132,8 @@ export function BassCasesPanel({ api, research, researchState, onOpenRun, onOpen
     onOpenEvidence(id, trial, "record");
   };
   const diff = outcome?.kind === "comparison" ? diffScenarioRankings(outcome.response) : null;
+  const paired = outcome?.kind === "comparison" && outcome.assessment.confirmed && outcome.a.comparison && outcome.b.comparison
+    ? { ...outcome.a.comparison, points: [...outcome.a.comparison.points, ...outcome.b.comparison.points] } : null;
 
   return <section className="ml-block ml-bass" aria-labelledby={`${uid}-bass-title`}>
     <h3 id={`${uid}-bass-title`}>BASS-II · approved source cases</h3>
@@ -138,7 +146,14 @@ export function BassCasesPanel({ api, research, researchState, onOpenRun, onOpen
           onClick={() => void execute(id)}>Run BASS-II · {TITLES[id]}</button>)}
         <button type="button" disabled={pending !== null} onClick={() => void execute("compare")}>Compare BASS-II · 6 → 5 cm/s</button>
       </div>
-      <details><summary>Exact preset inputs</summary><pre>{JSON.stringify(config.cases, null, 2)}</pre></details>
+      <details><summary>Preset filters</summary>
+        {(["bass_6", "bass_5", "lunar"] as const).map((id) => {
+          const ranking = config.cases[id].ranking;
+          return ranking && <div key={id}>
+            <h4>{TITLES[id]}</h4><ul className="ml-filters">{describeRequest(ranking).map((line) => <li key={line}>{line}</li>)}</ul>
+          </div>;
+        })}
+      </details>
       {pending && <p role="status" aria-busy="true">Loading BASS-II {pending === "compare" ? "A/B source cases" : TITLES[pending]} from the API…</p>}
       {error && <div role="alert"><p>{error}</p><button type="button" onClick={() => void execute(lastOperation)} disabled={pending !== null}>Retry BASS-II request</button></div>}
       {outcome && <div className="ml-result" data-bass-case={outcome.kind === "case" ? outcome.id : undefined}
@@ -155,11 +170,23 @@ export function BassCasesPanel({ api, research, researchState, onOpenRun, onOpen
           <RunDetails run={outcome.run} active={research?.id === outcome.run.id} onOpen={() => onOpenRun(outcome.run)} onEvidence={(id) => openEvidence(outcome.run, id)} />
         </> : <>
           {outcome.assessment.confirmed && <blockquote data-approved-copy="comparison">{config.copy.bass_comparison}</blockquote>}
-          <p>Comparison from <code>/scenarios/compare</code>: {outcome.response.label}. The result compares evidence selection, not combustion or risk.</p>
-          {diff && <><ul className="ml-summary">{diff.summary.map((line, index) => <li key={index}>{line}</li>)}</ul>
+          {paired && <section className="ml-bass-measurements" aria-label="BASS-II flame spread measurements">
+            <h5>Flame spread at 5 and 6 cm/s</h5>
+            <p>{paired.points.length} observations from {new Set(paired.points.map((point) => point.independent_unit_id)).size} identified samples. Each point opens the source for that observation.</p>
+            <ScatterChart comparison={paired} groupIndex={new Map()} selectedObservation={null} selectedTrial={null}
+              onSelect={(id) => {
+                const point = paired.points.find((entry) => entry.observation_id === id);
+                if (!point?.evidence_ids[0]) return;
+                const run = outcome.a.comparison?.points.some((entry) => entry.observation_id === id) ? outcome.a : outcome.b;
+                onOpenRun(run);
+                onOpenEvidence(point.evidence_ids[0], point.trial_id, "record");
+              }} />
+          </section>}
+          {diff && <details><summary>Trials that changed between A and B</summary>
             <ul className="ml-list">{[...diff.kept, ...diff.entered, ...diff.left].map((change) => <li key={change.trial_id}>
-              <code>{change.trial_id}</code> · {change.status}<br/>A: {describeSegments(change.a)}<br/>B: {describeSegments(change.b)}
-            </li>)}</ul></>}
+              <span title={change.trial_id}>{shortId(change.trial_id).split(":").at(-1)}</span> · {{ kept: "Selected in both", entered: "Added in B", left: "Absent in B" }[change.status]}<br/>A: {describeSegments(change.a)}<br/>B: {describeSegments(change.b)}
+            </li>)}</ul>
+          </details>}
           <div className="actions"><button type="button" onClick={() => onOpenRun(outcome.a)}>Open BASS-II research A</button><button type="button" onClick={() => onOpenRun(outcome.b)}>Open BASS-II research B</button></div>
           <h5>A · 6 cm/s</h5><RunDetails run={outcome.a} active={research?.id === outcome.a.id} onOpen={() => onOpenRun(outcome.a)} onEvidence={(id) => openEvidence(outcome.a, id)} />
           <h5>B · 5 cm/s</h5><RunDetails run={outcome.b} active={research?.id === outcome.b.id} onOpen={() => onOpenRun(outcome.b)} onEvidence={(id) => openEvidence(outcome.b, id)} />

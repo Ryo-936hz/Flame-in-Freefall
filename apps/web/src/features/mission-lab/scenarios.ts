@@ -4,6 +4,7 @@
 import type { Models, RankingRequest } from "../../lib/client";
 import type { MissionMetric } from "./slot";
 import { canonicalRequest, formatValue } from "./comparisonState";
+import { conditionLabel, conditionValueLabel, metricLabel } from "../../lib/filters";
 
 export type RankedTrial = Models["RankedTrial"];
 export type ScenarioComparisonRequest = Models["ScenarioComparisonRequest"];
@@ -100,29 +101,29 @@ export const scenarioPresets: readonly ScenarioPreset[] = [
   {
     id: "gravity_lunar",
     title: "lunar gravity",
-    change: "gravity_regime = lunar, required in required matches and removed from varied conditions.",
-    expectation: "Observed with the synthetic demo fixtures (not NASA measurements) and the default synthetic filters: B has no eligible trials because no fixture declares lunar gravity. The three trials selected in A leave with required_condition_mismatch:gravity_regime and the API warns that there is no eligible evidence.",
+    change: "Require trials recorded in lunar gravity.",
+    expectation: "The synthetic demo fixtures contain no lunar trials.",
     build: (base) => requireCondition(base, "gravity_regime", "lunar")
   },
   {
     id: "gravity_earth",
     title: "Earth gravity",
-    change: "gravity_regime = earth, required in required matches and removed from varied conditions.",
-    expectation: "Observed with the synthetic demo fixtures (not NASA measurements) and the default synthetic filters: the selection changes completely. The three microgravity fixtures leave and synthetic:trial-4, the only fixture declared in Earth gravity, enters.",
+    change: "Require trials recorded in Earth gravity.",
+    expectation: "The synthetic demo fixtures contain one trial in Earth gravity.",
     build: (base) => requireCondition(base, "gravity_regime", "earth")
   },
   {
     id: "flow_scored_2",
     title: "flow 2 cm/s scored",
-    change: "flow_velocity_cm_s = 2 is scored by Gower distance instead of being required: it enters the target, leaves required matches and varied conditions, and gets weight 1 if its weight was unset or 0 (a positive weight is kept).",
-    expectation: "Observed with the synthetic demo fixtures (not NASA measurements). From the default synthetic filters (flow varied) the same three microgravity trials stay selected, but similarity now includes flow: synthetic:trial-1 (2 cm/s) keeps 1, synthetic:trial-2 drops to 0.985 and synthetic:trial-3 to 0.96 (flow distances 0.03 and 0.08 on the fixed v1 scale). If A required flow = 5 cm/s, only synthetic:trial-2 was selected and synthetic:trial-1 and synthetic:trial-3 enter in B. If A gave flow weight 0, its contribution goes from not scored to scored with the same values. Order is similarity under explicit filters, not a physical outcome.",
+    change: "Rank trials by similarity to a flow of 2 cm/s.",
+    expectation: "In the synthetic demo fixtures, this can change rank while keeping the same trials.",
     build: (base) => scoreCondition(base, "flow_velocity_cm_s", 2)
   },
   {
     id: "exclude_synthetic",
     title: "no synthetic fixtures",
-    change: "allow_synthetic = false; every other filter stays the same.",
-    expectation: "With the synthetic demo dataset, B has no applicable evidence: every trial is a synthetic fixture and leaves with synthetic_not_allowed. It shows that fixtures are never passed off as real evidence.",
+    change: "Keep only evidence from sourced experiments.",
+    expectation: "The synthetic demo fixtures are excluded.",
     build: (base) => ({ ...cloneRequest(base), allow_synthetic: false })
   }
 ];
@@ -200,7 +201,7 @@ export function diffScenarioRankings(response: ScenarioComparison): ScenarioDiff
   ];
   summary.push("Selected lists are limited by the request. Excluded counts do not include eligible trials omitted by that limit.");
   const scope = response.metric
-    ? `explicit filters, minimum coverage and available measurements of ${response.metric}`
+    ? `explicit filters, minimum coverage and available measurements of ${metricLabel(response.metric)}`
     : "explicit filters and minimum coverage (metric availability was not requested)";
   if (noEvidenceA) summary.push(`${nameA} has no applicable evidence with its ${scope}.`);
   if (noEvidenceB) summary.push(`${nameB} has no applicable evidence with its ${scope}.`);
@@ -231,7 +232,8 @@ export function describeSegments(item: RankedTrial | null): string {
   const scored = item.scored_segment_id;
   const eligible = item.eligible_segment_ids ?? [];
   if (!scored && !eligible.length) return "Trial-level ranking; no segment selected for scoring.";
-  return `Scored segment: ${scored ?? "not assigned"}. Eligible segments: ${eligible.length ? eligible.join(", ") : "none"}. Segments remain parts of the same trial, not independent replicates.`;
+  const segmentName = (id: string) => id.match(/:(?:stage|segment):(\d+)$/)?.[1] ?? id;
+  return `Scored segment: ${scored ? segmentName(scored) : "not assigned"}. Eligible segments: ${eligible.length ? eligible.map(segmentName).join(", ") : "none"}.`;
 }
 
 /** Texto visible para la etiqueta de una hipótesis; nunca la presenta como física validada. */
@@ -246,10 +248,10 @@ export function hypothesisLabelText(label: Hypothesis["label"]): string {
   }
 }
 
-function setChanges(a: string[], b: string[], noun: string): string[] {
+function setChanges(a: string[], b: string[], noun: string, label = (key: string) => key): string[] {
   const out: string[] = [];
-  for (const key of b) if (!a.includes(key)) out.push(`${key} added to ${noun}`);
-  for (const key of a) if (!b.includes(key)) out.push(`${key} removed from ${noun}`);
+  for (const key of b) if (!a.includes(key)) out.push(`${label(key)} added to ${noun}`);
+  for (const key of a) if (!b.includes(key)) out.push(`${label(key)} removed from ${noun}`);
   return out;
 }
 
@@ -261,14 +263,14 @@ export function describeScenarioChanges(a: RankingRequest, b: RankingRequest): s
   const targetA = new Map(ca.target);
   const targetB = new Map(cb.target);
   for (const [key, value] of cb.target) {
-    if (!targetA.has(key)) changes.push(`${key} target set to ${formatValue(value)}`);
+    if (!targetA.has(key)) changes.push(`${conditionLabel(key)} target set to ${conditionValueLabel(key, value)}`);
     else if (JSON.stringify(targetA.get(key)) !== JSON.stringify(value)) {
-      changes.push(`${key} target ${formatValue(targetA.get(key))} → ${formatValue(value)}`);
+      changes.push(`${conditionLabel(key)} · ${conditionValueLabel(key, targetA.get(key))} → ${conditionValueLabel(key, value)}`);
     }
   }
-  for (const [key] of ca.target) if (!targetB.has(key)) changes.push(`${key} target removed`);
-  changes.push(...setChanges(ca.required_match, cb.required_match, "required matches"));
-  changes.push(...setChanges(ca.vary, cb.vary, "varied conditions"));
+  for (const [key] of ca.target) if (!targetB.has(key)) changes.push(`${conditionLabel(key)} target removed`);
+  changes.push(...setChanges(ca.required_match, cb.required_match, "required matches", conditionLabel));
+  changes.push(...setChanges(ca.vary, cb.vary, "varied conditions", conditionLabel));
   const weightsA = new Map(ca.weights);
   const weightsB = new Map(cb.weights);
   for (const key of [...new Set([...weightsA.keys(), ...weightsB.keys()])].sort()) {
@@ -276,12 +278,12 @@ export function describeScenarioChanges(a: RankingRequest, b: RankingRequest): s
     const wb = weightsB.get(key);
     if (wa === wb) continue;
     const show = (w: number | undefined) => (w === undefined ? "unset (default 1)" : formatValue(w));
-    changes.push(`${key} weight ${show(wa)} → ${show(wb)}`);
+    changes.push(`${conditionLabel(key)} weight ${show(wa)} → ${show(wb)}`);
   }
   if (ca.allow_synthetic !== cb.allow_synthetic) {
     changes.push(`Synthetic fixtures ${ca.allow_synthetic ? "allowed" : "not allowed"} → ${cb.allow_synthetic ? "allowed" : "not allowed"}`);
   }
-  if (ca.minimum_coverage !== cb.minimum_coverage) changes.push(`Minimum coverage ${formatValue(ca.minimum_coverage)} → ${formatValue(cb.minimum_coverage)}`);
+  if (ca.minimum_coverage !== cb.minimum_coverage) changes.push(`Minimum coverage ${Math.round(ca.minimum_coverage * 100)}% → ${Math.round(cb.minimum_coverage * 100)}%`);
   if (ca.limit !== cb.limit) changes.push(`Limit ${formatValue(ca.limit)} → ${formatValue(cb.limit)}`);
   changes.push(...setChanges(ca.study_ids, cb.study_ids, "selected studies"));
   if (ca.condition_scope !== cb.condition_scope) changes.push(`Condition scope ${ca.condition_scope} → ${cb.condition_scope}`);

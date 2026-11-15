@@ -57,20 +57,20 @@ test("freshness is current, stale or unknown", () => {
 
 test("describeRequest is readable English with defaults applied", () => {
   assert.deepEqual(describeRequest(demoRanking), [
-    "Target: gravity_regime = microgravity",
-    "Required matches: gravity_regime",
-    "Varied (not scored): flow_velocity_cm_s",
+    "Target: Gravity regime · Microgravity",
+    "Required matches: Gravity regime",
+    "Varied (not scored): Flow velocity",
     "Weights: default (1 per scored target)",
     "Synthetic fixtures: allowed",
-    "Minimum coverage: 0.6",
+    "Minimum coverage: 60%",
     "Limit: 3",
     "Studies: all"
   ]);
   const lines = describeRequest({ target: { flow_velocity_cm_s: 0 }, weights: { flow_velocity_cm_s: 0 }, condition_scope: "segment" });
-  assert.ok(lines.includes("Target: flow_velocity_cm_s = 0"));
-  assert.ok(lines.includes("Weights: flow_velocity_cm_s = 0"));
+  assert.ok(lines.includes("Target: Flow velocity · 0 cm/s"));
+  assert.ok(lines.includes("Weights: Flow velocity · 0"));
   assert.ok(lines.includes("Synthetic fixtures: not allowed"));
-  assert.ok(lines.includes("Condition scope: segment"));
+  assert.ok(lines.includes("Conditions evaluated per trial segment"));
 });
 
 test("request guard lets only the latest request apply its late response", async () => {
@@ -139,9 +139,9 @@ test("provider text distinguishes the deterministic demo from an external model"
 
 test("displayed studied variables retain the sent order relevant to research axes", () => {
   const request: RankingRequest = { vary: ["pressure_kpa", "flow_velocity_cm_s"] };
-  assert.ok(describeRequest(request).includes("Varied (not scored): pressure_kpa, flow_velocity_cm_s"));
+  assert.ok(describeRequest(request).includes("Varied (not scored): Pressure, Flow velocity"));
   assert.ok(describeRequest({ vary: ["flow_velocity_cm_s", "pressure_kpa"] })
-    .includes("Varied (not scored): flow_velocity_cm_s, pressure_kpa"));
+    .includes("Varied (not scored): Flow velocity, Pressure"));
   // Rank-only eligibility still treats these as the same varied-condition set.
   assert.equal(requestFingerprint(request), requestFingerprint({ vary: ["flow_velocity_cm_s", "pressure_kpa"] }));
 });

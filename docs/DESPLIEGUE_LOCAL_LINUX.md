@@ -163,6 +163,7 @@ Corpus con `FLAMELAB_DATA`, cada uno en su propia base del volumen `flamelab-wor
 | --- | --- | --- |
 | `catalog` (por defecto) | `data/catalog/psi_metadata.json`, 24 estudios reales sin ensayos | `metadata_only` |
 | `demo` | `data/fixtures/demo.json`, sintético: no son mediciones NASA | `synthetic` |
+| `bundle` | `FLAMELAB_BUNDLE` de `data/local/`: `bundle.json` o ZIP del paquete P2 (cotejado con `SHA256SUMS`) | el del bundle, p. ej. `scientific_unverified` |
 | `empty` | base vacía | `empty` |
 
 ```bash
@@ -187,5 +188,15 @@ docker compose down          # parar; añadir -v borra también las bases del vo
 Verificado en Linux Mint 22.3 (Docker 29.9.2, Compose v5.6.1): build, `catalog`
 (24 estudios, `metadata_only`), `demo` (`synthetic`), reinicio sin reimportar
 (`"changed": false`), SPA y `/docs` vía nginx. **No probado aún en Windows.**
+
+Modo `bundle`, verificado el 15-11-2026 en el mismo equipo con el fixture
+**sintético** `demo.json` como bundle (el paquete P2 real no está en este equipo, así
+que su carga en Docker queda pendiente de comprobar con el ZIP 1.1.1):
+
+- `.json` → `changed: true`, base `bundle-516986db74fc.db`, `data_mode: synthetic`, 2 estudios.
+- ZIP con el mismo `bundle.json` y `SHA256SUMS` correcto → misma base, `changed: false`.
+- ZIP con `SHA256SUMS` que no coincide → la API no arranca: «bundle.json de … no coincide con su SHA256SUMS».
+- Sin `FLAMELAB_BUNDLE` y varios archivos → lista los candidatos y no arranca.
+- `FLAMELAB_BUNDLE=../data/fixtures/demo.json` → rechazado (fuera de la carpeta de importación).
 PostgreSQL sigue opcional y sin verificar: `docker compose --profile postgres up -d postgres`
 con `FLAMELAB_POSTGRES_PASSWORD` definida.

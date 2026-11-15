@@ -158,11 +158,12 @@ indica qué hay cargado en `data_mode`.
 | --- | --- | --- | --- |
 | Demo sintética | `data/fixtures/demo.json`: 2 estudios, 5 ensayos y 6 observaciones **sintéticas**, no mediciones NASA | `synthetic` | Todo el recorrido: Investigate, A/B, informe |
 | Catálogo real | `data/catalog/psi_metadata.json`: 24 estudios, solo metadatos, sin ensayos | `metadata_only` | Study catalog; investigación y A/B devuelven evidencia insuficiente |
-| BASS-II (P2) | `bundle.json` del paquete interno 1.1.1, **no incluido en el repositorio** | `scientific_unverified` | Guion BASS-II de [DEMO](docs/DEMO.md) |
+| Corpus NASA P2 | `bundle.json` o ZIP del paquete interno 1.1.1, **no incluido en el repositorio** | `scientific_unverified` | Guion BASS-II de [DEMO](docs/DEMO.md), catálogo con series |
 | Vacío | sin datos | `empty` | Solo la estructura de la interfaz |
 
-**Docker:** elegir con `FLAMELAB_DATA` (`catalog` por defecto, `demo` o `empty`).
-La importación del catálogo es automática e idempotente.
+**Docker:** elegir con `FLAMELAB_DATA` (`catalog` por defecto, `demo`, `bundle` o
+`empty`). La importación es automática al arrancar la API, valida antes de escribir y
+es idempotente.
 
 ```bash
 FLAMELAB_DATA=demo docker compose up -d                 # Linux
@@ -171,6 +172,31 @@ FLAMELAB_DATA=demo docker compose up -d                 # Linux
 ```powershell
 $env:FLAMELAB_DATA = 'demo'; docker compose up -d       # Windows PowerShell
 ```
+
+Para cargar un corpus propio (p. ej. el paquete P2), copiarlo a `data/local/` y
+arrancar con `FLAMELAB_DATA=bundle`. Se acepta un `bundle.json` o el ZIP del paquete
+(`flamelab-p2-demo-v1.1.1.zip`): de este se lee `bundle.json` **sin extraer** y se
+coteja con su `SHA256SUMS`; si no coincide, la API no arranca.
+
+```bash
+cp ~/flamelab-p2-demo-v1.1.1.zip data/local/
+FLAMELAB_DATA=bundle FLAMELAB_BUNDLE=flamelab-p2-demo-v1.1.1.zip docker compose up -d
+docker compose logs api | grep -E 'Bundle|changed|datos='   # SHA-256, recuentos y base
+```
+
+```powershell
+Copy-Item C:\ruta\flamelab-p2-demo-v1.1.1.zip data\local\
+$env:FLAMELAB_DATA = 'bundle'; $env:FLAMELAB_BUNDLE = 'flamelab-p2-demo-v1.1.1.zip'
+docker compose up -d
+```
+
+- `data/local/` se monta en solo lectura y no se versiona ni entra en la imagen. Otra
+  carpeta: `FLAMELAB_IMPORT_DIR=/ruta`. Si solo hay un `.json`/`.zip`, `FLAMELAB_BUNDLE`
+  es opcional.
+- Cada contenido va a su propia base `bundle-<sha256[:12]>.db` del volumen: cambiar de
+  bundle nunca sustituye otro corpus ni usa `--replace`, y volver a uno anterior
+  reutiliza su base (`changed: false`).
+- Para volver al catálogo: `docker compose up -d` sin esas variables.
 
 **Nativo:** importar en una base dedicada y arrancar la API apuntando a ella. La
 validación precede a la escritura; repetir el mismo contenido es idempotente y
@@ -200,7 +226,7 @@ Las variables de entorno tienen prioridad sobre `.env` y solo duran en esa termi
   el `.env` de ejemplo). Nunca sustituye un corpus existente.
 - **BASS-II:** mismo procedimiento con la ruta del `bundle.json` y otra base
   (`sqlite:///work/p2-demo-v1.1.1.db`); ver [DEMO](docs/DEMO.md#guion-real-bass-ii-separado-del-fixture).
-  En Docker no está automatizado: el paquete no se distribuye con el repositorio.
+  En Docker: `FLAMELAB_DATA=bundle` (arriba). El paquete no se distribuye con el repositorio.
 
 Registro de la verificación en Linux, con salidas reales: [DESPLIEGUE_LOCAL_LINUX](docs/DESPLIEGUE_LOCAL_LINUX.md).
 

@@ -13,7 +13,8 @@ export function reasonText(code: string): string {
     case "coverage_below_minimum": return "Coverage below minimum";
     case "no_known_target_conditions": return "No known target conditions";
     case "no_active_target_weights": return "No conditions to score";
-    default: return code;
+    case "requested_metric_unavailable": return "Selected measurement unavailable";
+    default: return code.replaceAll("_", " ");
   }
 }
 

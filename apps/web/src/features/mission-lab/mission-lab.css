@@ -52,8 +52,8 @@
 .ml-block h5 { font-size: .85rem; margin: 12px 0 4px; text-transform: uppercase; letter-spacing: .05em; color: var(--ml-ink-2); }
 .ml-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
 .ml-presets legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
-.ml-preset { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; row-gap: 3px; margin: 0; padding: 10px; font-weight: 400; font-size: .84rem; border: 1px solid var(--ml-border); border-left: 3px solid var(--ml-border); border-radius: 3px; background: var(--ml-card); color: var(--ml-ink); cursor: pointer; min-width: 0; }
-.ml-preset input { display: inline; width: auto; margin: 3px 0 0; grid-row: span 3; align-self: start; }
+.ml-preset { display: grid; grid-template-columns: auto 1fr; column-gap: 8px; row-gap: 3px; align-content: start; margin: 0; padding: 10px; font-weight: 400; font-size: .84rem; border: 1px solid var(--ml-border); border-radius: 5px; background: var(--ml-card); color: var(--ml-ink); cursor: pointer; min-width: 0; }
+.ml-preset input { display: inline; width: auto; margin: 3px 0 0; grid-row: span 2; align-self: start; }
 .ml-preset input:focus-visible { outline: 3px solid var(--ml-focus); outline-offset: 2px; }
 .ml-preset-active { border-color: var(--ml-accent); border-left-color: var(--ml-accent); background: var(--ml-accent-bg); }
 .ml-preset-title { font-weight: 700; }
@@ -83,7 +83,9 @@
 .ml-table caption { text-align: left; font-size: .8rem; color: var(--ml-ink-3); padding-bottom: 4px; }
 .ml-table th, .ml-table td { padding: 6px 7px; overflow-wrap: anywhere; }
 .ml-table tbody th { font-weight: 400; background: transparent; }
-.ml-table td:nth-child(3), .ml-table td:nth-child(4), .ml-table td:nth-child(5), .ml-table td:nth-child(6) { font-family: var(--ml-mono); text-align: right; white-space: nowrap; }
+.ml-table td:nth-child(3), .ml-table td:nth-child(4) { font-family: var(--ml-mono); text-align: right; white-space: nowrap; }
+.ml-table [data-label="Trial"] .ml-tag { white-space: nowrap; }
+.ml-delta { display: block; color: var(--ml-ink-3); }
 .ml-row-entered td:nth-child(2) { border-left: 3px solid var(--ml-accent); }
 .ml-row-left td:nth-child(2) { border-left: 3px solid var(--ml-warn); }
 .ml-hypotheses { display: grid; gap: 10px; }
@@ -118,9 +120,22 @@
 .ml-context { margin: 4px 0 8px; font-size: .85rem; }
 .ml-context details summary { padding: 4px 0; }
 .ml-filters-title { margin: 6px 0 2px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--ml-ink-2); }
-.ml-filters { margin: 2px 0 6px; padding-left: 18px; font-family: var(--ml-mono); font-size: .78rem; }
+.ml-filters { margin: 2px 0 6px; padding-left: 18px; font-size: .84rem; }
 .ml-filters li { overflow-wrap: anywhere; }
-.ml-changes { margin: 6px 0 10px; padding: 6px 10px; border-left: 3px solid var(--ml-accent); background: var(--ml-accent-bg); }
+.ml-changes { margin: 6px 0 10px; padding: 6px 10px; border-left: 1px solid var(--ml-accent); background: var(--ml-accent-bg); }
+.ml-setup { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; margin-bottom: 18px; }
+.ml-setup label, .ml-setup p { display: grid; gap: 5px; margin: 0; color: var(--ml-ink-2); font-size: .86rem; }
+.ml-setup label { min-width: min(100%, 265px); }
+.ml-setup strong { color: var(--ml-ink); }
+.ml-transition { display: grid; gap: 9px; margin: 14px 0 18px; max-width: 600px; }
+.ml-transition-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; }
+.ml-transition-row .num { font-weight: 650; }
+.ml-track { display: block; grid-column: 1 / -1; height: 6px; border-radius: 6px; background: var(--ml-rule); overflow: hidden; }
+.ml-track > span { display: block; height: 100%; background: var(--ml-accent); border-radius: inherit; }
+.ml-transition-row[data-change="left"] .ml-track > span { background: var(--ml-ink-3); }
+.ml-transition p { margin: 2px 0 0; font-size: .8rem; color: var(--ml-ink-3); }
+.ml-bass-measurements { margin: 16px 0; }
+.ml-bass-measurements .chart { max-width: 720px; }
 .ml-column-title { font-size: .95rem; margin: 0 0 6px; overflow-wrap: anywhere; }
 .ml-prov, .ml-mode { margin: 4px 0 8px; font-size: .82rem; overflow-wrap: anywhere; }
 .ml-prov-synthetic .ml-tag, .ml-prov-mixed .ml-tag { border-color: var(--ml-warn); background: var(--ml-warn-bg); }

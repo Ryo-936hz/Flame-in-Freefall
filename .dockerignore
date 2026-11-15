@@ -22,3 +22,5 @@ data/raw
 data/processed
 datasets
 evals
+
+data/local
