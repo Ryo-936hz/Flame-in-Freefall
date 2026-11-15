@@ -71,7 +71,7 @@ export default function EvidenceCanvas({ result, labels, selection, trials, metr
         {view === "chart"
           ? <ScatterChart comparison={comparison} groupIndex={groupIndex} selectedObservation={selection.observationId}
             selectedTrial={selection.trialId} onSelect={onSelectObservation} form={chartForm} lines={lines} />
-          : <PointsTable comparison={comparison} groupIndex={groupIndex} selectedObservation={selection.observationId}
+          : <PointsTable comparison={comparison} labels={labels} groupIndex={groupIndex} selectedObservation={selection.observationId}
             selectedTrial={selection.trialId} onSelect={onSelectObservation} />}
         <ul className="groups" aria-label="Descriptive groups">
           {comparison.groups.map((group, index) => <li key={group.id}>

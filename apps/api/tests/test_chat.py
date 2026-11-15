@@ -46,6 +46,29 @@ def test_airflow_question_prioritizes_recorded_flow_over_unrelated_measurements(
     assert all("recorded flame spread rate was" not in source.text for source in sources)
 
 
+def test_chat_calculates_the_highest_flame_spread_from_all_matching_observations(monkeypatch):
+    async def unexpected(*args, **kwargs):
+        raise AssertionError("A numeric maximum must not use model-selected excerpts")
+
+    monkeypatch.setattr(chat, "choose", unexpected)
+    bundle = load_bundle(ROOT / "data/fixtures/demo.json")
+    observations = [item for item in bundle.observations if item.metric == "flame_spread_rate_mm_s" and item.value is not None]
+    maximum = max(observations, key=lambda item: item.value)
+    settings = Settings(_env_file=None, ai_provider="qwen")
+    question = ChatRequest(question="What is the highest recorded flame spread rate in the FlameLab dataset? Give the value in mm/s, the study, the trial ID, and the original source.")
+    answer = asyncio.run(chat.answer_chat(question, bundle, settings, None))
+    assert f"{maximum.value:g} mm/s" in answer.answer
+    assert maximum.trial_id in answer.answer
+    assert "synthetic demo observations" in answer.answer
+    assert answer.sources[0].evidence_id == maximum.evidence_ids[0]
+    assert str(len(observations)) in answer.technical_details[0]
+
+    published = ChatRequest(question="What is the maximum published flame spread rate?")
+    no_published = asyncio.run(chat.answer_chat(published, bundle, settings, None))
+    assert not no_published.sources
+    assert "couldn’t find recorded published" in no_published.answer
+
+
 def test_qwen_can_select_an_existing_excerpt(monkeypatch):
     async def select_second(_question, options, _instruction, _settings, **_kwargs):
         assert options[1]["index"] == 1

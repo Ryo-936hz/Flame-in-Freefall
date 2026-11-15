@@ -156,6 +156,7 @@ export default function App() {
 
   useEffect(() => { document.documentElement.dataset.theme = theme; store(THEME_KEY, theme); }, [theme]);
   useEffect(() => { store(SIDEBAR_KEY, sidebar); }, [sidebar]);
+  useEffect(() => { dash.current?.querySelector(".dash-content")?.scrollTo({ top: 0 }); }, [route]);
   // The evidence inspector opens whenever something with a source is selected.
   // Only Investigate opens it automatically (a new run selects its first point); elsewhere,
   // such as Ask SI, it waits for an explicit citation or source click (onOpenEvidence).
@@ -331,7 +332,10 @@ export default function App() {
     const ids = evidenceFor(result, selection);
     return selection.evidenceId && !ids.includes(selection.evidenceId) ? [selection.evidenceId, ...ids] : ids;
   }, [result, selection, evidenceSource, citationRunId]);
-  const context = selection.observationId ? shortId(selection.observationId) : selection.trialId ? (labels.get(selection.trialId) ?? shortId(selection.trialId)) : null;
+  const selectedSegment = selection.observationId && result?.comparison?.points.find((point) =>
+    point.observation_id === selection.observationId)?.segment_id;
+  const trialContext = selection.trialId ? labels.get(selection.trialId) ?? shortId(selection.trialId) : null;
+  const context = trialContext && selectedSegment ? `${trialContext} · Segment ${selectedSegment.split(":").at(-1)}` : trialContext;
 
   const onOpenEvidence = useCallback((evidenceId: string, trialId: string | null, source: EvidenceSource = "record") => {
     setCitationRunId(null);
@@ -568,9 +572,10 @@ export default function App() {
           </section>
 
           <div id="lab" className="view p6-slot" data-view="lab" hidden={view !== "lab"}>
-            {route.page === "dashboard" && route.view === "lab" && route.studyIds && <StudyComparison key={routeHash(route)}
-              api={api} ids={route.studyIds} onStudy={openStudy} />}
-            <MissionLabPanel key={`lab-${labKey}`} {...slot} question={draft.question} />
+            {route.page === "dashboard" && route.view === "lab" && <StudyComparison key={routeHash(route)}
+              api={api} ids={route.studyIds} choices={studies} onCompare={openStudyComparison} onStudy={openStudy} />}
+            <MissionLabPanel key={`lab-${labKey}`} {...slot} question={draft.question}
+              campaign={metricPreset(draft.metric, trials)} trialLabels={labels} />
           </div>
 
           <div className="view p6-slot" data-view="report" hidden={view !== "report"}>

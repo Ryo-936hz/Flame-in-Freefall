@@ -148,14 +148,15 @@ export async function verifyCampaignResearch({ page, apiUrl, bundle, check, step
       check(true, `${metric}: eligible trials and values stay within ${studyId}, with ${unit} units`);
       await page.getByRole("group", { name: "Comparison view", exact: true }).getByRole("button", { name: "Table", exact: true }).click();
       const table = page.getByRole("table", { name: "Observations plotted in the chart", exact: true });
-      await table.getByRole("columnheader", { name: `Y (${unit})`, exact: true }).waitFor();
-      const rows = await table.locator("tbody tr").evaluateAll((items) => items.map((row) => Array.from(row.cells, (cell) => cell.textContent)));
+      await table.getByRole("columnheader", { name: `${metricLabel} (${unit})`, exact: true }).waitFor();
+      const rows = await table.locator("tbody tr").evaluateAll((items) => items.map((row) =>
+        ({ trial: row.dataset.trialId, value: row.cells[2].textContent, sample: row.cells[3].title })));
       assert.equal(rows.length, run.comparison.points.length);
       rows.forEach((row, index) => {
         const point = run.comparison.points[index];
-        assert(row[0].includes(point.trial_id));
-        assert(Math.abs(Number(row[2]) - point.y) <= 0.00051, "UI rounding must preserve the API value to three decimal places");
-        assert.equal(row[3], point.independent_unit_id);
+        assert.equal(row.trial, point.trial_id);
+        assert(Math.abs(Number(row.value) - point.y) <= 0.00051, "UI rounding must preserve the API value to three decimal places");
+        assert.equal(row.sample, point.independent_unit_id);
       });
       check(true, `${metric}: every visible table value, physical unit ID and Y unit matches the API`);
       if (screenshots) await table.screenshot({ path: path.join(screenshots, `p2-${studyId.replace(":", "-")}-metric.png`) });
@@ -221,8 +222,9 @@ export async function verifyP2Catalog({ page, apiUrl, bundle, check, step, scree
       assert.equal(fields.Observación, observation.id);
       assert.equal(fields["Ensayo o registro"], observation.trial_id);
       assert.equal(fields.Segmento, observation.segment_id ?? "Sin segmento asignado");
-      assert.equal(fields.Métrica, observation.metric);
-      assert.equal(fields["Estado del valor"], observation.status ?? "known");
+      await row.getByTitle(observation.metric, { exact: true }).waitFor();
+      assert(fields.Métrica && fields.Métrica !== observation.metric);
+      await row.getByTitle(observation.status ?? "known", { exact: true }).waitFor();
       assert.equal(fields["Valor original"], observation.original_value == null ? "No disponible" : JSON.stringify(observation.original_value));
       assert.equal(fields["Unidad original"], observation.original_unit == null ? "No disponible" : JSON.stringify(observation.original_unit));
       assert.equal(fields["Valor normalizado"].trim(), `${observation.value == null ? "Sin valor numérico" : observation.value} ${observation.unit}`.trim());

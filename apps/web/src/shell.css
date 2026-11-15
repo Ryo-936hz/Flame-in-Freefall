@@ -318,7 +318,6 @@ details.interpreted[open] summary { margin-bottom: 6px; }
 .pt-line[data-series="1"] { stroke: var(--s1); }
 .pt-line[data-series="2"] { stroke: var(--s2); }
 .pt-line[data-series="3"] { stroke: var(--s3); }
-.comparison-meter { flex: 0 1 120px; width: 120px; height: 10px; }
 
 /* Investigate results: Comparison · Ranking · Synthesis tabs */
 .subtabs { display: flex; gap: 2px; padding: 3px; width: fit-content; max-width: 100%; overflow-x: auto; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); }
@@ -457,3 +456,15 @@ details.interpreted[open] summary { margin-bottom: 6px; }
   .dash { transition: none; }
   .view-card { transition: none; }
 }
+.study-compare { display: grid; gap: 14px; }
+.study-compare h3, .study-compare h4, .study-compare p { margin: 0; }
+.study-pair, .study-availability { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px 20px; }
+.study-pair { align-items: end; margin-top: 8px; }
+.study-pair label { display: grid; gap: 4px; min-width: 0; }
+.study-pair button { justify-self: start; }
+.study-availability .block { min-width: 0; margin-top: 0; }
+.study-availability h4 { margin-bottom: 8px; }
+.study-bars { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.study-bars li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; }
+.study-bar-track { grid-column: 1 / -1; height: 6px; border-radius: 6px; background: var(--rule); overflow: hidden; }
+.study-bar-track > span { display: block; height: 100%; border-radius: inherit; background: var(--signal); }

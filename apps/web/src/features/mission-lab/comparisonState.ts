@@ -1,5 +1,6 @@
 // Mission Lab · vigencia de resultados respecto de los filtros actuales (lógica pura).
 import type { RankingRequest } from "../../lib/client";
+import { conditionLabel, conditionValueLabel } from "../../lib/filters";
 
 /**
  * Defaults del contrato RankingRequest (apps/api/src/flamelab/domain/contracts.py).
@@ -74,16 +75,16 @@ function listOrNone(values: string[]): string {
 export function describeRequest(request: RankingRequest): string[] {
   const c = canonicalRequest(request);
   const lines = [
-    `Target: ${c.target.length ? c.target.map(([key, value]) => `${key} = ${formatValue(value)}`).join(", ") : "none"}`,
-    `Required matches: ${listOrNone(c.required_match)}`,
-    `Varied (not scored): ${listOrNone([...new Set(request.vary ?? [])])}`,
-    `Weights: ${c.weights.length ? c.weights.map(([key, value]) => `${key} = ${formatValue(value)}`).join(", ") : "default (1 per scored target)"}`,
+    `Target: ${c.target.length ? c.target.map(([key, value]) => `${conditionLabel(key)} · ${conditionValueLabel(key, value)}`).join(", ") : "none"}`,
+    `Required matches: ${listOrNone(c.required_match.map(conditionLabel))}`,
+    `Varied (not scored): ${listOrNone([...new Set(request.vary ?? [])].map(conditionLabel))}`,
+    `Weights: ${c.weights.length ? c.weights.map(([key, value]) => `${conditionLabel(key)} · ${formatValue(value)}`).join(", ") : "default (1 per scored target)"}`,
     `Synthetic fixtures: ${c.allow_synthetic ? "allowed" : "not allowed"}`,
-    `Minimum coverage: ${formatValue(c.minimum_coverage)}`,
+    `Minimum coverage: ${Math.round(c.minimum_coverage * 100)}%`,
     `Limit: ${formatValue(c.limit)}`,
     `Studies: ${c.study_ids.length ? c.study_ids.join(", ") : "all"}`
   ];
-  if (c.condition_scope !== RANKING_REQUEST_DEFAULTS.condition_scope) lines.push(`Condition scope: ${c.condition_scope}`);
+  if (c.condition_scope !== RANKING_REQUEST_DEFAULTS.condition_scope) lines.push("Conditions evaluated per trial segment");
   return lines;
 }
 

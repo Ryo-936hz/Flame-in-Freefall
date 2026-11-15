@@ -200,6 +200,8 @@ try {
     const data = await Promise.all(charts.map(async (pending) => (await pending).json()));
     check(data.every((item, index) => item.study.id === answer.comparison_studies[index] && item.metrics.length > 0),
       "the selected studies load their documented measurements inside Mission Lab");
+    await page.getByRole("heading", { name: "Measurement availability", exact: true }).waitFor();
+    check(await page.getByRole("heading", { name: "Median by study", exact: true }).count() === 0, "different quantities show availability, not paired medians");
   });
   await step("documentary Saffire context stays separate from imported BASS points", async () => {
     await verifySaffireContext({ page, check, screenshots: SHOTS });
@@ -260,6 +262,9 @@ try {
     await comparison.waitFor();
     await comparison.getByText(copy.bass_comparison, { exact: true }).waitFor();
     check(true, "the approved descriptive limitation is displayed verbatim");
+    const chart = comparison.getByRole("region", { name: "BASS-II flame spread measurements" });
+    await chart.waitFor();
+    check(await chart.locator(".pt-dot").count() === points.length, "one plotted mark per measured observation for 5 and 6 cm/s");
     await comparison.scrollIntoViewIfNeeded();
     check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "BASS-II desktop has no page horizontal overflow");
     if (SHOTS) await page.screenshot({ path: path.join(SHOTS, "bass-comparison-desktop.png") });

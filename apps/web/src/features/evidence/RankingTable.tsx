@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react";
 import type { Models } from "../../lib/client";
-import { conditionLabel } from "../../lib/filters";
+import { conditionLabel, conditionValueLabel } from "../../lib/filters";
 import { ELIGIBILITY_LABEL, contributionNote, fmt, pct, reasonText, shortId } from "../../lib/format";
 import { ProvenanceTag } from "../../components/ui";
 
@@ -14,9 +14,8 @@ function Row({ item, position, label, selected, onSelect }: {
     <tr className="row" data-selected={selected} data-eligibility={item.eligibility}>
       <td className="num muted">{position === null ? "—" : String(position).padStart(2, "0")}</td>
       <td>
-        <button type="button" className="row-link" aria-pressed={selected} onClick={onSelect}>
+        <button type="button" className="row-link" title={item.trial_id} aria-pressed={selected} onClick={onSelect}>
           <b>{label ?? shortId(item.trial_id)}</b>
-          <span className="id">{item.trial_id}</span>
           <ProvenanceTag value={item.provenance} />
         </button>
       </td>
@@ -34,7 +33,7 @@ function Row({ item, position, label, selected, onSelect }: {
       <table className="sub">
         <thead><tr><th>Condition</th><th>Target</th><th>Candidate</th><th>Weight</th><th>Distance</th><th>Note</th></tr></thead>
         <tbody>{item.contributions.map((c) => <tr key={c.variable}>
-          <td>{conditionLabel(c.variable)}</td><td className="num">{c.target ?? "—"}</td><td className="num">{c.candidate ?? "—"}</td>
+          <td>{conditionLabel(c.variable)}</td><td className="num">{conditionValueLabel(c.variable, c.target)}</td><td className="num">{conditionValueLabel(c.variable, c.candidate)}</td>
           <td className="num">{fmt(c.weight)}</td><td className="num">{fmt(c.distance)}</td><td>{contributionNote(c.note)}</td>
         </tr>)}</tbody>
       </table>
@@ -48,7 +47,7 @@ export default function RankingTable({ ranking, labels, selectedTrial, onSelect 
   selectedTrial: string | null;
   onSelect: (trialId: string) => void;
 }) {
-  const [showExcluded, setShowExcluded] = useState(true);
+  const [showExcluded, setShowExcluded] = useState(false);
   const head = <thead><tr><th>#</th><th>Trial</th><th>Similarity</th><th>Coverage</th><th>Status</th><th>Reasons</th><th><span className="sr-only">Detail</span></th></tr></thead>;
   return <div className="ranking">
     <div className="table-wrap">
