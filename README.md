@@ -298,6 +298,25 @@ Código: `apps/api/src/flamelab/{data,science,ai,storage}` y `apps/web`. Migraci
 5 ensayos y 6 observaciones sintéticas, incluido cero conocido y valor ausente.
 Repetir observaciones no crea réplicas independientes.
 
+## AI disclosure
+
+Este repositorio se ha desarrollado con asistencia de herramientas de IA generativa.
+Parte del código, las pruebas y la documentación se generó o editó con asistentes de
+programación (Codex y Claude Code) bajo la dirección del equipo. Los commits asistidos
+por Claude Code lo indican con el trailer `Co-Authored-By`; el resto del historial no
+marca de forma sistemática qué commits contaron con asistencia.
+
+- **Revisión:** los cambios llegan a `main` mediante pull request y se comprueban con
+  las pruebas y el CI descritos en [VERIFICATION](docs/VERIFICATION.md). La
+  responsabilidad sobre el código y las afirmaciones científicas es del equipo.
+- **IA en el producto:** Ask SI usa Qwen (`qwen3:0.6b`, local mediante Ollama en Docker
+  Compose) para seleccionar fuentes y redactar explicaciones. Los cálculos, filtros y
+  rankings se ejecutan en código verificable de la API, no en el modelo.
+- **AI Research** es una secuencia preparada: su actividad de agentes es animada y no
+  acredita la ejecución de modelos ni de agentes autónomos.
+- Los fixtures sintéticos no son mediciones NASA, y ningún texto generado por IA
+  sustituye a las fuentes citadas.
+
 ## Estado y relevo
 
 [Estado real](docs/IMPLEMENTATION_STATUS.md), [verificaciones](docs/VERIFICATION.md),
