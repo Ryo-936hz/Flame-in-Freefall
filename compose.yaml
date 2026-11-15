@@ -1,6 +1,7 @@
 # FlameLab SI en Docker (Linux y Windows con Docker Desktop).
 #   docker compose up -d --build      -> http://127.0.0.1:8080
-# FLAMELAB_DATA: catalog (por defecto), demo (sintético) o empty.
+# FLAMELAB_DATA: catalog (por defecto), demo (sintético), bundle o empty.
+# bundle importa FLAMELAB_BUNDLE (bundle.json o paquete ZIP P2) de FLAMELAB_IMPORT_DIR.
 # PostgreSQL es opcional y no está verificado: perfil "postgres".
 services:
   api:
@@ -9,12 +10,15 @@ services:
     environment:
       FLAMELAB_DATA: ${FLAMELAB_DATA:-catalog}
       FLAMELAB_AI_PROVIDER: ${FLAMELAB_AI_PROVIDER:-demo}
+      FLAMELAB_BUNDLE: ${FLAMELAB_BUNDLE:-}
     # Opcional: .env local (p. ej. proveedor de IA externo). Nunca claves en VITE_* ni en la imagen.
     env_file:
       - path: .env
         required: false
     volumes:
       - flamelab-work:/app/work
+      # Carpeta local con bundles para FLAMELAB_DATA=bundle; solo lectura.
+      - ${FLAMELAB_IMPORT_DIR:-./data/local}:/app/import:ro
     restart: unless-stopped
 
   web:

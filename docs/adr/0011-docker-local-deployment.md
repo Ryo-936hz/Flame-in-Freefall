@@ -31,6 +31,14 @@ Se adopta la alternativa 3. No cambia código ni contratos de la aplicación.
 - Solo se publica `127.0.0.1:8080`. Las claves de IA llegan por un `.env` local opcional,
   nunca en la imagen (`.dockerignore` excluye `.env`, `work/`, bases y binarios).
 - PostgreSQL pasa al perfil `postgres`; sigue sin verificarse.
+- Ampliación (15-11-2026, «añade la carga de datos»): modo `bundle`. La carpeta
+  `data/local/` (o `FLAMELAB_IMPORT_DIR`) se monta en solo lectura en `/app/import` y se
+  importa `FLAMELAB_BUNDLE`: un `bundle.json` o el ZIP del paquete P2, del que solo se
+  leen `bundle.json` y `SHA256SUMS` en memoria (sin extraer, límite de 20 MiB, nombres
+  sin rutas) y se exige que el hash coincida. Cada contenido usa su base
+  `bundle-<sha256[:12]>.db`, así que nunca se sustituye un corpus ni se usa `--replace`.
+  La extracción desde los originales (`extract-nasa`, requiere PyMuPDF) sigue fuera
+  de la imagen.
 
 ## Consecuencias
 
@@ -43,5 +51,5 @@ Se adopta la alternativa 3. No cambia código ni contratos de la aplicación.
 
 ## Rutas
 
-`Dockerfile`, `.dockerignore`, `compose.yaml`, `docker/api-entrypoint.py`,
+`Dockerfile`, `.dockerignore`, `.gitignore`, `compose.yaml`, `docker/api-entrypoint.py`, `data/local/README.md`,
 `docker/nginx.conf`, `README.md`, `docs/DESPLIEGUE_LOCAL_LINUX.md`.
