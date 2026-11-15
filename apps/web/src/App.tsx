@@ -156,6 +156,7 @@ export default function App() {
 
   useEffect(() => { document.documentElement.dataset.theme = theme; store(THEME_KEY, theme); }, [theme]);
   useEffect(() => { store(SIDEBAR_KEY, sidebar); }, [sidebar]);
+  useEffect(() => { dash.current?.querySelector(".dash-content")?.scrollTo({ top: 0 }); }, [route]);
   // The evidence inspector opens whenever something with a source is selected.
   // Only Investigate opens it automatically (a new run selects its first point); elsewhere,
   // such as Ask SI, it waits for an explicit citation or source click (onOpenEvidence).
@@ -568,9 +569,10 @@ export default function App() {
           </section>
 
           <div id="lab" className="view p6-slot" data-view="lab" hidden={view !== "lab"}>
-            {route.page === "dashboard" && route.view === "lab" && route.studyIds && <StudyComparison key={routeHash(route)}
-              api={api} ids={route.studyIds} onStudy={openStudy} />}
-            <MissionLabPanel key={`lab-${labKey}`} {...slot} question={draft.question} />
+            {route.page === "dashboard" && route.view === "lab" && <StudyComparison key={routeHash(route)}
+              api={api} ids={route.studyIds} choices={studies} onCompare={openStudyComparison} onStudy={openStudy} />}
+            <MissionLabPanel key={`lab-${labKey}`} {...slot} question={draft.question}
+              campaign={metricPreset(draft.metric, trials)} trialLabels={labels} />
           </div>
 
           <div className="view p6-slot" data-view="report" hidden={view !== "report"}>

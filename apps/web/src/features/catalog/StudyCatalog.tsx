@@ -3,8 +3,17 @@ import { sourceLink } from "../../lib/client";
 import type { createApi, Evidence, Models } from "../../lib/client";
 import "./catalog.css";
 import Select from "../../components/Select";
+import { metricLabel } from "../../lib/filters";
 
 const limit = 20;
+const studyStatus = {
+  metadata_only: "Solo documentación", unverified: "Revisión científica pendiente",
+  reviewed: "Revisado", synthetic: "Datos sintéticos",
+};
+const observationStatus = {
+  known: "Valor disponible", not_measured: "Sin medición", not_reported: "Sin publicar",
+  not_extracted: "Sin extraer", not_applicable: "No aplicable",
+};
 
 export function StudyCatalog({ api, requested }: {
   api: ReturnType<typeof createApi>;
@@ -104,7 +113,7 @@ export function StudyCatalog({ api, requested }: {
         options={studies.map((item) => ({ value: item.id, label: item.title }))} onChange={(next) => load(next, 0)} />
     </div>
     {study && <div className="catalog-study"><p><code>{study.id}</code> · {study.family}</p>
-      <p>{study.description}</p><p>Estado del estudio: <strong>{study.dataset_status}</strong></p>
+      <p>{study.description}</p><p>Estado del estudio: <strong>{studyStatus[study.dataset_status]}</strong></p>
       {study.dataset_status === "synthetic" && <p>Datos sintéticos de demostración; no son mediciones NASA.</p>}
       {study.dataset_status === "metadata_only" && <p>Perfil documental: no se han incorporado ensayos numéricos para este estudio.</p>}
       {study.dataset_status === "unverified" && <p>Las correspondencias científicas de este estudio siguen pendientes de revisión. Su presencia en el catálogo no implica validación científica global.</p>}
@@ -128,9 +137,9 @@ export function StudyCatalog({ api, requested }: {
           <dt>Observación</dt><dd><code>{item.id}</code></dd>
           <dt>Ensayo o registro</dt><dd><code>{item.trial_id}</code></dd>
           <dt>Segmento</dt><dd>{item.segment_id ? <code>{item.segment_id}</code> : "Sin segmento asignado"}</dd>
-          <dt>Métrica</dt><dd><code>{item.metric}</code></dd>
+          <dt>Métrica</dt><dd title={item.metric}>{metricLabel(item.metric)}</dd>
           <dt>Valor normalizado</dt><dd>{item.value == null ? "Sin valor numérico" : item.value} {item.unit}</dd>
-          <dt>Estado del valor</dt><dd>{item.status ?? "known"}</dd>
+          <dt>Estado del valor</dt><dd title={item.status ?? "known"}>{observationStatus[item.status ?? "known"]}</dd>
           <dt>Valor original</dt><dd>{item.original_value == null ? "No disponible" : <code>{JSON.stringify(item.original_value)}</code>}</dd>
           <dt>Unidad original</dt><dd>{item.original_unit == null ? "No disponible" : <code>{JSON.stringify(item.original_unit)}</code>}</dd>
           <dt>Procedencia</dt><dd>{item.provenance}{item.provenance === "synthetic" ? " · datos sintéticos" : ""}</dd>

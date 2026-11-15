@@ -76,9 +76,21 @@ export function conditionLabel(key: string): string {
 }
 
 export function metricLabel(key: string): string {
-  return METRICS.find((item) => item.key === key)?.label ?? key;
+  return METRICS.find((item) => item.key === key)?.label ?? key.replaceAll("_", " ");
 }
 
+export function conditionValueLabel(key: string, value: unknown): string {
+  if (value == null) return "Not reported";
+  if (typeof value === "number") {
+    const unit = META.get(key as ConditionKey)?.unit;
+    return unit ? `${value} ${unit}` : String(value);
+  }
+  if (key === "gravity_regime") {
+    const gravity: Record<string, string> = { earth: "Earth gravity", lunar: "Lunar gravity", martian: "Martian gravity", microgravity: "Microgravity" };
+    return gravity[String(value)] ?? String(value).replaceAll("_", " ");
+  }
+  return String(value).replaceAll("_", " ");
+}
 function emptyConditions(): Record<ConditionKey, ConditionDraft> {
   return Object.fromEntries(CONDITIONS.map(({ key }) => [key, { role: "off", value: "" }])) as Record<ConditionKey, ConditionDraft>;
 }
@@ -196,9 +208,9 @@ export function buildRanking(draft: BriefDraft): BuildResult {
 export function describeRanking(request: RankingRequest): string[] {
   const lines: string[] = [];
   const target = request.target ?? {};
-  for (const key of request.required_match ?? []) lines.push(`${conditionLabel(key)} must be ${target[key]}`);
+  for (const key of request.required_match ?? []) lines.push(`${conditionLabel(key)} must be ${conditionValueLabel(key, target[key])}`);
   for (const [key, value] of Object.entries(target)) {
-    if (!(request.required_match ?? []).includes(key as ConditionKey)) lines.push(`Prefer ${conditionLabel(key)} ≈ ${value}`);
+    if (!(request.required_match ?? []).includes(key as ConditionKey)) lines.push(`Prefer ${conditionLabel(key)} near ${conditionValueLabel(key, value)}`);
   }
   for (const key of request.vary ?? []) lines.push(`Study the effect of ${conditionLabel(key)} (not scored)`);
   lines.push(request.allow_synthetic ? "Includes synthetic demo data" : "Excludes synthetic data");

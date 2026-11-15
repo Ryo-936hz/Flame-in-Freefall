@@ -271,7 +271,7 @@ try {
     check(body.metric === "flame_spread_rate_mm_s", "Earth comparison retains the selected flame-spread metric");
     check(body.ranking_b.items.length === 1 && body.ranking_b.items[0].trial_id === "synthetic:trial-4",
       "the Earth fixture with a known zero remains eligible for the metric");
-    await lab.locator(".ml-row-entered").getByText("synthetic:trial-4", { exact: true }).waitFor();
+    await lab.locator(".ml-row-entered").getByTitle("synthetic:trial-4", { exact: true }).waitFor();
     check(await lab.locator(".ml-row-left").count() === 3, "the UI shows all three microgravity fixtures leaving");
   });
 
@@ -286,8 +286,8 @@ try {
       const item = body.ranking_b.items[index];
       return item.trial_id === id && Math.abs(item.similarity - value) < 1e-12;
     }), "scored-flow B matches the independently specified fixture similarities");
-    const row = lab.locator(".ml-row-kept").filter({ hasText: "synthetic:trial-2" });
-    await row.locator('[data-label="Similarity B"]').getByText("0.985", { exact: true }).waitFor();
+    const row = lab.locator(".ml-row-kept").filter({ has: page.getByTitle("synthetic:trial-2", { exact: true }) });
+    await row.locator('[data-score="B"]').filter({ hasText: /^0\.985$/ }).waitFor();
     check(await lab.locator(".ml-row-kept").count() === 3, "the UI labels the same three trials as kept");
   });
 
@@ -304,6 +304,9 @@ try {
     await lab.getByText("A · current filters").first().waitFor();
     check(body.ranking_b.items.length === 0, "lunar B has no eligible synthetic trial");
     await lab.getByText("Insufficient applicable evidence.").first().waitFor();
+    const visual = result.getByRole("group", { name: "Changes in selected trials" });
+    check(await visual.locator('[data-change="left"] .num').textContent() === "3", "the selection chart shows the three trials absent from B");
+    check(!/gravity_regime|flame_spread_rate_mm_s|evidence_comparison_not_physical_simulation/.test(await result.innerText()), "the result uses human labels");
     await shot(page, "2-ab");
   });
 
