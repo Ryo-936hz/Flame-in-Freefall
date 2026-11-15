@@ -25,6 +25,18 @@ export function sketchGravity(label: string | null): number | null {
   return GRAVITY[label.trim().toLowerCase()] ?? null;
 }
 
+/*
+ * Budget. The glow is made of soft, blurred sprites, so it is drawn at a reduced
+ * internal resolution and scaled up by CSS; the loss is not visible but the
+ * pixel work drops several times. Particle spawn is cut and capped, with each
+ * particle brighter so the flame keeps its look.
+ */
+const RENDER_SCALE = 0.6; // canvas pixels per CSS pixel, independent of devicePixelRatio
+const SPAWN_BASE = 3; // was 7 per emitter per step
+const ALPHA_BOOST = 2.1;
+const MAX_PARTICLES = 500; // per emitter
+const STEP_MS = 1000 / 60;
+
 interface Particle { x: number; y: number; vx: number; vy: number; life: number; max: number; seed: number }
 
 function makeSprites(): HTMLCanvasElement[] {
@@ -61,18 +73,18 @@ function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: numb
 
   useEffect(() => {
     const canvas = ref.current;
-    const ctx = canvas?.getContext("2d");
+    const ctx = canvas?.getContext("2d", { alpha: true, desynchronized: true });
     if (!canvas || !ctx) return;
     const sprites = makeSprites();
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let w = 0, h = 0, dpr = 1, raf = 0, frame = 0;
+    let w = 0, h = 0, raf = 0, frame = 0, lastStep = 0;
     const emitters: { particles: Particle[]; fixedG: number | null }[] = [{ particles: [], fixedG: 1 }, { particles: [], fixedG: null }];
 
     const resize = () => {
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
       const r = canvas.getBoundingClientRect();
+      if (Math.abs(r.width - w) < 0.5 && Math.abs(r.height - h) < 0.5) return;
       w = r.width; h = r.height;
-      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      canvas.width = Math.max(1, Math.round(w * RENDER_SCALE)); canvas.height = Math.max(1, Math.round(h * RENDER_SCALE));
     };
     resize();
     const ro = new ResizeObserver(resize);
@@ -81,7 +93,7 @@ function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: numb
     const step = () => {
       frame++;
       const { o2: O, g: G, flow: F } = params.current;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.setTransform(RENDER_SCALE, 0, 0, RENDER_SCALE, 0, 0);
       ctx.globalCompositeOperation = "source-over";
       ctx.clearRect(0, 0, w, h);
       ctx.globalCompositeOperation = "lighter";
@@ -94,7 +106,7 @@ function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: numb
         const cx = (w / 4) * (idx === 0 ? 1 : 3);
         const cy = h * (0.42 + 0.22 * (1 - micro));
         const flowPx = (em.fixedG ? 0 : F) * 0.0016 * scale;
-        const spawn = Math.round(7 * o2k);
+        const spawn = em.particles.length < MAX_PARTICLES ? Math.round(SPAWN_BASE * o2k) : 0;
         for (let i = 0; i < spawn; i++) {
           const a = Math.random() * Math.PI * 2;
           const sp = (0.55 + Math.random() * 0.7) * scale * o2k * (0.5 + micro * 0.6);
@@ -108,7 +120,8 @@ function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: numb
         const flicker = gg > 0.25 ? Math.sin(frame * 0.32 + idx) * 0.06 * gg * scale : 0;
         const ps = em.particles;
         const sizeK = scale * (0.8 + 0.25 * o2k);
-        const alphaK = micro > 0.6 ? 0.15 : 0.17;
+        // Fewer particles than the original sketch, so each one carries proportionally more light.
+        const alphaK = (micro > 0.6 ? 0.15 : 0.17) * ALPHA_BOOST;
         let n = 0;
         for (let i = 0; i < ps.length; i++) {
           const p = ps[i]!;
@@ -141,7 +154,12 @@ function FlameCanvas({ g, o2, flow, label }: { g: number; o2: number; flow: numb
     } else {
       // A few frames up front so a throttled or freshly opened view never shows an empty tile.
       for (let i = 0; i < 60; i++) step();
-      const loop = () => { step(); raf = requestAnimationFrame(loop); };
+      // The sketch advances per step, so capping steps at 60 Hz keeps its speed and cost
+      // the same on 120/144 Hz displays.
+      const loop = (now: number) => {
+        if (now - lastStep >= STEP_MS - 1) { lastStep = now; step(); }
+        raf = requestAnimationFrame(loop);
+      };
       io = new IntersectionObserver(([entry]) => {
         cancelAnimationFrame(raf);
         raf = entry?.isIntersecting ? requestAnimationFrame(loop) : 0;

@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parents[4]
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="FLAMELAB_", env_file=".env", extra="ignore", hide_input_in_errors=True)
     database_url: str = f"sqlite:///{(ROOT / 'work/flamelab.db').as_posix()}"
-    ai_provider: Literal["demo", "openai"] = "demo"
+    ai_provider: Literal["demo", "openai", "qwen"] = "demo"
+    ollama_model: str = "qwen3:0.6b"
     openai_api_key: SecretStr | None = None
     openai_model: str | None = None
     ai_timeout_seconds: float = Field(default=30, gt=0, le=120)

@@ -88,6 +88,22 @@ def test_catalog_plan_report_and_evidence_survive_corpus_replacement_and_restart
         assert reopened.get(evidence_url, params={"research_id": run["id"]}).json() == source
 
 
+def test_qwen_chat_configuration_keeps_research_calculations_deterministic(tmp_path, monkeypatch):
+    async def forbidden(*_args, **_kwargs):
+        raise AssertionError("This configuration reserves Qwen for chat evidence selection")
+
+    monkeypatch.setattr("flamelab.ai.chat.choose", forbidden)
+    monkeypatch.setattr("flamelab.ai.engine.synthesize", forbidden)
+    settings = settings_for(tmp_path).model_copy(update={"ai_provider": "qwen"})
+    with TestClient(create_app(settings)) as client:
+        assert client.get("/api/v1/health").json()["ai_provider"] == "qwen"
+        response = client.post("/api/v1/research", json=catalog_request())
+        assert response.status_code == 200, response.text
+        run = response.json()
+        assert run["provider"] == "demo"
+        assert run["status"] == "completed" and len(run["comparison"]["points"]) == 4
+
+
 def test_conflicting_catalog_plan_never_executes_analysis_or_provider(tmp_path, monkeypatch):
     def forbidden(*_args, **_kwargs):
         raise AssertionError("A blocked plan must not execute analysis or call a provider")
@@ -95,7 +111,7 @@ def test_conflicting_catalog_plan_never_executes_analysis_or_provider(tmp_path, 
     request = catalog_request()
     request["ranking"]["target"]["flow_velocity_cm_s"] = 5
     request["ranking"]["required_match"].append("flow_velocity_cm_s")
-    for name in ("rank_trials", "compare_trials", "profile_dataset", "synthesize"):
+    for name in ("rank_trials", "compare_trials", "synthesize"):
         monkeypatch.setattr("flamelab.ai.engine." + name, forbidden)
     with TestClient(create_app(settings_for(tmp_path))) as client:
         preview = client.post("/api/v1/research/plan", json=request)

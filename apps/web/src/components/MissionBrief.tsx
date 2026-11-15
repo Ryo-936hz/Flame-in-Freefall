@@ -4,8 +4,24 @@ import type { RankingRequest } from "../lib/client";
 import { CONDITIONS, HABITATS, METRICS, ROLE_LABELS, activeHabitat, applyHabitat, buildRanking, describeRanking } from "../lib/filters";
 import type { BriefDraft, ConditionKey, ConditionRole } from "../lib/filters";
 import { Panel } from "./ui";
+import Select from "./Select";
+import type { SelectOption } from "./Select";
 
 const ROLES: ConditionRole[] = ["off", "match", "similar", "vary"];
+const ROLE_OPTIONS: SelectOption[] = ROLES.map((role) => ({ value: role, label: ROLE_LABELS[role] }));
+const METRIC_OPTIONS: SelectOption[] = METRICS.map((metric) => ({ value: metric.key, label: metric.label }));
+const PRESET_GRAVITY = [...new Set(HABITATS.map((habitat) => habitat.gravity))];
+
+/**
+ * Categorical values offered for a condition: those present in the active corpus,
+ * plus preset gravity labels and the current value, which are marked when the
+ * corpus does not contain them (they cannot match until it does).
+ */
+function valueOptions(key: ConditionKey, current: string, inCorpus: string[]): SelectOption[] {
+  const extra = key === "gravity_regime" ? PRESET_GRAVITY : [];
+  const values = [...new Set([...inCorpus, ...extra, ...(current.trim() ? [current.trim()] : [])])];
+  return values.map((value) => ({ value, label: value, hint: inCorpus.includes(value) ? undefined : "not in corpus" }));
+}
 
 export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy, suggestions }: {
   draft: BriefDraft;
@@ -17,6 +33,7 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
   suggestions: Partial<Record<ConditionKey, string[]>>;
 }) {
   const coverageId = useId();
+  const metricId = useId();
   const built = useMemo(() => buildRanking(draft), [draft]);
   const setCondition = (key: ConditionKey, patch: Partial<BriefDraft["conditions"][ConditionKey]>) =>
     onChange({ ...draft, conditions: { ...draft.conditions, [key]: { ...draft.conditions[key], ...patch } } });
@@ -33,11 +50,11 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
       const was = before[index];
       const now = draft.conditions[key].role;
       const shown = (role?: string) => role === "match" || role === "similar";
-      if (!shown(was) && shown(now)) gsap.from(`[data-cond="${key}"] .input`, { height: 0, opacity: 0, y: -6, duration: 0.4, ease: "expo.out", clearProps: "height,opacity,transform" });
+      if (!shown(was) && shown(now)) gsap.from(`[data-cond="${key}"] .input, [data-cond="${key}"] .cond-value`,{ height: 0, opacity: 0, y: -6, duration: 0.4, ease: "expo.out", clearProps: "height,opacity,transform" });
     });
   }, { scope: form, dependencies: [roles] });
 
-  return <Panel id="brief" title="Query" className="brief">
+  return <Panel id="brief" title="Mission Brief" className="brief">
     <form ref={form} className="panel-b" onSubmit={(event) => { event.preventDefault(); if (canSubmit && built.request) onSubmit(built.request); }}>
       <label className="field">
         <span className="cap">Question</span>
@@ -47,26 +64,18 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
             // Ctrl/Cmd + Enter runs the investigation without leaving the keyboard.
             if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) { event.preventDefault(); event.currentTarget.form?.requestSubmit(); }
           }} />
-        <small className="hint">The demo uses the selected filters, not free-text constraints.</small>
+        <small className="hint">The filters below drive the analysis; written constraints are not interpreted.</small>
       </label>
 
-      <label className="field metric-field"><span className="cap">Metric</span>
-        <select className="select" value={draft.metric} onChange={(event) => onChange({ ...draft, metric: event.target.value as BriefDraft["metric"] })}>
-          {METRICS.map((metric) => <option key={metric.key} value={metric.key}>{metric.label}</option>)}
-        </select>
-      </label>
-      <details className="brief-disclosure" data-brief-section="conditions">
-        <summary>Conditions <span className="num">{CONDITIONS.filter(({ key }) => draft.conditions[key].role !== "off").length} active</span></summary>
-        <div className="disclosure-body">
       <div className="field">
         <span className="cap">Habitat presets</span>
-        <div className="presets" role="group" aria-label="Habitat presets">
+        <div className="presets" role="group" aria-label="Habitat presets"
+          title="Fills gravity, O₂ and pressure. Gravity must exist in the data to match.">
           {HABITATS.map((h) => <button type="button" key={h.id} className="preset" aria-pressed={activeHabitat(draft) === h.id}
             onClick={() => onChange(applyHabitat(draft, h.id))}>
             {h.label}<small>{h.note}</small>
           </button>)}
         </div>
-
       </div>
 
       <fieldset className="conditions">
@@ -79,17 +88,17 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
           const needsValue = condition.role === "match" || condition.role === "similar";
           return <div className="cond" key={key} data-cond={key} data-role={condition.role}>
             <label className="cond-name" htmlFor={`role-${key}`}>{label}{unit && <span className="unit"> {unit}</span>}</label>
-            <select id={`role-${key}`} className="select" value={condition.role}
-              onChange={(event) => setCondition(key, { role: event.target.value as ConditionRole })}>
-              {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABELS[role]}</option>)}
-            </select>
+            <Select id={`role-${key}`} value={condition.role} options={ROLE_OPTIONS}
+              onChange={(role) => setCondition(key, { role: role as ConditionRole })} />
             {needsValue && <>
-              <input aria-label={`Value for ${label}`} className="input" value={condition.value}
-                inputMode={numeric ? "decimal" : "text"} list={numeric ? undefined : `values-${key}`}
-                aria-invalid={Boolean(error)} aria-describedby={error ? `err-${key}` : undefined}
-                placeholder={numeric ? "0" : "value"}
-                onChange={(event) => setCondition(key, { value: event.target.value })} />
-              {!numeric && <datalist id={`values-${key}`}>{(suggestions[key] ?? []).map((value) => <option key={value} value={value} />)}</datalist>}
+              {numeric
+                ? <input aria-label={`Value for ${label}`} className="input" value={condition.value} inputMode="decimal"
+                  aria-invalid={Boolean(error)} aria-describedby={error ? `err-${key}` : undefined} placeholder="0"
+                  onChange={(event) => setCondition(key, { value: event.target.value })} />
+                : <Select ariaLabel={`Value for ${label}`} className="cond-value" value={condition.value}
+                  options={valueOptions(key, condition.value, suggestions[key] ?? [])} placeholder="Choose a value"
+                  invalid={Boolean(error)} describedBy={error ? `err-${key}` : undefined}
+                  onChange={(value) => setCondition(key, { value })} />}
               {range && (() => {
                 const parsed = Number(condition.value.replace(",", "."));
                 const current = condition.value.trim() !== "" && Number.isFinite(parsed) ? Math.min(range.max, Math.max(range.min, parsed)) : range.min;
@@ -107,12 +116,12 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
         })}
       </fieldset>
 
-        </div>
-      </details>
-      <details className="brief-disclosure" data-brief-section="sampling">
-        <summary>Sampling & coverage <span className="num">{draft.limit} trials · {Math.round(draft.minimumCoverage * 100)}%</span></summary>
-        <div className="disclosure-body">
       <div className="field-row">
+        <div className="field">
+          <label className="cap" htmlFor={metricId}>Metric</label>
+          <Select id={metricId} value={draft.metric} options={METRIC_OPTIONS}
+            onChange={(metric) => onChange({ ...draft, metric: metric as BriefDraft["metric"] })} />
+        </div>
         <label className="field">
           <span className="cap">Max. trials</span>
           <input className="input" type="number" min={1} max={50} value={draft.limit}
@@ -131,20 +140,16 @@ export default function MissionBrief({ draft, onChange, onSubmit, onReset, busy,
         <span>Include synthetic demo data <small>(not NASA measurements)</small></span>
       </label>
 
-        </div>
-      </details>
-      {built.request && <details className="brief-disclosure" data-brief-section="review">
-        <summary>Review filters <span>{draft.allowSynthetic ? "Synthetic allowed" : "Synthetic excluded"}</span></summary>
-        <div className="interpreted"><ul>{describeRanking(built.request).map((line) => <li key={line}>{line}</li>)}</ul></div>
-      </details>}
-      <div className="active-conditions" aria-label="Active conditions">
-        {CONDITIONS.filter(({ key }) => draft.conditions[key].role !== "off").map(({ key, label, unit }) => <span key={key}>
-          {label}: {draft.conditions[key].role === "vary" ? "studied variable" : `${draft.conditions[key].value} ${unit ?? ""}`}
-          {draft.conditions[key].role === "match" ? " · exact" : draft.conditions[key].role === "similar" ? " · similarity" : ""}
-        </span>)}
-      </div>
+      {built.request && (() => {
+        const lines = describeRanking(built.request);
+        return <details className="interpreted">
+          <summary className="cap">Filters to be sent ({lines.length})</summary>
+          <ul aria-live="polite">{lines.map((line) => <li key={line}>{line}</li>)}</ul>
+        </details>;
+      })()}
+
       <div className="actions brief-actions">
-        {Object.keys(built.errors).length > 0 && <p className="field-error brief-error" role="status">Check Conditions to fix the highlighted value.</p>}
+        {Object.keys(built.errors).length > 0 && <p className="field-error brief-error" role="status">Fix the highlighted condition to investigate.</p>}
         <button type="submit" className="btn primary" disabled={!canSubmit} aria-keyshortcuts="Control+Enter">{busy ? "Investigating…" : "Investigate"}</button>
         <button type="button" className="btn" onClick={onReset} disabled={busy}>Reset filters</button>
         <span className="kbd-hint" aria-hidden="true">Ctrl + Enter</span>

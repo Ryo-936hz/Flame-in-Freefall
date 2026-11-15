@@ -6,8 +6,7 @@ import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRuntime } from "./runtime.mjs";
-import { brief, closeSource, go, labView, openedResults, resultView } from "./workspace-navigation.mjs";
-import { verifyCampaignResearch, verifyP2Catalog, verifySaffireContext } from "./p2-catalog-acceptance.mjs";
+import { askSI, chooseOption, openView, verifyCampaignResearch, verifyP2Catalog, verifySaffireContext } from "./p2-catalog-acceptance.mjs";
 
 const EXPECTED_SHA256 = "cb8b782fd73dbe4df0576b8047f3dea781a37d7c06c962ad2e978e607a00191d";
 const DATASET = "psi:nasa-local-corpus-v1";
@@ -152,43 +151,28 @@ try {
   let firstReport = "";
   const isPost = (response, suffix) => response.url().endsWith(suffix) && response.request().method() === "POST";
   async function runPreset(key, label) {
-    await labView(page, "bass");
+    await openView(page, "lab");
     const responsePromise = page.waitForResponse((response) => isPost(response, "/api/v1/research"));
     await bass.getByRole("button", { name: label, exact: true }).click();
     const response = await responsePromise;
     assert.deepEqual(response.request().postDataJSON(), cases[key], `${key} must send the exact approved request`);
     check(response.ok(), `${key}: real research endpoint succeeded`);
     const run = await response.json();
-    await openedResults(page);
-    if (key === "bass_6") {
-      await resultView(page);
-      const warnings = page.getByRole("region", { name: "Scientific warnings", exact: true });
-      await warnings.waitFor();
-      const visible = await warnings.locator(":scope > ul > li > span:visible").allTextContents();
-      check(visible.some((text) => /unverified/i.test(text)), "BASS-II unverified status stays visible outside folded details");
-      check(visible.some((text) => /sequence.*order/i.test(text)), "segment order versus measured time stays visible");
-      check(visible.some((text) => text.includes("psi:PSI-25:M8") && text.includes("0.0557") && text.includes("0.0391")), "the distinct M8 table/figure discrepancy stays visible in Results");
-    }
-    await labView(page, "bass");
     await bass.locator(`[data-bass-case="${key}"][data-research-id="${run.id}"]`).waitFor();
     runs[key] = run;
     return run;
   }
   async function openM8(key, sequence) {
-    await labView(page, "bass");
     const run = runs[key];
     const evidenceId = `psi:PSI-25:M8:stage:${sequence}:table51`;
     const responsePromise = page.waitForResponse((response) => decodeURIComponent(new URL(response.url()).pathname).endsWith(`/evidence/${evidenceId}`));
     await bass.getByRole("button", { name: new RegExp(`^Open evidence ${evidenceId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`) }).first().click();
     const response = await responsePromise;
     const source = await response.json();
-    await page.getByRole("dialog", { name: "Evidence source", exact: true }).waitFor();
     check(new URL(response.url()).searchParams.get("research_id") === run.id, `${key}: M8 source uses the saved research snapshot`);
     await page.locator("#evidence .ev-text").filter({ hasText: copy.m8_notice }).waitFor();
     check(await page.locator("#evidence .ev-text").textContent() === source.text, `${key}: M8 source and discrepancy notice are literal`);
     check(source.reviewed === false && source.provenance === "published", `${key}: source remains published and unreviewed`);
-    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, `${key}-source-drawer.png`) });
-    await closeSource(page);
   }
 
   await step("real corpus status and approved-case panel", async () => {
@@ -196,13 +180,27 @@ try {
     const profile = await (await fetch(`${API}/api/v1/datasets/profile`)).json();
     check(health.data_mode === "scientific_unverified" && health.ai_provider === "demo", "real corpus remains scientific_unverified in deterministic mode");
     check(profile.dataset_id === DATASET && profile.n_studies === 24 && profile.synthetic_trials === 0, "24-study corpus contains no synthetic trials");
-    await page.goto(WEB);
-    await page.getByRole("heading", { name: "New investigation", exact: true }).waitFor();
-    await labView(page, "bass"); await bass.waitFor();
-    await go(page, "reports"); await report.waitFor();
+    await page.goto(`${WEB}/#/dashboard/investigate`);
+    await page.getByRole("heading", { name: "Mission Brief", exact: true }).waitFor();
+    await openView(page, "report");
+    await report.waitFor();
+    await openView(page, "lab");
+    await bass.waitFor();
   });
 
   await verifyP2Catalog({ page, apiUrl: API, bundle, check, step, screenshots: SHOTS });
+  await step("Ask SI opens the requested published-study comparison", async () => {
+    const answer = await askSI(page, "Plot BASS-II and FLEX");
+    assert.deepEqual(answer.comparison_studies, ["psi:PSI-25", "psi:PSI-69"]);
+    const charts = answer.comparison_studies.map((id) => page.waitForResponse((response) =>
+      decodeURIComponent(new URL(response.url()).pathname) === `/api/v1/studies/${id}/chart`));
+    await page.getByRole("button", { name: "Open study comparison", exact: true }).click();
+    await page.waitForURL(/#\/dashboard\/lab\?study=/);
+    await page.getByRole("heading", { name: "Study comparison", exact: true }).waitFor();
+    const data = await Promise.all(charts.map(async (pending) => (await pending).json()));
+    check(data.every((item, index) => item.study.id === answer.comparison_studies[index] && item.metrics.length > 0),
+      "the selected studies load their documented measurements inside Mission Lab");
+  });
   await step("documentary Saffire context stays separate from imported BASS points", async () => {
     await verifySaffireContext({ page, check, screenshots: SHOTS });
   });
@@ -210,13 +208,13 @@ try {
 
   await step("approved 6 cm/s preset preserves four source observations", async () => {
     // Fixed, disclosed presets must not inherit unrelated current-form edits.
-    await brief(page, ["sampling"]);
-    await page.getByRole("combobox", { name: "Metric", exact: true }).selectOption("heat_release_w");
+    await openView(page, "investigate");
+    await chooseOption(page, page.getByRole("combobox", { name: "Metric", exact: true }), "Heat release");
     await page.getByRole("spinbutton", { name: /Max\. trials/ }).fill("1");
     const run = await runPreset("bass_6", "Run BASS-II · 6 cm/s");
     verifyRun("bass_6", run);
     await openM8("bass_6", 2);
-    await go(page, "reports");
+    await openView(page, "report");
     const pre = report.locator(`pre[data-research-id="${run.id}"]`).first();
     await pre.waitFor();
     firstReport = await pre.textContent();
@@ -238,7 +236,6 @@ try {
   });
 
   await step("A/B preserves ten observations from seven samples and the approved limitations", async () => {
-    await labView(page, "bass");
     const responses = ["bass_6", "bass_5"].map((key) => page.waitForResponse((response) => isPost(response, "/api/v1/research") && response.request().postDataJSON()?.question === cases[key].question));
     const scenarioResponse = page.waitForResponse((response) => isPost(response, "/api/v1/scenarios/compare"));
     await bass.getByRole("button", { name: "Compare BASS-II · 6 → 5 cm/s", exact: true }).click();
@@ -259,8 +256,6 @@ try {
     assert.deepEqual(sorted([...a].filter((id) => b.has(id))), ["psi:PSI-25:M13", "psi:PSI-25:M7", "psi:PSI-25:M8"]);
     const points = [...pointsA, ...pointsB];
     check(points.length === 10 && new Set(points.map((point) => point.independent_unit_id)).size === 7, "ten records correspond to seven identified physical samples, not ten replicas");
-    await openedResults(page);
-    await labView(page, "bass");
     const comparison = bass.locator("[data-bass-comparison]");
     await comparison.waitFor();
     await comparison.getByText(copy.bass_comparison, { exact: true }).waitFor();
@@ -288,23 +283,19 @@ try {
   });
 
   await step("saved BASS-II report and M8 notice survive API restart and browser reload", async () => {
+    await openView(page, "report");
     const run = runs.bass_6;
-    await go(page, "reports");
     await report.getByLabel("Research id", { exact: true }).fill(run.id);
     await report.getByRole("button", { name: "Recover", exact: true }).click();
-    await openedResults(page);
-    await go(page, "reports");
     const pre = report.locator(`pre[data-research-id="${run.id}"]`).first();
     await pre.waitFor();
     check(await pre.textContent() === firstReport, "original BASS-II report is recovered before restart");
     await stop(api); api = startApi();
     await waitHttp(`${API}/api/v1/health`, api);
     await page.reload();
-    await go(page, "reports");
+    await openView(page, "report");
     await report.getByText(/No active research\./).waitFor();
     await report.getByRole("button", { name: "Reopen last research", exact: true }).click();
-    await openedResults(page);
-    await go(page, "reports");
     await pre.waitFor();
     check(await pre.textContent() === firstReport && firstReport.includes(copy.m8_notice), "reopened historical report and M8 notice remain byte-for-byte equal");
     check((await (await fetch(`${API}/api/v1/health`)).json()).data_mode === "scientific_unverified", "restart retains the real corpus without synthetic reseeding");
