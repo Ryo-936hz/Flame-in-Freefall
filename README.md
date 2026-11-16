@@ -1,53 +1,58 @@
-# FlameLab SI — demo integrada
+# FlameLab SI
 
-> **AI Research** presenta un caso preparado BASS-II con agentes animados, fuentes
-> publicadas y una pausa para aceptar el alcance de la comparación. Abrir
-> `#/dashboard/ai-research` y pulsar **Start research**. La actividad de agentes es
-> coreografiada; no llama a modelos. [Guion, fuentes y límites](docs/AI_RESEARCH_CASE.md).
-> Ask SI usa Qwen para seleccionar fuentes cuando se arranca con Docker Compose.
-> El buscador y Ask SI también abren la [referencia publicada M13](docs/FILMING_M13.md).
-
-La [PR #3](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/3) está fusionada en
-`main` mediante `0b732cb`: P1/P3/P4, la ingesta y los contratos de P2, Mission Lab
-y recuperación P6, sobre el host P5 `9f54700`. La referencia de arranque del equipo
-es **`origin/main`**; cada persona conserva su propia rama.
-
-El cierre adicional P2 está implementado y **verificado localmente** en `raul`,
-código **`20aab80404fc2f0fc188d718cac47d0d4bf31d54`**: tarjeta documental Saffire, reintentos e
-identidades del catálogo y selector de las 14 métricas. El cierre se entrega mediante la PR #4 sobre `main`; la PR #3 anterior ya está fusionada. Consultar
-[estado](docs/IMPLEMENTATION_STATUS.md), [verificación](docs/VERIFICATION.md) y
-[guía P2](docs/INTEGRATION_P2_MAIN.md) para distinguir ambas entregas.
-
-Los TTS · 14 de noviembre de 2026.
+FlameLab SI es una aplicación pública y desplegada para explorar investigaciones
+sobre combustión en microgravedad, consultar evidencia y comparar resultados.
+Responde al reto **Flame in Freefall** de NASA Space Apps mediante un espacio de
+trabajo que conecta datos científicos, herramientas de análisis e inteligencia artificial.
 
 [![Verificación Windows y Linux](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/workflows/verify.yml/badge.svg?branch=main)](https://github.com/Ryo-936hz/Flame-in-Freefall/actions/workflows/verify.yml)
 
-Demo integrada: FastAPI/Pydantic, SQLite con migraciones y snapshots, ingesta,
-ranking y comparación científica, coordinación determinista y cliente React/TypeScript.
-La interfaz de P5 monta **Mission Lab, informe y recuperación de P6**, con tabla,
-gráfico y fuentes conectados por identificadores.
+## Funciones principales
 
-**Guías:** [demo y arranque](docs/DEMO.md), [integración P2 y carga real en Windows](docs/INTEGRATION_P2_MAIN.md),
-[relevo del equipo](docs/TEAM_HANDOFF.md) y [estado real](docs/IMPLEMENTATION_STATUS.md). El [hito P6](docs/handoffs/P6.md)
-verificó el código `66934638e37c1396eeab638631d54a2159ab7930` antes del merge.
-Las etiquetas `flamelab-p6-demo-2026-11-14-r2` y anteriores conservan ese historial;
-no se mueven ni sustituyen `origin/main` como base del trabajo nuevo.
-La [entrega de backend P1/P3/P4](docs/INTEGRATION_P134.md) y
-`codex/team-start-v1` también se conservan como antecedentes.
+- **Study catalog:** exploración de 24 investigaciones, sus fuentes y los datos
+  disponibles en cada estudio.
+- **Ask SI:** consulta de evidencia con recuperación de información y Qwen servido
+  localmente mediante Ollama; los resultados conservan las referencias a sus fuentes.
+- **AI Research:** laboratorio de investigación con un sistema multiagente operativo.
+  Coordinator organiza la investigación; Scout recupera evidencia; Analyst realiza
+  el análisis; Critic revisa resultados y referencias; Writer prepara el informe.
+  El flujo conserva el contexto científico entre etapas e incorpora revisión humana
+  antes del informe final. Se accede desde `#/dashboard/ai-research`.
+- **Investigate y Mission Lab:** filtros experimentales, ranking de evidencia,
+  comparaciones A/B, tablas y gráficos conectados con sus fuentes.
+- **Informes y recuperación:** persistencia de investigaciones y sus snapshots,
+  consulta de resultados anteriores y exportación de informes.
 
-La demo predeterminada y el CI usan **datos sintéticos**, no mediciones NASA. El corpus local
-P2 contiene 24 estudios: seis campañas con resultados, una con configuraciones
-y 17 documentales. P3 aprobó el uso **descriptivo de diez puntos BASS-II** (siete
-muestras), conservando el aviso M8 y el caso lunar corregido. Esta conformidad
-limitada no valida el corpus completo ni cambia su estado `scientific_unverified`.
-Ver [paquete P2](docs/handoffs/P2_DEMO.md) y [dictamen P3](docs/handoffs/P3_BASS_II_DECISION_DEMO.md).
+## Arquitectura y datos
 
-El recorrido conecta filtros y métrica → herramientas científicas → evidencia,
-A/B e informe persistido. La interfaz usa filtros explícitos y presets BASS-II fijos; la API también
-ofrece el catálogo acotado de preguntas y la previsualización de planes.
-Mission Lab muestra el plan guardado de su consulta. No hacen falta credenciales.
+FastAPI y Pydantic definen la API y sus contratos; SQLAlchemy y Alembic gestionan
+la persistencia y las migraciones. El cliente React/TypeScript consume tipos
+construidos desde OpenAPI. Docker permite reproducir el despliegue local.
+La IA trabaja sobre evidencia recuperada y herramientas científicas con entradas
+validadas; los cálculos numéricos se ejecutan en código determinista.
 
-El cierre se publica en la [PR #4](https://github.com/Ryo-936hz/Flame-in-Freefall/pull/4); el CI de cada revisión puede consultarse allí. La base compartida es `origin/main`.
+El modelo científico conserva valores y unidades originales, procedencia y
+condiciones por segmento. Distingue ensayos, muestras y observaciones: los
+segmentos de una misma muestra no se cuentan como réplicas independientes.
+Las comparaciones consideran geometría, oxígeno y caras de combustión.
+
+El catálogo contiene 24 estudios: seis campañas con resultados, una con
+configuraciones y 17 documentales. La disponibilidad de análisis numérico depende
+del corpus cargado. Los fixtures de pruebas son **sintéticos**, no mediciones NASA.
+Las instrucciones de instalación siguientes explican cómo elegir el corpus local;
+no describen necesariamente la configuración del servicio público.
+
+La revisión científica documentada de BASS-II cubre el uso descriptivo de diez
+puntos de siete muestras, conservando la discrepancia M8. No equivale a validar
+científicamente todo el corpus. Ver [paquete de datos](docs/handoffs/P2_DEMO.md)
+y [dictamen científico](docs/handoffs/P3_BASS_II_DECISION_DEMO.md).
+
+**Guías:** [arranque y recorridos](docs/DEMO.md),
+[carga de datos en Windows](docs/INTEGRATION_P2_MAIN.md) y
+[verificaciones por versión](docs/VERIFICATION.md).
+Los documentos de relevo, las PR de integración y el caso preparado original de
+AI Research conservan el historial de construcción; sus limitaciones fechadas
+no describen el estado actual del sistema multiagente desplegado.
 
 ## Instalación y arranque
 
@@ -59,7 +64,7 @@ Tres vías, con la misma aplicación y los mismos datos:
 | [B. Windows nativo](#b-windows-nativo) | Windows 10/11 | Git, Python 3.12, Node 24 con npm, PowerShell 7 | http://127.0.0.1:5173 | Vía documentada del equipo (`setup.ps1`); sin ejecutar en esta revisión |
 | [C. Linux nativo](#c-linux-nativo) | Linux | Git, Python 3.12, Node 24 con npm, pipx | http://127.0.0.1:5173 | Verificada en Linux Mint 22.3 |
 
-Docker sirve para usar la demo sin instalar Python ni Node. Para desarrollar y
+Docker sirve para ejecutar la aplicación localmente sin instalar Python ni Node. Para desarrollar y
 ejecutar las comprobaciones (`check.ps1`, E2E) se usan las vías nativas. Los datos
 que se cargan se eligen igual en las tres: ver [Cargar datos](#cargar-datos).
 
@@ -333,12 +338,13 @@ marca de forma sistemática qué commits contaron con asistencia.
 - **IA en el producto:** Ask SI usa Qwen (`qwen3:0.6b`, local mediante Ollama en Docker
   Compose) para seleccionar fuentes y redactar explicaciones. Los cálculos, filtros y
   rankings se ejecutan en código verificable de la API, no en el modelo.
-- **AI Research** es una secuencia preparada: su actividad de agentes es animada y no
-  acredita la ejecución de modelos ni de agentes autónomos.
+- **AI Research:** el sistema multiagente coordina Coordinator, Scout, Analyst,
+  Critic y Writer para investigar con evidencia y revisión humana antes del informe.
+  La revisión humana no sustituye la validación científica de los datos.
 - Los fixtures sintéticos no son mediciones NASA, y ningún texto generado por IA
   sustituye a las fuentes citadas.
 
-## Estado y relevo
+## Historial de verificación y relevo
 
 [Estado real](docs/IMPLEMENTATION_STATUS.md), [verificaciones](docs/VERIFICATION.md),
 [Windows](docs/SETUP_WINDOWS.md), [seis puestos](docs/TEAM_HANDOFF.md) y [ADR de
@@ -365,11 +371,12 @@ PostgreSQL 17 y navegador Chromium en Windows/Linux. El registro por entorno y
 SHA está en [VERIFICATION](docs/VERIFICATION.md). Estos resultados corresponden al SHA indicado; los cambios posteriores requieren
 su propia verificación.
 
-El proveedor externo se probó con HTTP simulado, sin llamadas reales ni claves.
-Quedan fuera de esta demo la validación científica global, pgvector, CFD, diseño
-inverso y despliegue público. El catálogo no interpreta lenguaje natural general.
-La [dirección visual](docs/DESIGN_ANDURIL.md) se conserva; no se ha evaluado con
-lector de pantalla ni móvil físico. No necesitas el ZIP NASA para arrancar.
+En las verificaciones históricas anteriores, el proveedor externo se probó con
+HTTP simulado, sin llamadas reales ni claves. Esos resultados pertenecen a los
+commits indicados y no constituyen una evaluación del despliegue público actual.
+La validación científica global, CFD y diseño inverso quedan fuera del alcance
+descrito aquí. La [dirección visual](docs/DESIGN_ANDURIL.md) documenta la interfaz.
+No necesitas el ZIP NASA para arrancar con el catálogo o los fixtures sintéticos.
 
 ## Comprobación de integración PostgreSQL
 
